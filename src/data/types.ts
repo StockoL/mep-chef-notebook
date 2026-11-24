@@ -66,6 +66,8 @@ export interface Kitchen extends Row {
   sheetName: string;
   /** True for the "No kitchen" record, which can't be renamed or deleted. */
   builtIn: boolean;
+  /** The chef's usual section here; the app opens on it (schema v2). */
+  usualSectionId: Id | null;
 }
 
 export interface Section extends Row {
@@ -73,6 +75,8 @@ export interface Section extends Row {
   name: string;
   order: number;
   hidden: boolean;
+  /** Set when merged into another section; everything now points there (schema v2). */
+  mergedIntoId: Id | null;
 }
 
 /** One thing on a section's list: a component or an ingredient. */
@@ -98,15 +102,27 @@ export interface Checklist extends Row {
   items: ChecklistItem[];
 }
 
-/** A service window: first tickets to last bookings, on given days. */
-export interface Service extends Row {
-  kitchenId: KitchenId;
-  name: string;
+/** One stretch of a service on given days: first tickets to last bookings. */
+export interface ServiceWindow {
+  days: DayOfWeek[];
   firstTickets: TimeOfDay | null;
   lastBookings: TimeOfDay | null;
   usualFinish: TimeOfDay | null;
-  days: DayOfWeek[];
+}
+
+/**
+ * A service (breakfast, lunch, dinner…): an editable list item holding its
+ * times. Times can differ by day, so it has a list of windows, each for some
+ * days (DECISIONS 32; SPEC's flat fields became `windows` in schema v2).
+ */
+export interface Service extends Row {
+  kitchenId: KitchenId;
+  name: string;
+  order: number;
+  hidden: boolean;
+  mergedIntoId: Id | null;
   iWorkThis: boolean;
+  windows: ServiceWindow[];
 }
 
 /** The chef's usual hours in this kitchen: 10:00–22:30 on given days. */

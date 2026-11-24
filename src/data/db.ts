@@ -1,5 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie';
+import { seedChefLists } from './defaults';
 import { newId, nowTimestamp } from './ids';
+import { ROW_FIXES } from './migrations';
 import {
   NO_KITCHEN_ID,
   type Batch,
@@ -57,7 +59,8 @@ import {
  * Booleans can't be indexed in IndexedDB, so none are.
  *
  * NEVER edit this object once released. A change is a new version:
- *   this.version(2).stores({ …changed tables… }).upgrade(tx => …)
+ *   this.version(n).stores({ …changed tables… }).upgrade(tx => …)
+ * and, for changes to the rows themselves, an entry in migrations.ts.
  */
 export const SCHEMA_V1 = {
   kitchens: 'id',
@@ -105,8 +108,11 @@ export const SCHEMA_V1 = {
 
 export type TableName = keyof typeof SCHEMA_V1;
 
-/** The schema version this code writes. Goes into every export. */
-export const SCHEMA_VERSION = 1;
+/**
+ * The schema version this code writes. Goes into every export.
+ * v1: Phase 0. v2: Phase 1 row changes (migrations.ts); indexes unchanged.
+ */
+export const SCHEMA_VERSION = 2;
 
 /** Every table name, in schema order. */
 export const TABLE_NAMES = Object.keys(SCHEMA_V1) as TableName[];
@@ -164,6 +170,14 @@ export class MepDatabase extends Dexie {
   constructor(name = 'mep') {
     super(name);
     this.version(1).stores(SCHEMA_V1);
+    // v2 changes no indexes, only rows: run each table's fix over what's stored.
+    this.version(2)
+      .stores({})
+      .upgrade(async (transaction) => {
+        for (const [table, fix] of Object.entries(ROW_FIXES[2] ?? {})) {
+          await transaction.table(table).toCollection().modify((row) => fix(row));
+        }
+      });
     this.addRowHooks();
   }
 
@@ -196,19 +210,23 @@ export class MepDatabase extends Dexie {
 export const db = new MepDatabase();
 
 /**
- * Makes sure built-in rows exist: today, the "No kitchen" record
- * (DECISIONS 30). Safe to call on every start and after every import.
+ * Makes sure built-in rows exist: the "No kitchen" record (DECISIONS 30) and
+ * the chef's own lists with their starting values (DECISIONS 16). Safe to
+ * call on every start and after every import.
  */
 export async function ensureBuiltIns(database: MepDatabase = db): Promise<void> {
-  await database.transaction('rw', database.kitchens, async () => {
+  await database.transaction('rw', database.kitchens, database.listValues, async () => {
     const existing = await database.kitchens.get(NO_KITCHEN_ID);
-    if (existing) return;
-    await database.kitchens.add({
-      id: NO_KITCHEN_ID,
-      name: 'No kitchen',
-      archived: false,
-      sheetName: "Today's sheet",
-      builtIn: true,
-    });
+    if (!existing) {
+      await database.kitchens.add({
+        id: NO_KITCHEN_ID,
+        name: 'No kitchen',
+        archived: false,
+        sheetName: "Today's sheet",
+        builtIn: true,
+        usualSectionId: null,
+      });
+    }
+    await seedChefLists(database);
   });
 }

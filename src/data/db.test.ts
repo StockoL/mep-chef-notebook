@@ -17,7 +17,7 @@ afterEach(async () => {
   await db.delete();
 });
 
-describe('schema v1', () => {
+describe('schema', () => {
   it('has a table for every entity in SPEC → Data model, plus media and settings', () => {
     const expected = [
       'kitchens', 'sections', 'sectionItems', 'checklists', 'services', 'shiftPatterns',
@@ -30,7 +30,7 @@ describe('schema v1', () => {
     ];
     expect([...TABLE_NAMES].sort()).toEqual([...expected].sort());
     expect(db.tables.map((table) => table.name).sort()).toEqual([...expected].sort());
-    expect(db.verno).toBe(1);
+    expect(db.verno).toBe(2);
   });
 
   it('stores and reads back a row in every table', async () => {

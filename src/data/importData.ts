@@ -1,6 +1,7 @@
 import { strFromU8, unzipSync } from 'fflate';
 import { ensureBuiltIns, SCHEMA_VERSION, TABLE_NAMES, db as appDb, type MepDatabase, type TableName } from './db';
 import { DATA_FILE, EXPORT_FORMAT, EXPORT_FORMAT_VERSION, type ExportedMedia } from './exportFormat';
+import { upgradeRow } from './migrations';
 
 /** A problem with the file itself. The message is written for the chef. */
 export class ImportError extends Error {
@@ -62,6 +63,7 @@ function readExport(zipBytes: Uint8Array): Record<TableName, unknown[]> {
   }
 
   const tables = data.tables;
+  const fileVersion = data.schemaVersion;
   for (const name of Object.keys(tables)) {
     if (!(TABLE_NAMES as string[]).includes(name)) {
       throw new ImportError(`The export has data Mep doesn't know about ("${name}").`);
@@ -80,7 +82,10 @@ function readExport(zipBytes: Uint8Array): Record<TableName, unknown[]> {
         throw new ImportError(`The export's "${name}" data has a row without an ${keyField}.`);
       }
     }
-    result[name] = name === 'media' ? restoreMedia(rows as ExportedMedia[], files) : rows;
+    // An export from an older Mep is brought up to date, row by row, the
+    // same way the database upgrades itself (migrations.ts).
+    const upgraded = rows.map((row) => upgradeRow(name, row as Record<string, unknown>, fileVersion, SCHEMA_VERSION));
+    result[name] = name === 'media' ? restoreMedia(upgraded as unknown as ExportedMedia[], files) : upgraded;
   }
   return result;
 }

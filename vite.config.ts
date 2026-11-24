@@ -110,5 +110,8 @@ export default defineConfig({
     include: ['src/**/*.test.{ts,tsx}'],
     // src/core is pure logic, so plain Node is enough: no browser, no DOM.
     environment: 'node',
+    // An in-memory IndexedDB, installed before any test file loads, so the
+    // app's own database (created when db.ts is imported) has one to use.
+    setupFiles: ['fake-indexeddb/auto'],
   },
 });
