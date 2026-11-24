@@ -1,0 +1,31 @@
+{
+  // TypeScript only checks the code here; Vite does the actual building.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+
+    // JSX is compiled for Preact, not React.
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+
+    // Strict mode: no implicit any, null must be handled.
+    "strict": true,
+    // array[i] might be undefined, so make us check it.
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+
+    // Each file must compile on its own, as Vite compiles them.
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+
+    // Types for import.meta.env and asset imports.
+    "types": ["vite/client"]
+  },
+  "include": ["src", "vite.config.ts"]
+}
