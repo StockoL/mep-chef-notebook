@@ -9,9 +9,30 @@ export const BASE = import.meta.env.BASE_URL;
 /** Every route's full path. Use these instead of typing paths by hand. */
 export const paths = {
   today: BASE,
+  inbox: `${BASE}inbox`,
   library: `${BASE}library`,
   plan: `${BASE}plan`,
   section: `${BASE}section`,
+  waste: `${BASE}section/waste`,
+  goal: `${BASE}section/goal`,
+  settings: `${BASE}settings`,
+  settingsList: (list: string) => `${BASE}settings/lists/${list}`,
+  kitchens: `${BASE}kitchens`,
+  kitchen: (id: string) => `${BASE}kitchen/${id}`,
+  kitchenSections: (id: string) => `${BASE}kitchen/${id}/sections`,
+  kitchenServices: (id: string) => `${BASE}kitchen/${id}/services`,
+  service: (kitchenId: string, serviceId: string) => `${BASE}kitchen/${kitchenId}/services/${serviceId}`,
+  kitchenPart: (id: string, part: string) => `${BASE}kitchen/${id}/${part}`,
+} as const;
+
+/** Route patterns for preact-iso (":id" becomes a prop). */
+export const routes = {
+  settingsList: `${BASE}settings/lists/:list`,
+  kitchen: `${BASE}kitchen/:id`,
+  kitchenSections: `${BASE}kitchen/:id/sections`,
+  kitchenServices: `${BASE}kitchen/:id/services`,
+  service: `${BASE}kitchen/:id/services/:serviceId`,
+  kitchenPart: `${BASE}kitchen/:id/:part`,
 } as const;
 
 /** One entry per bottom tab, in the order they appear. */
@@ -19,20 +40,24 @@ export interface Tab {
   path: string;
   label: string;
   icon: IconName;
+  /** Other screens that belong to this tab (opened from it). */
+  children?: string[];
 }
 
 export const tabs: readonly Tab[] = [
-  { path: paths.today, label: 'Today', icon: 'home' },
+  { path: paths.today, label: 'Today', icon: 'home', children: [paths.inbox] },
   { path: paths.library, label: 'Library', icon: 'book' },
   { path: paths.plan, label: 'Plan', icon: 'clock' },
   { path: paths.section, label: 'Section', icon: 'list' },
 ];
 
 /**
- * Is this tab the one we're in? Today only matches its own path exactly;
- * the others also match anything below them (later: /library/component/…).
+ * Is this tab the one we're in? Today matches only its own path (it's the
+ * root of everything) and its children; the others also match anything below them.
  */
 export function isTabActive(tab: Tab, currentPath: string): boolean {
+  const under = (path: string) => currentPath === path || currentPath.startsWith(`${path}/`);
+  if (tab.children?.some(under)) return true;
   if (tab.path === paths.today) return currentPath === paths.today;
-  return currentPath === tab.path || currentPath.startsWith(`${tab.path}/`);
+  return under(tab.path);
 }

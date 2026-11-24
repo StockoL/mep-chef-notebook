@@ -1,0 +1,7 @@
+/* First run: a calm, full-screen page before the app shell exists. */
+.first-run {
+  min-block-size: 100dvh;
+  padding-block: calc(var(--safe-top) + var(--space-xl)) calc(var(--safe-bottom) + var(--space-l));
+  padding-inline: calc(var(--safe-left) + var(--gutter)) calc(var(--safe-right) + var(--gutter));
+  background-color: var(--color-surface-sunken);
+}

@@ -2,6 +2,7 @@
    then photo, voice and waste as round icon buttons. */
 .capture-bar {
   display: flex;
+  flex-wrap: wrap; /* at large text sizes the icons move to a second row */
   align-items: center;
   gap: var(--space-2xs);
   padding-block: var(--space-2xs);
@@ -9,7 +10,7 @@
 }
 
 .capture-bar__note {
-  flex: 1;
+  flex: 1 1 8em;
   min-inline-size: 0;
   min-block-size: var(--tap);
   padding-inline: var(--space-s);
@@ -29,9 +30,9 @@
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  inline-size: var(--tap);
-  block-size: var(--tap);
-  padding: 0;
+  min-inline-size: var(--tap);
+  min-block-size: var(--tap);
+  padding: var(--space-3xs);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
   background-color: var(--color-surface);

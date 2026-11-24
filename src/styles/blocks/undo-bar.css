@@ -1,0 +1,24 @@
+/* Undo bar: a short message above the capture bar, with Undo after a delete. */
+.undo-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  margin: var(--space-2xs) var(--gutter) 0;
+  padding: var(--space-3xs) var(--space-3xs) var(--space-3xs) var(--space-s);
+  border-radius: var(--radius-control);
+  background-color: var(--color-text);
+  color: var(--color-text-inverse);
+}
+
+.undo-bar__undo {
+  min-block-size: var(--tap);
+  padding-inline: var(--space-s);
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  text-decoration: underline;
+  cursor: pointer;
+}

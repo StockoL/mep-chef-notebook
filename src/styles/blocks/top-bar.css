@@ -16,6 +16,8 @@
 
 /* The whole "where am I" block is one big tap target. */
 .top-bar__place {
+  flex: 1;
+  min-inline-size: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-start;

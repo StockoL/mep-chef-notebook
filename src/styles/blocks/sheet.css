@@ -1,0 +1,74 @@
+/* Sheet: a native <dialog> as a bottom sheet (or top, for typing: on iPhone
+   the keyboard covers the bottom). Slides in with @starting-style. */
+.sheet {
+  margin: auto 0 0;
+  padding: 0;
+  inline-size: 100%;
+  max-inline-size: 100%;
+  max-block-size: 92dvh;
+  border: 0;
+  border-radius: var(--radius-surface) var(--radius-surface) 0 0;
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+  box-shadow: var(--shadow-overlay);
+  overscroll-behavior: contain;
+  transition:
+    translate calc(var(--duration-base) * var(--motion-scale)) var(--ease-out-expo),
+    overlay calc(var(--duration-base) * var(--motion-scale)) allow-discrete,
+    display calc(var(--duration-base) * var(--motion-scale)) allow-discrete;
+  translate: 0 100%;
+}
+
+.sheet[open] {
+  translate: 0 0;
+}
+
+@starting-style {
+  .sheet[open] {
+    translate: 0 100%;
+  }
+}
+
+.sheet[data-position='top'] {
+  margin: 0 0 auto;
+  border-radius: 0 0 var(--radius-surface) var(--radius-surface);
+  translate: 0 -100%;
+}
+
+.sheet[data-position='top'][open] {
+  translate: 0 0;
+}
+
+@starting-style {
+  .sheet[data-position='top'][open] {
+    translate: 0 -100%;
+  }
+}
+
+.sheet::backdrop {
+  background-color: var(--color-backdrop);
+}
+
+.sheet__inner {
+  padding-block: var(--space-xs) calc(var(--space-m) + var(--safe-bottom));
+  padding-inline: calc(var(--safe-left) + var(--gutter)) calc(var(--safe-right) + var(--gutter));
+}
+
+.sheet[data-position='top'] .sheet__inner {
+  padding-block: calc(var(--safe-top) + var(--space-xs)) var(--space-m);
+}
+
+.sheet__header {
+  display: flex;
+  flex-wrap: wrap; /* Done drops below the title at large text sizes */
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  margin-block-end: var(--space-s);
+}
+
+.sheet__title {
+  min-inline-size: 0;
+  margin: 0;
+  font-size: var(--step-1);
+}

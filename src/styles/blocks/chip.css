@@ -1,0 +1,20 @@
+/* Chip: one choice among several (UX → Editing rule 5). Pressed = chosen. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--tap);
+  padding-inline: var(--space-s);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.chip[aria-pressed='true'] {
+  border-color: var(--color-action);
+  background-color: var(--color-action);
+  color: var(--color-action-text);
+}

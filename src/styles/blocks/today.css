@@ -1,0 +1,55 @@
+/* Today's quiet lines: next service, the weekly goal, "needs you", empty state. */
+.next-service {
+  color: var(--color-text-muted);
+}
+
+.next-service strong {
+  color: var(--color-text);
+}
+
+.goal-line {
+  display: flex;
+  align-items: center;
+  min-block-size: var(--tap);
+  color: var(--color-text-muted);
+  font-size: var(--step--1);
+  text-decoration: none;
+}
+
+.needs-you {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.needs-you__item {
+  display: flex;
+  flex-wrap: wrap; /* the button drops below the text at large text sizes */
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  min-block-size: var(--tap);
+  padding: var(--space-2xs) var(--space-s);
+  border-radius: var(--radius-surface);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.needs-you__item[data-status='warning'] {
+  border: 1px solid var(--color-status-warning-border);
+  background-color: var(--color-status-warning-surface);
+  color: var(--color-status-warning-text);
+}
+
+.empty-state {
+  padding: var(--space-l) var(--space-s);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-surface);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.empty-state__hint {
+  font-size: var(--step--1);
+}

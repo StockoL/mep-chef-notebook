@@ -1,0 +1,18 @@
+/* Screen header: a back link naming where it goes, then the title. */
+.screen-header {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3xs);
+}
+
+.screen-header__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  min-block-size: var(--tap);
+  margin-inline-start: calc(var(--space-2xs) * -1);
+  padding-inline-end: var(--space-s);
+  color: var(--color-action);
+  text-decoration: none;
+}

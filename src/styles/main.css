@@ -26,3 +26,15 @@
 @import './blocks/top-bar.css' layer(blocks);
 @import './blocks/capture-bar.css' layer(blocks);
 @import './blocks/tab-bar.css' layer(blocks);
+@import './blocks/sheet.css' layer(blocks);
+@import './blocks/list-row.css' layer(blocks);
+@import './blocks/chip.css' layer(blocks);
+@import './blocks/screen-header.css' layer(blocks);
+@import './blocks/undo-bar.css' layer(blocks);
+@import './blocks/today.css' layer(blocks);
+@import './blocks/media.css' layer(blocks);
+@import './blocks/details-list.css' layer(blocks);
+@import './blocks/first-run.css' layer(blocks);
+
+/* 5. Exceptions to LooseLeaf's blocks: last in the blocks layer, so they win there. */
+@import './exceptions.css' layer(blocks);

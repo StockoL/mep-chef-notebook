@@ -5,6 +5,7 @@
 .app-shell {
   display: grid;
   grid-template-rows: auto 1fr auto;
+  grid-template-columns: minmax(0, 1fr); /* content can never widen the page */
   min-block-size: 100dvh;
   background-color: var(--color-surface-sunken);
 }

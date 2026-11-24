@@ -1,6 +1,7 @@
 /* Tab bar: four equal tabs, icon over label. The active tab is marked by
    aria-current="page", so the CSS and screen readers read the same thing. */
 .tab-bar {
+  container: tab-bar / inline-size;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   padding-inline: var(--safe-left) var(--safe-right);
@@ -34,4 +35,17 @@
 
 .tab-bar__tab[aria-current='page'] .icon {
   stroke-width: 2;
+}
+
+/* When the labels would collide (large text sizes), keep the icons and hide
+   the labels visually; screen readers still read them (DESIGN.md). */
+@container tab-bar (max-width: 14em) {
+  .tab-bar__label {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }

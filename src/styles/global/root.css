@@ -20,3 +20,19 @@ body {
   font-family: var(--font-body);
   line-height: var(--leading-body);
 }
+
+/* At the largest accessibility text sizes a long word ("November") can be
+   wider than the screen. Let words wrap and hyphenate, and cap headings at a
+   share of the screen width (DESIGN.md caps the timer the same way). */
+body {
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+h1 {
+  font-size: min(var(--heading-1), 11vw);
+}
+
+h2 {
+  font-size: min(var(--heading-2), 9vw);
+}
