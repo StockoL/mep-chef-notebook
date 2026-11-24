@@ -8,7 +8,12 @@ export const UNITS = {
   kg: { dimension: 'mass', perBase: 1000 },
   ml: { dimension: 'volume', perBase: 1 },
   l: { dimension: 'volume', perBase: 1000 },
+  each: { dimension: 'count', perBase: 1 },
+  portion: { dimension: 'portion', perBase: 1 },
 } as const;
+
+/** The units in the order pickers show them. */
+export const UNIT_CHOICES = Object.keys(UNITS) as Unit[];
 
 export type Unit = keyof typeof UNITS;
 
