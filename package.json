@@ -13,6 +13,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "dexie": "^4.4.7",
+    "fflate": "^0.8.3",
     "looseleaf-ui": "^2.5.1",
     "preact": "^11.2.0",
     "preact-iso": "^2.12.2"
@@ -20,8 +22,11 @@
   "devDependencies": {
     "@preact/preset-vite": "^2.10.6",
     "@types/node": "^24.19.2",
+    "@vite-pwa/assets-generator": "^2.0.0",
+    "fake-indexeddb": "^6.2.8",
     "typescript": "^7.0.2",
     "vite": "^8.3.8",
+    "vite-plugin-pwa": "^2.0.0",
     "vitest": "^5.1.1"
   }
 }
