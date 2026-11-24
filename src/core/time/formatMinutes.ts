@@ -1,26 +1,40 @@
+/** The real minus sign (U+2212). It's the width of a digit, unlike a hyphen,
+ *  so a countdown doesn't shift sideways as it passes zero. */
+const MINUS = '−';
+
 /**
  * Shows a number of minutes the way a chef reads a time on the plan or a
  * countdown: short, and the same shape every time.
  *
- * Under an hour, minutes with "min":
- *    45 → "45 min"
- *     0 → "0 min"
- * An hour or more, hours with "h", then the minutes as two digits:
- *    90 → "1h 30"
- *    65 → "1h 05"
- *   120 → "2h"        (no " 00" on a whole hour)
- * Negative means overrun (prep mode counts into negative time). Use the
- * real minus sign "−" (U+2212), not a hyphen "-": it's the width of a digit,
- * so a countdown doesn't shift sideways as it passes zero.
- *    −6 → "−6 min"
- *   −90 → "−1h 30"
+ *    45 → "45 min"      90 → "1h 30"      −6 → "−6 min"
+ *     0 → "0 min"       65 → "1h 05"     −90 → "−1h 30"
+ *                      120 → "2h"
  *
- * Decide for yourself, and write a test for each:
- *  - what a fractional input such as 2.5 should give
- *  - anything else you think could reach this function
+ * - Negative means overrun (prep mode counts into negative time).
+ * - Fractions round to the nearest whole minute, by size, so 2.5 → "3 min"
+ *   and −2.5 → "−3 min". Rounding happens first, so 59.6 → "1h".
+ * - A tiny overrun that rounds to zero shows "0 min", never "−0 min".
+ * - NaN or Infinity throws: it means a bug upstream, so fail loudly.
  */
 export function formatMinutes(minutes: number): string {
-  // TODO(Louis): write the tests in formatMinutes.test.ts first, watch them
-  // fail, then replace this line with your implementation.
-  throw new Error(`formatMinutes(${minutes}) is not written yet`);
+  if (!Number.isFinite(minutes)) {
+    throw new RangeError(`formatMinutes needs a finite number, got ${minutes}`);
+  }
+
+  // Work with the size and the sign separately. Math.round(-2.5) is -2 in
+  // JavaScript (it rounds .5 towards +∞), so round the size instead.
+  const total = Math.round(Math.abs(minutes));
+  const sign = minutes < 0 && total > 0 ? MINUS : '';
+
+  if (total < 60) {
+    return `${sign}${total} min`;
+  }
+
+  const hours = Math.floor(total / 60);
+  const rest = total % 60;
+
+  if (rest === 0) {
+    return `${sign}${hours}h`;
+  }
+  return `${sign}${hours}h ${String(rest).padStart(2, '0')}`;
 }
