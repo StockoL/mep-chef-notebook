@@ -37,9 +37,17 @@ function inlineThemeScript(): Plugin {
 // The app lives at https://stockol.github.io/mep-chef-notebook/ permanently.
 // The same base is used in dev and preview, so paths, the service worker's
 // scope and routes behave the same everywhere.
+const packageJson = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as {
+  version: string;
+};
+
 export default defineConfig({
   base: '/mep-chef-notebook/',
   plugins: [preact(), inlineThemeScript()],
+  // Replaced in the code at build time (declared in src/env.d.ts).
+  define: {
+    __APP_VERSION__: JSON.stringify(packageJson.version),
+  },
   server: {
     host: true, // listen on the local network so a phone can reach it
   },
