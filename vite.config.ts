@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
-import { defineConfig, type Plugin } from 'vite';
+import type { Plugin } from 'vite';
+// Vitest's defineConfig is Vite's, plus a `test` section: one config for both.
+import { defineConfig } from 'vitest/config';
 import preact from '@preact/preset-vite';
 
 /**
@@ -43,5 +45,11 @@ export default defineConfig({
   },
   preview: {
     host: true,
+  },
+  test: {
+    // Tests sit next to the code they test: formatMinutes.ts → formatMinutes.test.ts
+    include: ['src/**/*.test.{ts,tsx}'],
+    // src/core is pure logic, so plain Node is enough: no browser, no DOM.
+    environment: 'node',
   },
 });
