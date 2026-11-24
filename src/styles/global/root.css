@@ -1,0 +1,21 @@
+/* Text size follows the phone (DECISIONS 26, docs/DESIGN.md).
+   Every size and space token is in rem, so the whole layout scales from here. */
+
+/* 17 px where the browser's default is 16 px (Android, desktop). */
+html {
+  font-size: 106.25%;
+}
+
+/* iPhone and iPad: follow Settings → Display & Brightness → Text Size. */
+@supports (font: -apple-system-body) {
+  html {
+    font: -apple-system-body;
+  }
+}
+
+/* The `font` shorthand above also resets the family and line height,
+   so set them back from the tokens. */
+body {
+  font-family: var(--font-body);
+  line-height: var(--leading-body);
+}

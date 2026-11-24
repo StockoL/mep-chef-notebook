@@ -1,0 +1,23 @@
+/* ==========================================================================
+   Mep styles: the one stylesheet main.tsx imports.
+   Order matters. Layers run lowest to highest:
+   reset, global, compositions, blocks, motion, utilities.
+   ========================================================================== */
+
+/* 0. The layer order, stated first so nothing imported later can change it.
+      (LooseLeaf states it too. The minified build leaves this line out when
+      the layers already appear in this order, which is harmless.) */
+@layer reset, global, compositions, blocks, motion, utilities;
+
+/* 1. LooseLeaf: fills every layer. */
+@import 'looseleaf-ui/css';
+
+/* 2. Mep's theme (copied from design/). The compiled file isn't wrapped in a
+      layer, so it's put into `global` here. Loaded after LooseLeaf, it wins
+      inside that layer and replaces LooseLeaf's default token values. */
+@import './looseleaf-tokens.css' layer(global);
+
+/* 3. Mep's own global rules: root text size follows the phone. */
+@import './global/root.css' layer(global);
+
+/* 4. Mep blocks arrive in step 3: @import './blocks/top-bar.css' layer(blocks); */
