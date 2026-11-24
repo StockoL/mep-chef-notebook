@@ -27,6 +27,8 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      # Never ship a version whose tests fail: the phone holds the only copy.
+      - run: npm test
       - run: npm run build
       # Pages has no "serve index.html for every path" setting, but it serves
       # 404.html for unknown paths, so a reload on /mep-chef-notebook/library
