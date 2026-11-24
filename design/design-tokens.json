@@ -1,0 +1,331 @@
+{
+  "$version": "2.5.1",
+  "$generated": "2026-11-24T11:02:38.103Z",
+  "_comment": "Single source of truth for LooseLeaf UI. $utopia and $palette are inputs: the neutral, action, accent, status, step and space groups are derived from them at build time (scripts/tokens-core.mjs). Do not hand-edit derived values; change the inputs, or add an explicit value to a derived group to override it. Everything else is a semantic (tier 2) token named by purpose. Run npm run build after editing; see docs/TOKENS.md for the generated reference.",
+  "$utopia": {
+    "minViewport": 360,
+    "maxViewport": 1024,
+    "type": {
+      "minBase": 16,
+      "maxBase": 18,
+      "minRatio": 1.2,
+      "maxRatio": 1.25,
+      "stepsBelow": 2,
+      "stepsAbove": 6
+    },
+    "space": {
+      "minBase": 16,
+      "maxBase": 18,
+      "multipliers": {
+        "3xs": 0.25,
+        "2xs": 0.5,
+        "xs": 0.75,
+        "s": 1,
+        "m": 1.5,
+        "l": 2,
+        "xl": 3,
+        "2xl": 4,
+        "3xl": 6
+      },
+      "pairs": [
+        "s-m",
+        "m-l",
+        "l-xl"
+      ]
+    }
+  },
+  "$palette": {
+    "neutral": {
+      "hue": 60,
+      "chroma": 0.008
+    },
+    "action": {
+      "hue": 42,
+      "chroma": 0.17
+    },
+    "accent": {
+      "hue": 185,
+      "chroma": 0.11
+    },
+    "status": {
+      "success": {
+        "hue": 160,
+        "chroma": 0.128
+      },
+      "warning": {
+        "hue": 80,
+        "chroma": 0.14
+      },
+      "danger": {
+        "hue": 25,
+        "chroma": 0.17
+      },
+      "info": {
+        "hue": 245,
+        "chroma": 0.128
+      }
+    },
+    "lightness": {
+      "ramp": [
+        1,
+        0.985,
+        0.97,
+        0.92,
+        0.87,
+        0.71,
+        0.54,
+        0.44,
+        0.37,
+        0.27,
+        0.21,
+        0.13
+      ],
+      "status": {
+        "light": {
+          "base": 0.55,
+          "surface": 0.97,
+          "border": 0.88,
+          "text": 0.35
+        },
+        "dark": {
+          "base": 0.7,
+          "surface": 0.22,
+          "border": 0.35,
+          "text": 0.85
+        }
+      }
+    }
+  },
+  "color": {
+    "$purpose": "Semantic colour roles. The only colour tokens blocks may use.",
+    "surface": {
+      "light": "{neutral.0}",
+      "dark": "{neutral.950}"
+    },
+    "surface-raised": {
+      "light": "{neutral.0}",
+      "dark": "{neutral.900}"
+    },
+    "surface-sunken": {
+      "light": "{neutral.100}",
+      "dark": "{neutral.800}"
+    },
+    "text": {
+      "light": "{neutral.900}",
+      "dark": "{neutral.100}"
+    },
+    "text-muted": {
+      "light": "{neutral.500}",
+      "dark": "{neutral.400}"
+    },
+    "text-inverse": {
+      "light": "{neutral.0}",
+      "dark": "{neutral.950}"
+    },
+    "border": {
+      "light": "{neutral.200}",
+      "dark": "{neutral.700}"
+    },
+    "border-strong": {
+      "light": "{neutral.300}",
+      "dark": "{neutral.600}"
+    },
+    "link": {
+      "light": "{color.action}",
+      "dark": "{action.400}"
+    },
+    "action": "{action.500}",
+    "action-hover": "{action.600}",
+    "action-text": "{neutral.0}",
+    "accent": "{accent.500}",
+    "focus": "{color.action}",
+    "backdrop": "rgb(0 0 0 / 0.5)",
+    "status-success": {
+      "light": "{success.base}",
+      "dark": "{success.base-dark}"
+    },
+    "status-success-surface": {
+      "light": "{success.surface-light}",
+      "dark": "{success.surface-dark}"
+    },
+    "status-success-border": {
+      "light": "{success.border-light}",
+      "dark": "{success.border-dark}"
+    },
+    "status-success-text": {
+      "light": "{success.text-light}",
+      "dark": "{success.text-dark}"
+    },
+    "status-warning": {
+      "light": "{warning.base}",
+      "dark": "{warning.base-dark}"
+    },
+    "status-warning-surface": {
+      "light": "{warning.surface-light}",
+      "dark": "{warning.surface-dark}"
+    },
+    "status-warning-border": {
+      "light": "{warning.border-light}",
+      "dark": "{warning.border-dark}"
+    },
+    "status-warning-text": {
+      "light": "{warning.text-light}",
+      "dark": "{warning.text-dark}"
+    },
+    "status-danger": {
+      "light": "{danger.base}",
+      "dark": "{danger.base-dark}"
+    },
+    "status-danger-surface": {
+      "light": "{danger.surface-light}",
+      "dark": "{danger.surface-dark}"
+    },
+    "status-danger-border": {
+      "light": "{danger.border-light}",
+      "dark": "{danger.border-dark}"
+    },
+    "status-danger-text": {
+      "light": "{danger.text-light}",
+      "dark": "{danger.text-dark}"
+    },
+    "status-info": {
+      "light": "{info.base}",
+      "dark": "{info.base-dark}"
+    },
+    "status-info-surface": {
+      "light": "{info.surface-light}",
+      "dark": "{info.surface-dark}"
+    },
+    "status-info-border": {
+      "light": "{info.border-light}",
+      "dark": "{info.border-dark}"
+    },
+    "status-info-text": {
+      "light": "{info.text-light}",
+      "dark": "{info.text-dark}"
+    }
+  },
+  "gutter": {
+    "$value": "{space.s}",
+    "$purpose": "Default gap inside compositions."
+  },
+  "region-space": {
+    "$value": "{space.l}",
+    "$purpose": "Vertical padding of a page section."
+  },
+  "flow-space": {
+    "$value": "1em",
+    "$purpose": "Default rhythm in .flow; scales with the local font size."
+  },
+  "inset": {
+    "$purpose": "Padding inside blocks.",
+    "control": "{space.2xs} {space.s}",
+    "surface": "{space.m}"
+  },
+  "text": {
+    "$purpose": "Body text sizes.",
+    "body": "{step.0}",
+    "small": "{step.-1}",
+    "lead": "{step.1}"
+  },
+  "heading": {
+    "1": "{step.4}",
+    "2": "{step.3}",
+    "3": "{step.2}",
+    "4": "{step.1}",
+    "$purpose": "Heading sizes; h5 and h6 reuse --text-body."
+  },
+  "font": {
+    "$purpose": "Font family stacks. Brand-neutral placeholders; override per project.",
+    "body": "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+    "heading": "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+    "mono": "ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace"
+  },
+  "weight": {
+    "$purpose": "Font weights.",
+    "regular": 400,
+    "medium": 500,
+    "semibold": 600,
+    "bold": 700
+  },
+  "leading": {
+    "$purpose": "Line heights.",
+    "tight": 1.1,
+    "body": 1.4
+  },
+  "radius": {
+    "$purpose": "Corner radii by what is being rounded.",
+    "control": "12px",
+    "surface": "18px",
+    "pill": "999px"
+  },
+  "duration": {
+    "$purpose": "Motion durations."
+  },
+  "ease": {
+    "$purpose": "Motion easing curves.",
+    "standard": "cubic-bezier(0, 0, 0.2, 1)"
+  },
+  "layer": {
+    "$purpose": "Stacking order. Dialogs use the top layer and need no token.",
+    "raised": 10,
+    "nav": 50,
+    "popover": 100
+  },
+  "button": {
+    "$purpose": "Style of a .button with no data-variant: outlined (transparent) or filled (action).",
+    "default-bg": "transparent",
+    "default-text": "{color.text}",
+    "default-border": "{color.border}",
+    "default-bg-hover": "{color.surface-sunken}",
+    "default-border-hover": "{color.border-strong}"
+  },
+  "link": {
+    "$purpose": "Decoration of unstyled anchors: underlined always, or only on hover.",
+    "decoration": "none",
+    "decoration-hover": "underline"
+  },
+  "measure": {
+    "$value": "60ch",
+    "$purpose": "Typographic reading width (.center, prose)."
+  },
+  "wrapper-max": {
+    "$value": "40rem",
+    "$purpose": "Site-wide page section width (.wrapper)."
+  },
+  "$motion": {
+    "preset": "calm",
+    "spring": {
+      "mass": 1,
+      "stiffness": 120,
+      "damping": 20
+    },
+    "durations": {
+      "quick": 150,
+      "base": 250,
+      "slow": 400
+    },
+    "press": 0.95,
+    "lift": "3xs",
+    "reveal": false,
+    "pageTransition": false,
+    "stuck": true
+  },
+  "$shape": {
+    "shadow": {
+      "strength": 0.4,
+      "softness": 0.5,
+      "angle": "top"
+    }
+  },
+  "tap": {
+    "$value": "48px",
+    "$purpose": "Minimum tap target, fixed (not fluid)."
+  },
+  "display": {
+    "$purpose": "Arm's-length sizes: countdown, current task, quantities.",
+    "timer": "min(clamp(4.25rem, 3.7rem + 2.5vw, 5.65rem), 24vw)",
+    "task": "{step.3}",
+    "quantity": "{step.1}"
+  }
+}

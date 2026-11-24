@@ -1,0 +1,310 @@
+/* ==========================================================================
+   AUTO-GENERATED CUSTOM PROPERTIES - DO NOT EDIT DIRECTLY
+   ==========================================================================
+   Source: design-tokens.json, compiled by scripts/tokens-core.mjs
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  /* --- neutral: Raw grayscale ramp, derived from $palette.neutral. Never used directly by blocks. --- */
+  --neutral-0: #ffffff;
+  --neutral-50: #fef9f5;
+  --neutral-100: #f9f4f0;
+  --neutral-200: #e9e3df;
+  --neutral-300: #d8d3cf;
+  --neutral-400: #a5a09d;
+  --neutral-500: #726e6a;
+  --neutral-600: #56524e;
+  --neutral-700: #433f3c;
+  --neutral-800: #292623;
+  --neutral-900: #1b1715;
+  --neutral-950: #0a0705;
+
+  /* --- action: Raw action hue (500, a lighter 400 and a darker 600), derived from $palette.action. --- */
+  --action-400: #f67742;
+  --action-500: #b84400;
+  --action-600: #8b3100;
+
+  /* --- accent: Raw accent hue (500, a lighter 400 and a darker 600), derived from $palette.accent. --- */
+  --accent-400: #39b8aa;
+  --accent-500: #008076;
+  --accent-600: #006058;
+
+  /* --- success: Raw success status colours for both schemes, derived from $palette.status.success. --- */
+  --success-base: #008758;
+  --success-surface-light: #e4fcee;
+  --success-border-light: #b4e5c9;
+  --success-text-light: #00472c;
+  --success-base-dark: #47b683;
+  --success-surface-dark: #0c1f15;
+  --success-border-dark: #16452f;
+  --success-text-dark: #90e3b7;
+
+  /* --- warning: Raw warning status colours for both schemes, derived from $palette.status.warning. --- */
+  --warning-base: #946900;
+  --warning-surface-light: #fff4e1;
+  --warning-border-light: #f0d3a3;
+  --warning-text-light: #4e3500;
+  --warning-base-dark: #cb9317;
+  --warning-surface-dark: #231906;
+  --warning-border-dark: #4d3603;
+  --warning-text-dark: #f4c675;
+
+  /* --- danger: Raw danger status colours for both schemes, derived from $palette.status.danger. --- */
+  --danger-base: #c13c3b;
+  --danger-surface-light: #fff2f0;
+  --danger-border-light: #ffc8c3;
+  --danger-text-light: #710710;
+  --danger-base-dark: #f66d67;
+  --danger-surface-dark: #2b1210;
+  --danger-border-dark: #5f2623;
+  --danger-text-dark: #ffbab3;
+
+  /* --- info: Raw info status colours for both schemes, derived from $palette.status.info. --- */
+  --info-base: #1a77b7;
+  --info-surface-light: #edf6ff;
+  --info-border-light: #b5ddff;
+  --info-text-light: #003e65;
+  --info-base-dark: #51a6e8;
+  --info-surface-dark: #0d1c28;
+  --info-border-dark: #1a3d5a;
+  --info-text-dark: #a2d4ff;
+
+  /* --- step: Raw Utopia fluid type steps, derived from $utopia.type. --- */
+  --step--2: clamp(0.69rem, 0.68rem + 0.06vw, 0.72rem);
+  --step--1: clamp(0.83rem, 0.8rem + 0.16vw, 0.9rem);
+  --step-0: clamp(1rem, 0.93rem + 0.3vw, 1.13rem);
+  --step-1: clamp(1.2rem, 1.09rem + 0.5vw, 1.41rem);
+  --step-2: clamp(1.44rem, 1.27rem + 0.77vw, 1.76rem);
+  --step-3: clamp(1.73rem, 1.47rem + 1.13vw, 2.2rem);
+  --step-4: clamp(2.07rem, 1.71rem + 1.62vw, 2.75rem);
+  --step-5: clamp(2.49rem, 1.98rem + 2.28vw, 3.43rem);
+  --step-6: clamp(2.99rem, 2.28rem + 3.15vw, 4.29rem);
+
+  /* --- space: Raw Utopia fluid space scale and one-up pairs, derived from $utopia.space. --- */
+  --space-3xs: clamp(0.25rem, 0.23rem + 0.08vw, 0.28rem);
+  --space-2xs: clamp(0.5rem, 0.47rem + 0.15vw, 0.56rem);
+  --space-xs: clamp(0.75rem, 0.7rem + 0.23vw, 0.84rem);
+  --space-s: clamp(1rem, 0.93rem + 0.3vw, 1.13rem);
+  --space-m: clamp(1.5rem, 1.4rem + 0.45vw, 1.69rem);
+  --space-l: clamp(2rem, 1.86rem + 0.6vw, 2.25rem);
+  --space-xl: clamp(3rem, 2.8rem + 0.9vw, 3.38rem);
+  --space-2xl: clamp(4rem, 3.73rem + 1.2vw, 4.5rem);
+  --space-3xl: clamp(6rem, 5.59rem + 1.81vw, 6.75rem);
+  --space-s-m: clamp(1rem, 0.63rem + 1.66vw, 1.69rem);
+  --space-m-l: clamp(1.5rem, 1.09rem + 1.81vw, 2.25rem);
+  --space-l-xl: clamp(2rem, 1.25rem + 3.31vw, 3.38rem);
+
+  /* --- duration: Motion durations. --- */
+  --duration-quick: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+  --duration-spring: 589ms;
+  --duration-page: 0ms;
+
+  /* --- ease: Motion easing curves. --- */
+  --ease-spring: linear(0, 0.0131 2.55%, 0.0544 5.6%, 0.1367 9.68%, 0.4843 23.94%, 0.6153 30.22%, 0.7191 36.33%, 0.8041 42.78%, 0.8713 49.75%, 0.9246 57.89%, 0.9635 67.91%, 0.9887 81.66%, 1);
+  --ease-standard: cubic-bezier(0, 0, 0.2, 1);
+
+  /* --- press: Scale of a pressed button or choice, from $motion.press. --- */
+  --press-scale: 0.95;
+
+  /* --- lift: How far .anim-lift and interactive cards rise on hover, from $motion.lift. --- */
+  --lift-distance: var(--space-3xs);
+
+  /* --- reveal: Scroll reveal for [data-reveal]: the animation, or none when $motion.reveal is off. --- */
+  --reveal-animation: none;
+
+  /* --- navbar: Padding of a sticky navbar once stuck; the normal padding when $motion.stuck is off. --- */
+  --navbar-stuck-padding: var(--space-2xs);
+
+  /* --- shadow: Elevation, derived from $shape.shadow: layered shadows tinted with the neutral hue (shadow.color holds OKLCH components). --- */
+  --shadow-color: 0.2 0.03 60;
+  --shadow-raised: 0px 0.44px 0.89px -0.06px oklch(var(--shadow-color) / 0.112), 0px 1.78px 3.56px -0.22px oklch(var(--shadow-color) / 0.112), 0px 4px 8px -0.5px oklch(var(--shadow-color) / 0.112);
+  --shadow-floating: 0px 0.88px 1.75px -0.11px oklch(var(--shadow-color) / 0.088), 0px 3.5px 7px -0.44px oklch(var(--shadow-color) / 0.088), 0px 7.88px 15.75px -0.98px oklch(var(--shadow-color) / 0.088), 0px 14px 28px -1.75px oklch(var(--shadow-color) / 0.088);
+  --shadow-overlay: 0px 1.44px 2.88px -0.18px oklch(var(--shadow-color) / 0.072), 0px 5.76px 11.52px -0.72px oklch(var(--shadow-color) / 0.072), 0px 12.96px 25.92px -1.62px oklch(var(--shadow-color) / 0.072), 0px 23.04px 46.08px -2.88px oklch(var(--shadow-color) / 0.072), 0px 36px 72px -4.5px oklch(var(--shadow-color) / 0.072);
+
+  /* --- color: Semantic colour roles. The only colour tokens blocks may use. --- */
+  --color-surface: var(--neutral-0);
+  --color-surface-raised: var(--neutral-0);
+  --color-surface-sunken: var(--neutral-100);
+  --color-text: var(--neutral-900);
+  --color-text-muted: var(--neutral-500);
+  --color-text-inverse: var(--neutral-0);
+  --color-border: var(--neutral-200);
+  --color-border-strong: var(--neutral-300);
+  --color-link: var(--color-action);
+  --color-action: var(--action-500);
+  --color-action-hover: var(--action-600);
+  --color-action-text: var(--neutral-0);
+  --color-accent: var(--accent-500);
+  --color-focus: var(--color-action);
+  --color-backdrop: rgb(0 0 0 / 0.5);
+  --color-status-success: var(--success-base);
+  --color-status-success-surface: var(--success-surface-light);
+  --color-status-success-border: var(--success-border-light);
+  --color-status-success-text: var(--success-text-light);
+  --color-status-warning: var(--warning-base);
+  --color-status-warning-surface: var(--warning-surface-light);
+  --color-status-warning-border: var(--warning-border-light);
+  --color-status-warning-text: var(--warning-text-light);
+  --color-status-danger: var(--danger-base);
+  --color-status-danger-surface: var(--danger-surface-light);
+  --color-status-danger-border: var(--danger-border-light);
+  --color-status-danger-text: var(--danger-text-light);
+  --color-status-info: var(--info-base);
+  --color-status-info-surface: var(--info-surface-light);
+  --color-status-info-border: var(--info-border-light);
+  --color-status-info-text: var(--info-text-light);
+
+  /* --- gutter: Default gap inside compositions. --- */
+  --gutter: var(--space-s);
+
+  /* --- region-space: Vertical padding of a page section. --- */
+  --region-space: var(--space-l);
+
+  /* --- flow-space: Default rhythm in .flow; scales with the local font size. --- */
+  --flow-space: 1em;
+
+  /* --- inset: Padding inside blocks. --- */
+  --inset-control: var(--space-2xs) var(--space-s);
+  --inset-surface: var(--space-m);
+
+  /* --- text: Body text sizes. --- */
+  --text-body: var(--step-0);
+  --text-small: var(--step--1);
+  --text-lead: var(--step-1);
+
+  /* --- heading: Heading sizes; h5 and h6 reuse --text-body. --- */
+  --heading-1: var(--step-4);
+  --heading-2: var(--step-3);
+  --heading-3: var(--step-2);
+  --heading-4: var(--step-1);
+
+  /* --- font: Font family stacks. Brand-neutral placeholders; override per project. --- */
+  --font-body: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, 'DejaVu Sans Mono', monospace;
+
+  /* --- weight: Font weights. --- */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* --- leading: Line heights. --- */
+  --leading-tight: 1.1;
+  --leading-body: 1.4;
+
+  /* --- radius: Corner radii by what is being rounded. --- */
+  --radius-control: 12px;
+  --radius-surface: 18px;
+  --radius-pill: 999px;
+
+  /* --- layer: Stacking order. Dialogs use the top layer and need no token. --- */
+  --layer-raised: 10;
+  --layer-nav: 50;
+  --layer-popover: 100;
+
+  /* --- button: Style of a .button with no data-variant: outlined (transparent) or filled (action). --- */
+  --button-default-bg: transparent;
+  --button-default-text: var(--color-text);
+  --button-default-border: var(--color-border);
+  --button-default-bg-hover: var(--color-surface-sunken);
+  --button-default-border-hover: var(--color-border-strong);
+
+  /* --- link: Decoration of unstyled anchors: underlined always, or only on hover. --- */
+  --link-decoration: none;
+  --link-decoration-hover: underline;
+
+  /* --- measure: Typographic reading width (.center, prose). --- */
+  --measure: 60ch;
+
+  /* --- wrapper-max: Site-wide page section width (.wrapper). --- */
+  --wrapper-max: 40rem;
+
+  /* --- tap: Minimum tap target, fixed (not fluid). --- */
+  --tap: 48px;
+
+  /* --- display: Arm's-length sizes: countdown, current task, quantities. --- */
+  --display-timer: min(clamp(4.25rem, 3.7rem + 2.5vw, 5.65rem), 24vw);
+  --display-task: var(--step-3);
+  --display-quantity: var(--step-1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    /* --- shadow: Elevation, derived from $shape.shadow: layered shadows tinted with the neutral hue (shadow.color holds OKLCH components). --- */
+    --shadow-color: 0.05 0.03 60;
+    --shadow-raised: 0px 0.44px 0.89px -0.06px oklch(var(--shadow-color) / 0.224), 0px 1.78px 3.56px -0.22px oklch(var(--shadow-color) / 0.224), 0px 4px 8px -0.5px oklch(var(--shadow-color) / 0.224);
+    --shadow-floating: 0px 0.88px 1.75px -0.11px oklch(var(--shadow-color) / 0.176), 0px 3.5px 7px -0.44px oklch(var(--shadow-color) / 0.176), 0px 7.88px 15.75px -0.98px oklch(var(--shadow-color) / 0.176), 0px 14px 28px -1.75px oklch(var(--shadow-color) / 0.176);
+    --shadow-overlay: 0px 1.44px 2.88px -0.18px oklch(var(--shadow-color) / 0.144), 0px 5.76px 11.52px -0.72px oklch(var(--shadow-color) / 0.144), 0px 12.96px 25.92px -1.62px oklch(var(--shadow-color) / 0.144), 0px 23.04px 46.08px -2.88px oklch(var(--shadow-color) / 0.144), 0px 36px 72px -4.5px oklch(var(--shadow-color) / 0.144);
+
+    /* --- color: Semantic colour roles. The only colour tokens blocks may use. --- */
+    --color-surface: var(--neutral-950);
+    --color-surface-raised: var(--neutral-900);
+    --color-surface-sunken: var(--neutral-800);
+    --color-text: var(--neutral-100);
+    --color-text-muted: var(--neutral-400);
+    --color-text-inverse: var(--neutral-950);
+    --color-border: var(--neutral-700);
+    --color-border-strong: var(--neutral-600);
+    --color-link: var(--action-400);
+    --color-status-success: var(--success-base-dark);
+    --color-status-success-surface: var(--success-surface-dark);
+    --color-status-success-border: var(--success-border-dark);
+    --color-status-success-text: var(--success-text-dark);
+    --color-status-warning: var(--warning-base-dark);
+    --color-status-warning-surface: var(--warning-surface-dark);
+    --color-status-warning-border: var(--warning-border-dark);
+    --color-status-warning-text: var(--warning-text-dark);
+    --color-status-danger: var(--danger-base-dark);
+    --color-status-danger-surface: var(--danger-surface-dark);
+    --color-status-danger-border: var(--danger-border-dark);
+    --color-status-danger-text: var(--danger-text-dark);
+    --color-status-info: var(--info-base-dark);
+    --color-status-info-surface: var(--info-surface-dark);
+    --color-status-info-border: var(--info-border-dark);
+    --color-status-info-text: var(--info-text-dark);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* --- shadow: Elevation, derived from $shape.shadow: layered shadows tinted with the neutral hue (shadow.color holds OKLCH components). --- */
+  --shadow-color: 0.05 0.03 60;
+  --shadow-raised: 0px 0.44px 0.89px -0.06px oklch(var(--shadow-color) / 0.224), 0px 1.78px 3.56px -0.22px oklch(var(--shadow-color) / 0.224), 0px 4px 8px -0.5px oklch(var(--shadow-color) / 0.224);
+  --shadow-floating: 0px 0.88px 1.75px -0.11px oklch(var(--shadow-color) / 0.176), 0px 3.5px 7px -0.44px oklch(var(--shadow-color) / 0.176), 0px 7.88px 15.75px -0.98px oklch(var(--shadow-color) / 0.176), 0px 14px 28px -1.75px oklch(var(--shadow-color) / 0.176);
+  --shadow-overlay: 0px 1.44px 2.88px -0.18px oklch(var(--shadow-color) / 0.144), 0px 5.76px 11.52px -0.72px oklch(var(--shadow-color) / 0.144), 0px 12.96px 25.92px -1.62px oklch(var(--shadow-color) / 0.144), 0px 23.04px 46.08px -2.88px oklch(var(--shadow-color) / 0.144), 0px 36px 72px -4.5px oklch(var(--shadow-color) / 0.144);
+
+  /* --- color: Semantic colour roles. The only colour tokens blocks may use. --- */
+  --color-surface: var(--neutral-950);
+  --color-surface-raised: var(--neutral-900);
+  --color-surface-sunken: var(--neutral-800);
+  --color-text: var(--neutral-100);
+  --color-text-muted: var(--neutral-400);
+  --color-text-inverse: var(--neutral-950);
+  --color-border: var(--neutral-700);
+  --color-border-strong: var(--neutral-600);
+  --color-link: var(--action-400);
+  --color-status-success: var(--success-base-dark);
+  --color-status-success-surface: var(--success-surface-dark);
+  --color-status-success-border: var(--success-border-dark);
+  --color-status-success-text: var(--success-text-dark);
+  --color-status-warning: var(--warning-base-dark);
+  --color-status-warning-surface: var(--warning-surface-dark);
+  --color-status-warning-border: var(--warning-border-dark);
+  --color-status-warning-text: var(--warning-text-dark);
+  --color-status-danger: var(--danger-base-dark);
+  --color-status-danger-surface: var(--danger-surface-dark);
+  --color-status-danger-border: var(--danger-border-dark);
+  --color-status-danger-text: var(--danger-text-dark);
+  --color-status-info: var(--info-base-dark);
+  --color-status-info-surface: var(--info-surface-dark);
+  --color-status-info-border: var(--info-border-dark);
+  --color-status-info-text: var(--info-text-dark);
+}

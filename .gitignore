@@ -1,0 +1,18 @@
+node_modules/
+dist/
+dev-dist/
+coverage/
+.vite/
+*.local
+.env
+.env.*
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.claude/
+
+# Local working notes for the AI assistant: never committed
+CLAUDE.md
+docs/PHASE0_KICKOFF.md
+docs/LEARNING.md

@@ -1,0 +1,142 @@
+{
+  "_notes": [
+    "Seed data for development and testing, from Dumbleton Hall's published menus (dumbletonhall.co.uk, read 24 Nov 2026).",
+    "Dish names, descriptions and prices are as published. Components are only the items named on the menu: each is a draft component with no method yet.",
+    "Sections are guesses (marked section_guess) until Louis knows how the kitchen is split. Breakfast times are unknown.",
+    "The Sunday lunch menu as published looks like a spring menu (asparagus); it may not be the current one.",
+    "shared_ingredients lists items that appear on more than one menu or section, as test cases for the \"also used in\" notes in SPEC.md."
+  ],
+  "kitchen": {
+    "name": "Dumbleton Hall",
+    "restaurant": "Cedar 1905",
+    "sections": ["Starters & garnish", "Fish", "Meat", "Veg", "Pastry", "Breakfast"],
+    "my_usual_section": "Starters & garnish",
+    "my_usual_shift": { "start": "10:00", "end": "22:30" },
+    "services": [
+      { "name": "Breakfast", "first_tickets": null, "last_bookings": null, "i_work_this": false },
+      { "name": "Lunch", "first_tickets": "12:00", "last_bookings": "16:30", "i_work_this": true },
+      { "name": "Dinner", "first_tickets": "18:00", "last_bookings": "20:15", "i_work_this": true }
+    ]
+  },
+  "menus": [
+    {
+      "name": "À la carte",
+      "type": "a-la-carte",
+      "status": "on-now",
+      "source": "https://www.dumbletonhall.co.uk/images/pdf/oct-26/Cedar%20A4.pdf",
+      "courses": [
+        { "name": "Nibbles", "dishes": [
+          { "name": "Bread and butter", "price_pence": 500, "components": ["bread", "butter"], "section_guess": "Starters & garnish" },
+          { "name": "Gordal olives", "price_pence": 500, "components": ["gordal olives"], "section_guess": "Starters & garnish" },
+          { "name": "Smoked almonds", "price_pence": 600, "components": ["smoked almonds"], "section_guess": "Starters & garnish" }
+        ]},
+        { "name": "Sides", "dishes": [
+          { "name": "Rocket, parmesan", "price_pence": 600, "components": ["rocket", "parmesan"], "section_guess": "Starters & garnish" },
+          { "name": "French fries", "price_pence": 600, "components": ["french fries"], "section_guess": "Veg" },
+          { "name": "Greens, romesco sauce", "price_pence": 700, "components": ["greens", "romesco sauce"], "section_guess": "Veg" },
+          { "name": "New potatoes, olive oil", "price_pence": 700, "components": ["new potatoes", "olive oil"], "section_guess": "Veg" }
+        ]},
+        { "name": "To begin", "dishes": [
+          { "name": "Smoked mackerel crumpet", "description": "Horseradish, cucumber, dill", "price_pence": 2200, "components": ["smoked mackerel", "crumpet", "horseradish", "cucumber", "dill"], "section_guess": "Starters & garnish" },
+          { "name": "Fire roasted beetroot", "description": "Cashew, pickled onion, quinoa", "price_pence": 1400, "components": ["fire roasted beetroot", "cashew", "pickled onion", "quinoa"], "section_guess": "Starters & garnish" },
+          { "name": "Pressed chicken terrine", "description": "Apricot, walnut, preserved lemon", "price_pence": 1500, "components": ["pressed chicken terrine", "apricot", "walnut", "preserved lemon"], "section_guess": "Starters & garnish" },
+          { "name": "Burrata", "description": "Sage, radicchio, pumpkin, hazelnut", "price_pence": 1500, "components": ["burrata", "sage", "radicchio", "pumpkin", "hazelnut"], "section_guess": "Starters & garnish" }
+        ]},
+        { "name": "Mains", "dishes": [
+          { "name": "Cornish cod", "description": "Charred leek, sea vegetables, red pepper", "price_pence": 3900, "components": ["cornish cod", "charred leek", "sea vegetables", "red pepper"], "section_guess": "Fish" },
+          { "name": "Brown butter gnocchi", "description": "Wild Room mushrooms, Old Winchester, truffle", "price_pence": 3500, "components": ["brown butter gnocchi", "Wild Room mushrooms", "Old Winchester", "truffle"], "section_guess": "Veg" },
+          { "name": "Wood-roasted heritage carrot", "description": "Cumin, yoghurt, golden raisins", "price_pence": 3000, "components": ["wood-roasted heritage carrot", "cumin", "yoghurt", "golden raisins"], "section_guess": "Veg" },
+          { "name": "Stone bass", "description": "Cauliflower, cep, mushroom velouté", "price_pence": 3900, "components": ["stone bass", "cauliflower", "cep", "mushroom velouté"], "section_guess": "Fish" },
+          { "name": "9oz ribeye steak", "description": "Dumbleton butter, pickled shallot, French fries", "price_pence": 4900, "components": ["ribeye", "Dumbleton butter", "pickled shallot", "french fries"], "section_guess": "Meat" },
+          { "name": "Tamworth pork", "description": "Prune, quince, mustard", "price_pence": 3900, "components": ["Tamworth pork", "prune", "quince", "mustard"], "section_guess": "Meat" }
+        ]}
+      ]
+    },
+    {
+      "name": "Dessert",
+      "type": "a-la-carte",
+      "status": "on-now",
+      "source": "https://www.dumbletonhall.co.uk/images/pdf/cedar-1905-dessert-menu.pdf",
+      "courses": [
+        { "name": "To end", "dishes": [
+          { "name": "Strawberry and long pepper meringue", "description": "Strawberry sorbet, vanilla Chantilly", "price_pence": 1500, "components": ["meringue", "strawberry sorbet", "vanilla Chantilly"], "section_guess": "Pastry" },
+          { "name": "Olive oil brûlée", "description": "Lemon and basil sorbet", "price_pence": 1400, "components": ["olive oil brûlée", "lemon and basil sorbet"], "section_guess": "Pastry" },
+          { "name": "Pecan pie", "description": "Coffee ice cream", "price_pence": 1400, "components": ["pecan pie", "coffee ice cream"], "section_guess": "Pastry" },
+          { "name": "Manjari chocolate crémeux", "description": "Blackcurrant, bay leaf, cocoa crumb", "price_pence": 1700, "components": ["Manjari chocolate crémeux", "blackcurrant", "bay leaf", "cocoa crumb"], "section_guess": "Pastry" },
+          { "name": "British cheese", "description": "Crackers, chutney", "price_pence": 1700, "components": ["British cheeses", "crackers", "chutney"], "section_guess": "Pastry" }
+        ]}
+      ]
+    },
+    {
+      "name": "Sunday lunch",
+      "type": "set",
+      "status": "on-now",
+      "days": ["Sun"],
+      "price_note": "£40 two courses, £48.50 three courses",
+      "source": "https://www.dumbletonhall.co.uk/images/pdf/sunday-lunch-cedar-1905.pdf",
+      "courses": [
+        { "name": "Starters", "dishes": [
+          { "name": "Chalk stream trout", "description": "Almond, lovage, cucumber, lime", "components": ["chalk stream trout", "almond", "lovage", "cucumber", "lime"], "section_guess": "Starters & garnish" },
+          { "name": "Merryfield duck", "description": "Beetroot, walnut, lemon", "components": ["Merryfield duck", "beetroot", "walnut", "lemon"], "section_guess": "Starters & garnish" },
+          { "name": "Woodfield asparagus", "description": "Cacklebean egg, black garlic, cheddar custard", "components": ["asparagus", "Cacklebean egg", "black garlic", "cheddar custard"], "section_guess": "Starters & garnish" }
+        ]},
+        { "name": "Main course", "dishes": [
+          { "name": "Roasted beef sirloin", "description": "Roasted potatoes, local vegetables, Yorkshire pudding", "components": ["beef sirloin", "roast potatoes", "local vegetables", "Yorkshire pudding"], "section_guess": "Meat" },
+          { "name": "Cornish sea bass", "description": "Cauliflower, sea vegetables, shrimp noisette", "components": ["sea bass", "cauliflower", "sea vegetables", "shrimp noisette"], "section_guess": "Fish" },
+          { "name": "Brown butter gnocchi", "description": "Courgette, basil, red pepper, Graceburn", "components": ["brown butter gnocchi", "courgette", "basil", "red pepper", "Graceburn"], "section_guess": "Veg" }
+        ]},
+        { "name": "To end", "dishes": [
+          { "name": "Olive brûlée", "description": "Lemon, basil", "components": ["olive oil brûlée", "lemon and basil sorbet"], "section_guess": "Pastry" },
+          { "name": "Pistachio soufflé", "description": "Chocolate ice cream", "components": ["pistachio soufflé", "chocolate ice cream"], "section_guess": "Pastry" },
+          { "name": "British cheese", "description": "Crackers, quince", "components": ["British cheeses", "crackers", "quince"], "section_guess": "Pastry" }
+        ]}
+      ]
+    },
+    {
+      "name": "Breakfast",
+      "type": "breakfast",
+      "status": "on-now",
+      "source": "https://www.dumbletonhall.co.uk/images/pdf/breakfast-menu.pdf",
+      "courses": [
+        { "name": "Continental", "dishes": [
+          { "name": "Toasted bloomer", "components": ["bloomer", "preserves"], "section_guess": "Breakfast" },
+          { "name": "Warm croissant", "components": ["croissant", "preserves"], "section_guess": "Breakfast" },
+          { "name": "Prune, orange and Earl Grey compote", "components": ["prune compote"], "section_guess": "Breakfast" },
+          { "name": "Apricot and vanilla compote", "components": ["apricot compote"], "section_guess": "Breakfast" },
+          { "name": "Fruit salad", "description": "Pineapple, blueberries", "components": ["pineapple", "blueberries"], "section_guess": "Breakfast" },
+          { "name": "Bircher muesli", "description": "Apple, yoghurt, toasted nuts", "components": ["bircher muesli", "apple", "yoghurt", "toasted nuts"], "section_guess": "Breakfast" },
+          { "name": "Yoghurt bowl", "description": "Chia seeds, seasonal compote", "components": ["yoghurt", "chia seeds", "compote"], "section_guess": "Breakfast" },
+          { "name": "Porridge", "description": "Banana and pecans, or Cacklebean honey", "components": ["porridge", "banana", "pecans", "Cacklebean honey"], "section_guess": "Breakfast" },
+          { "name": "Rustic baguettes", "description": "English cheeses or Cobble Lane cured meats", "components": ["baguette", "English cheeses", "Cobble Lane cured meats"], "section_guess": "Breakfast" }
+        ]},
+        { "name": "Cooked", "dishes": [
+          { "name": "Dumbleton Hall English breakfast", "description": "Black pudding available", "components": ["full English", "black pudding"], "section_guess": "Breakfast" },
+          { "name": "Vegetarian breakfast", "components": ["vegetarian breakfast"], "section_guess": "Breakfast" },
+          { "name": "Eggs royale", "description": "Chalk stream trout", "components": ["poached eggs", "chalk stream trout", "hollandaise"], "section_guess": "Breakfast" },
+          { "name": "Eggs Benedict", "description": "Old Spot pork ham", "components": ["poached eggs", "Old Spot ham", "hollandaise"], "section_guess": "Breakfast" },
+          { "name": "Eggs Florentine", "description": "Baby spinach", "components": ["poached eggs", "baby spinach", "hollandaise"], "section_guess": "Breakfast" },
+          { "name": "Cold smoked trout", "description": "Cacklebean scrambled eggs", "components": ["cold smoked trout", "Cacklebean eggs"], "section_guess": "Breakfast" },
+          { "name": "Pancakes", "description": "Lemon and sugar, or hazelnut and chocolate spread", "components": ["pancakes", "lemon", "hazelnut chocolate spread"], "section_guess": "Breakfast" },
+          { "name": "French toast", "description": "Maple syrup, bacon", "components": ["French toast", "maple syrup", "bacon"], "section_guess": "Breakfast" },
+          { "name": "Smoked haddock", "description": "Poached egg, charred lemon, confit tomatoes", "components": ["smoked haddock", "poached egg", "charred lemon", "confit tomatoes"], "section_guess": "Breakfast" },
+          { "name": "Smashed avocado", "description": "Sourdough, roasted peppers and tomato; poached Cacklebean eggs as an add-on", "components": ["avocado", "sourdough", "roasted peppers", "tomato", "Cacklebean eggs"], "section_guess": "Breakfast" }
+        ]}
+      ]
+    }
+  ],
+  "shared_ingredients": [
+    { "ingredient": "Cacklebean eggs", "used_on": ["Breakfast: eggs royale, Benedict, Florentine, cold smoked trout, smoked haddock, smashed avocado, pancakes, French toast", "Sunday lunch: Woodfield asparagus"], "note": "Breakfast is the big user; a heavy Sunday asparagus starter can leave Monday breakfast short." },
+    { "ingredient": "Chalk stream trout", "used_on": ["Breakfast: eggs royale, cold smoked trout", "Sunday lunch: chalk stream trout starter"], "note": "Same fish across a lunch starter and two breakfast dishes." },
+    { "ingredient": "Yoghurt", "used_on": ["À la carte: wood-roasted heritage carrot", "Breakfast: Bircher muesli, yoghurt bowl"] },
+    { "ingredient": "Butter (for hollandaise, bread and butter, brown butter, Dumbleton butter)", "used_on": ["Breakfast: hollandaise", "À la carte: bread and butter, gnocchi, ribeye", "Sunday lunch: gnocchi"] },
+    { "ingredient": "Sea vegetables", "used_on": ["À la carte: Cornish cod", "Sunday lunch: Cornish sea bass"] },
+    { "ingredient": "Cauliflower", "used_on": ["À la carte: stone bass", "Sunday lunch: Cornish sea bass"] },
+    { "ingredient": "Red pepper", "used_on": ["À la carte: Cornish cod, romesco", "Sunday lunch: gnocchi", "Breakfast: smashed avocado"] },
+    { "ingredient": "British cheeses", "used_on": ["Dessert: British cheese", "Sunday lunch: British cheese", "Breakfast: rustic baguettes"] },
+    { "ingredient": "Lemon and basil sorbet", "used_on": ["Dessert: olive oil brûlée", "Sunday lunch: olive brûlée"] },
+    { "ingredient": "Brown butter gnocchi", "used_on": ["À la carte: mains", "Sunday lunch: mains"], "note": "Same component, different garnish on each menu." },
+    { "ingredient": "French fries", "used_on": ["À la carte: side", "À la carte: ribeye"] },
+    { "ingredient": "Walnut", "used_on": ["À la carte: pressed chicken terrine", "Sunday lunch: Merryfield duck"] },
+    { "ingredient": "Bread (bloomer, baguette, sourdough)", "used_on": ["À la carte: bread and butter", "Breakfast: toasted bloomer, rustic baguettes, smashed avocado"] }
+  ]
+}
