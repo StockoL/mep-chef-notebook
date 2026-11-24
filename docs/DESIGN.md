@@ -99,11 +99,12 @@ src/ui/
   components/       one per block: TabBar, CaptureBar, Sheet, Segmented, Chip, ListRow, Stepper, NumPad, Timer, Switch, UndoBar, EmptyState
   screens/          Today, Inbox, Library/*, Component, Dish, Ingredient, Plan, PrepMode, Section/*, Settings/*
   icons.tsx         one inline SVG <symbol> sheet, used with LooseLeaf's .icon
-  state/            Preact Signals: current kitchen, section, settings; Dexie liveQuery wrapped as signals
+  hooks/            useLiveQuery (Dexie liveQuery as a hook), usePromise
 ```
 
 - Routing: `preact-iso` (small, from the Preact team). Path routes; the service worker serves the app shell for any path when offline.
-- State: Preact Signals for app state; Dexie `liveQuery` results exposed as signals, so a screen updates when stored data changes.
+- State: everything lasting (current kitchen and section, settings) is stored data, read with `useLiveQuery`, so a screen updates whenever stored data changes. Component-local UI state uses `useState`. Preact Signals can come later if shared in-memory state is needed; Phase 1 didn't need it.
+- Gestures: UX.md's drag-to-reorder and swipe-to-sort/delete are buttons in a sheet for now (Phase 1); they work one-handed and with wet fingers. Gestures can be added on top later.
 - Screens read data through `src/data/` only, never Dexie directly.
 
 ## Motion, sound and haptics

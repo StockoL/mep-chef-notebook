@@ -8,7 +8,7 @@ Your data stays on your device. No account, no server.
 
 **Use it:** https://stockol.github.io/mep-chef-notebook/ (on iPhone, open it in Safari and add it to your Home Screen).
 
-Status: Phase 0 (scaffold). See `docs/SPEC.md` and `docs/BUILD_ORDER.md`.
+Status: Phase 1 (capture and kitchens). See `docs/SPEC.md` and `docs/BUILD_ORDER.md`.
 
 ## Development
 
@@ -32,7 +32,7 @@ The service worker only exists in the production build, so test offline behaviou
 
 Everything is stored in the browser's IndexedDB, which belongs to the address the app was opened from. The Pages address above is the permanent one: **install from there for real use.** A copy installed from a development address (below) has its own, separate data.
 
-Export (a `.zip`, format in `docs/EXPORT_FORMAT.md`) is the backup. Until App settings arrives in Phase 1, Export and Import are on the Section tab under "Phase 0 check".
+Export (a `.zip`, format in `docs/EXPORT_FORMAT.md`) is the backup: ••• → App settings → Back up now. Import is there too.
 
 ## Testing on a phone
 
@@ -56,13 +56,13 @@ A phone can't install or use offline a page served over plain `http://192.168.x.
 
 If the computer's address changes, repeat step 4 with the new one.
 
-## Phase 0 checks on a phone
+## Checks on a phone
 
-1. **Install.** Open the app in Safari: the "Add Mep to your Home Screen" card shows on Today. Follow it, then open Mep from the Home Screen. The card is gone, and Section → Phase 0 check says "Home Screen (installed)".
+1. **Install.** Open the app in Safari (or Chrome): the "Add Mep to your Home Screen" card shows on Today. Follow it, then open Mep from the Home Screen. ••• → App settings → Storage says "Home Screen".
 2. **Offline.** Turn on Airplane Mode, close Mep fully (swipe it away), and open it again. It opens, and every tab works.
-3. **Export and import.** Section → Export → Save to Files. Then Import… → choose that file → confirm. "Imported" shows, and nothing is lost.
-4. **Storage kept.** Section → Write marker. Note whether "Storage kept safe" says Yes. Leave Mep unopened for 4–7 days, then open it: the marker should still show the date it was written.
-5. **Updates.** After a new version is pushed, open Mep: within a few seconds it reloads once on its own (or the next time it's put in the background), and the marker is still there.
+3. **Back up and restore.** App settings → Back up now → Save to Files. Then Import a backup… → that file → confirm. Photos and voice notes come back too.
+4. **Storage kept.** App settings → Write test marker. Leave Mep unopened for 4–7 days, then check the marker still shows the date it was written.
+5. **Updates.** After a new version is pushed, open Mep: within a few seconds it reloads once on its own (or the next time it's put in the background), and nothing is lost.
 
 ## Licence
 

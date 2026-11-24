@@ -16,3 +16,19 @@ An installable, offline, empty app with the foundations in place.
 - Persistent storage requested on every start and the result recorded; iPhone "Add to Home Screen" card on Today.
 - Temporary "Phase 0 check" on the Section tab: install state, storage, test marker, export, import.
 - Optional HTTPS for phone testing with mkcert (`.cert/`).
+
+## Phase 1: Capture and kitchens (24 Nov 2026)
+
+Replaces the paper notebook for quick notes.
+
+- First run: name a kitchen or choose no kitchen, then a usual section (or add your own); both skippable.
+- Capture bar on every main screen: a note (saved from the first keystroke, 2 taps), a photo (shrunk to 2000 px JPEG, DECISIONS 33), a voice note, or waste. All tagged with kitchen, section and time.
+- Inbox, newest first: sort a capture into a kitchen note or a new draft component (house variation in a kitchen, the chef's own with no kitchen), or delete with Undo.
+- Kitchens: create, switch from the top bar ("Where are you today?"), archive; "No kitchen" built in. The app reopens in the last kitchen and section; switching section takes 2 taps.
+- Editable lists: one editor for sections, services and the chef's lists (waste reasons, component types, technique categories): rename, reorder, hide, merge (moves every reference), add.
+- Kitchen settings: name, sections with a usual one, services with times by day (DECISIONS 32), the chef's usual shift, kitchen notes; empty screens for equipment, suppliers and house rules.
+- Today: the date, the next service you work (on now / next / set your times), the weekly goal line, and "needs you" (notes to sort, backup due, last week's check-in).
+- App settings: back up now and the reminder (daily, every 3 days, weekly), import, dark mode, the chef's lists, storage and the test marker. Replaces the Phase 0 check panel.
+- Waste log and weekly goal (with check-in and history) under the Section tab.
+- Schema v2: services hold time windows, kitchens a usual section, sections and services can be merged. Existing data upgrades in place and old exports upgrade on import (`src/data/migrations.ts`), both tested.
+- Layout survives the largest accessibility text size (simulated at 310%): headings capped to the screen width, rows and bars wrap, tab labels hide behind their icons.
