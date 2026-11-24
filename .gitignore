@@ -16,3 +16,6 @@ Thumbs.db
 CLAUDE.md
 docs/PHASE0_KICKOFF.md
 docs/LEARNING.md
+
+# mkcert certificates for testing on a phone (README)
+.cert/

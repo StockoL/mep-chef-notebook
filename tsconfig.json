@@ -25,7 +25,7 @@
     "skipLibCheck": true,
 
     // Types for import.meta.env and asset imports.
-    "types": ["vite/client"]
+    "types": ["vite/client", "vite-plugin-pwa/client"]
   },
   "include": ["src"]
 }

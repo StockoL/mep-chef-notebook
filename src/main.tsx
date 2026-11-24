@@ -1,4 +1,6 @@
 import { render } from 'preact';
+import { startData } from './data/startup';
+import { setUpServiceWorker } from './pwa';
 import { App } from './ui/app';
 // Vite sees a CSS import, bundles the stylesheet and adds a <link> to the page.
 import './styles/main.css';
@@ -8,3 +10,8 @@ const root = document.getElementById('app');
 if (!root) throw new Error('#app is missing from index.html');
 
 render(<App />, root);
+
+// After the first paint: make sure built-in rows exist and ask for
+// persistent storage, then register the service worker for offline use.
+void startData();
+setUpServiceWorker();

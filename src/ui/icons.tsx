@@ -62,6 +62,13 @@ const ICONS = {
   'chevron-right': <path d="m9 5 7 7-7 7" />,
   'chevron-down': <path d="m5 9 7 7 7-7" />,
   tick: <path d="m5 12.5 4.5 4.5L19 7" />,
+  /** Safari's Share icon: a box with an arrow out of the top. */
+  share: (
+    <>
+      <path d="M12 3v12M8 7l4-4 4 4" />
+      <path d="M8 10H6a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1h-2" />
+    </>
+  ),
 } satisfies Record<string, JSX.Element>;
 
 /**

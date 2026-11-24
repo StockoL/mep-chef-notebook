@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Placeholder Mep icon: a white M on burnt orange (#b84400, the action-500 token).
+       Full bleed: iOS and Android round the corners themselves.
+       The M is a drawn shape, not text, so it renders the same without fonts,
+       and it sits inside the maskable safe zone (a central circle of radius 205). -->
+  <rect width="512" height="512" fill="#b84400"/>
+  <path fill="#ffffff" d="M136 384V136h76l44 92 44-92h76v248h-68V250l-36 76h-32l-36-76v134z"/>
+</svg>
