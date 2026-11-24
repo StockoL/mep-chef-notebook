@@ -16,6 +16,7 @@ html {
 /* The `font` shorthand above also resets the family and line height,
    so set them back from the tokens. */
 body {
+  margin: 0; /* the app fills the screen; browsers add 8 px by default */
   font-family: var(--font-body);
   line-height: var(--leading-body);
 }

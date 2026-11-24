@@ -1,0 +1,59 @@
+/* Top bar: kitchen and section on the left, search and menu on the right.
+   Sticks to the top; clears the iPhone notch with --safe-top. */
+.top-bar {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: var(--layer-nav);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  padding-block: calc(var(--safe-top) + var(--space-2xs)) var(--space-2xs);
+  padding-inline: calc(var(--safe-left) + var(--gutter)) calc(var(--safe-right) + var(--gutter));
+  background-color: var(--color-surface-raised);
+  border-block-end: 1px solid var(--color-border);
+}
+
+/* The whole "where am I" block is one big tap target. */
+.top-bar__place {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-block-size: var(--tap);
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  text-align: start;
+  font: inherit;
+  cursor: pointer;
+}
+
+.top-bar__kitchen {
+  font-weight: var(--weight-semibold);
+}
+
+.top-bar__section {
+  font-size: var(--step--1);
+  color: var(--color-text-muted);
+}
+
+.top-bar__actions {
+  display: flex;
+  gap: var(--space-3xs);
+}
+
+.top-bar__action {
+  display: grid;
+  place-items: center;
+  min-inline-size: var(--tap);
+  min-block-size: var(--tap);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--color-text);
+  font-size: var(--step-1);
+  cursor: pointer;
+}

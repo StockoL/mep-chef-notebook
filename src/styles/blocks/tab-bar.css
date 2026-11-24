@@ -1,0 +1,37 @@
+/* Tab bar: four equal tabs, icon over label. The active tab is marked by
+   aria-current="page", so the CSS and screen readers read the same thing. */
+.tab-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  padding-inline: var(--safe-left) var(--safe-right);
+}
+
+.tab-bar__tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3xs);
+  min-block-size: var(--tap);
+  padding-block: var(--space-2xs);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: var(--step-1); /* sizes the icon (1em) */
+}
+
+.tab-bar__tab .icon {
+  stroke-width: 1.8;
+}
+
+.tab-bar__label {
+  font-size: var(--step--2); /* the one place step −2 is allowed (DESIGN.md) */
+  line-height: 1;
+}
+
+.tab-bar__tab[aria-current='page'] {
+  color: var(--color-action);
+}
+
+.tab-bar__tab[aria-current='page'] .icon {
+  stroke-width: 2;
+}

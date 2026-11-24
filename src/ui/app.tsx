@@ -1,15 +1,42 @@
-// The app shell. Step 3 replaces this with the top bar, tabs and capture bar.
-// For now it's a visual check that LooseLeaf and Mep's tokens are loaded:
-// system font, 17 px body text, a burnt-orange primary button, and dark mode
-// when the phone is set to dark.
+import { LocationProvider, Route, Router } from 'preact-iso';
+import { CaptureBar } from './components/CaptureBar';
+import { TabBar } from './components/TabBar';
+import { TopBar } from './components/TopBar';
+import { IconSheet } from './icons';
+import { BASE, paths } from './router';
+import { Library } from './screens/Library';
+import { Plan } from './screens/Plan';
+import { Section } from './screens/Section';
+import { Today } from './screens/Today';
+
+/**
+ * The app shell (docs/UX.md → Navigation): top bar, the current screen, and a
+ * dock at the bottom holding the capture bar above the tab bar.
+ *
+ * LocationProvider tracks the URL; `scope` tells it to handle only links
+ * inside the app's own path. Router shows whichever Route matches.
+ */
 export function App() {
   return (
-    <main class="center flow">
-      <h1>Mep</h1>
-      <p>Chef's notebook and prep planner.</p>
-      <button class="button" type="button" data-variant="primary">
-        Primary action
-      </button>
-    </main>
+    <LocationProvider scope={BASE}>
+      <IconSheet />
+      <div class="app-shell">
+        <TopBar />
+        <main class="app-shell__main">
+          <Router>
+            <Route path={paths.today} component={Today} />
+            <Route path={paths.library} component={Library} />
+            <Route path={paths.plan} component={Plan} />
+            <Route path={paths.section} component={Section} />
+            {/* Any unknown path inside the app shows Today: no dead ends. */}
+            <Route default component={Today} />
+          </Router>
+        </main>
+        <div class="app-shell__dock">
+          <CaptureBar />
+          <TabBar />
+        </div>
+      </div>
+    </LocationProvider>
   );
 }

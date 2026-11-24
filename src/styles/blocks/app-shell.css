@@ -1,0 +1,24 @@
+/* App shell: top bar, a scrolling main area, and the dock (capture bar + tab
+   bar) held at the bottom of the screen within thumb reach.
+   dvh = the visible height, which on a phone changes as the browser's own
+   toolbars slide in and out. */
+.app-shell {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-block-size: 100dvh;
+  background-color: var(--color-surface-sunken);
+}
+
+.app-shell__main {
+  padding-block: var(--space-m);
+  padding-inline: calc(var(--safe-left) + var(--gutter)) calc(var(--safe-right) + var(--gutter));
+}
+
+.app-shell__dock {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: var(--layer-nav);
+  padding-block-end: var(--safe-bottom); /* clears the iPhone home indicator */
+  background-color: var(--color-surface-raised);
+  border-block-start: 1px solid var(--color-border);
+}

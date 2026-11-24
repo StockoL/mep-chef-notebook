@@ -1,0 +1,41 @@
+/* Capture bar: a wide "write a note" button that looks like a text field,
+   then photo, voice and waste as round icon buttons. */
+.capture-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding-block: var(--space-2xs);
+  padding-inline: calc(var(--safe-left) + var(--gutter)) calc(var(--safe-right) + var(--gutter));
+}
+
+.capture-bar__note {
+  flex: 1;
+  min-inline-size: 0;
+  min-block-size: var(--tap);
+  padding-inline: var(--space-s);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  text-align: start;
+  font: inherit;
+  white-space: nowrap; /* one line; at the largest text sizes it ends in … */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: text;
+}
+
+.capture-bar__action {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: var(--tap);
+  block-size: var(--tap);
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--step-1);
+  cursor: pointer;
+}

@@ -20,4 +20,9 @@
 /* 3. Mep's own global rules: root text size follows the phone. */
 @import './global/root.css' layer(global);
 
-/* 4. Mep blocks arrive in step 3: @import './blocks/top-bar.css' layer(blocks); */
+/* 4. Mep blocks: one file per block, each put into the `blocks` layer here,
+      so the files themselves stay plain CSS. */
+@import './blocks/app-shell.css' layer(blocks);
+@import './blocks/top-bar.css' layer(blocks);
+@import './blocks/capture-bar.css' layer(blocks);
+@import './blocks/tab-bar.css' layer(blocks);
