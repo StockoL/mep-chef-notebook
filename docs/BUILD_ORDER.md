@@ -1,6 +1,6 @@
 # Build order
 
-One phase per session. Each phase ends at a review gate: Louis tests it on his phone (ideally on a real shift) before the next phase starts. Usable software after every phase matters more than speed.
+Phases are built in order, and several can follow one another in a session. Each phase ends usable: Louis tests it on his phone, on a real shift where he can, and the next phase can start straight away; anything found in use goes into the next phase's work. Getting the app into use quickly matters most (DECISIONS 31).
 
 Pure logic (`src/core/`) is built and tested before the UI that uses it. Names follow SPEC → The building blocks: dish, component, ingredient, technique, kitchen.
 

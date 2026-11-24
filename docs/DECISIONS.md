@@ -34,6 +34,7 @@
 | 28 | Every row's id is a string UUID from `crypto.randomUUID()`, with `createdAt` and `updatedAt` | Import, sharing and any later sync never clash, unlike auto-numbered ids |
 | 29 | Schema v1 adds two tables to SPEC's list: `media` (photo and voice Blobs, referenced by id) and `settings` (key/value: last kitchen and section, persist result, last backup, theme) | Blobs stay out of the data rows and map straight onto the export's `media/` folder |
 | 30 | "No kitchen" is a real Kitchen record with id `"none"` (name "No kitchen", can't be deleted), created on first run. A `kitchenId` that means "where I am" is never null. `null` means only "not tied to any kitchen" (own, book and idea variations, techniques, ingredients) | IndexedDB can't index null, so compound indexes and "no kitchen" queries work; the two meanings stay apart |
+| 31 | Ship first, learn later: the app is built for use on shift as soon as possible; learning the stack comes afterwards, from the phase log. Tests, versioned migrations and the export round trip stay, because they protect the chef's only copy | Louis needs the app now; the safeguards cost little and a lost notebook can't be undone |
 
 ## Open
 
