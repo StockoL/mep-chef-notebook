@@ -15,6 +15,12 @@ export function isoDayOfWeek(date: Date): 1 | 2 | 3 | 4 | 5 | 6 | 7 {
   return (day === 0 ? 7 : day) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
 }
 
+/** Minutes since midnight → "HH:MM": 605 → "10:05". Wraps past midnight. */
+export function minutesToTime(minutes: number): string {
+  const m = ((Math.round(minutes) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+}
+
 /** "HH:MM" → minutes since midnight: "12:30" → 750. */
 export function timeToMinutes(time: string): number {
   const match = /^(\d{1,2}):(\d{2})$/.exec(time);

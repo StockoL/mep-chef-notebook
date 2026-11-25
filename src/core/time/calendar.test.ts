@@ -51,3 +51,12 @@ describe('daysBetween', () => {
     expect(daysBetween(new Date(2026, 10, 20, 9), new Date(2026, 10, 23, 10))).toBe(3);
   });
 });
+
+describe('minutesToTime', () => {
+  it('shows minutes past midnight as a clock time', async () => {
+    const { minutesToTime } = await import('./calendar');
+    expect(minutesToTime(605)).toBe('10:05');
+    expect(minutesToTime(0)).toBe('00:00');
+    expect(minutesToTime(1450)).toBe('00:10');
+  });
+});
