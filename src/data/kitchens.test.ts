@@ -48,7 +48,7 @@ describe('where the chef is', () => {
     const [starters] = await listSections(id, db);
     await setUsualSection(id, starters!.id, db);
     await setPlace(id, undefined, db);
-    expect(await getPlace(db)).toEqual({ kitchenId: id, sectionId: starters!.id });
+    expect(await getPlace(db)).toEqual({ kitchenId: id, sectionId: starters!.id, alsoSectionId: null });
   });
 
   it('falls back to No kitchen when the current one is archived', async () => {
