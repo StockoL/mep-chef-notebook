@@ -1,9 +1,10 @@
 import { useState } from 'preact/hooks';
 import { listKitchens, listSections } from '../../data/kitchens';
 import { ListError } from '../../data/lists';
-import { deleteNote, listInbox, restoreNote, sortToKitchenNote, sortToNewComponent } from '../../data/notes';
+import { deleteNote, listInbox, restoreNote, returnToInbox, sortToKitchenNote, sortToNewComponent } from '../../data/notes';
 import { NO_KITCHEN_ID, type Note } from '../../data/types';
 import { MediaView } from '../components/MediaView';
+import { NoteEditor } from '../components/NoteEditor';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Sheet } from '../components/Sheet';
 import { showMessage } from '../components/UndoBar';
@@ -67,7 +68,10 @@ function SortNote({ note, onDone }: { note: Note; onDone: () => void }) {
   async function toKitchen() {
     await sortToKitchenNote(note.id);
     onDone();
-    showMessage('Kept as a kitchen note.');
+    showMessage('Moved to kitchen notes.', {
+      view: { href: paths.notesFor(note.kitchenId) },
+      undo: () => returnToInbox(note.id),
+    });
   }
 
   async function toComponent(event: Event) {
@@ -75,7 +79,7 @@ function SortNote({ note, onDone }: { note: Note; onDone: () => void }) {
     try {
       await sortToNewComponent(note.id, name);
       onDone();
-      showMessage(`New draft component: ${name.trim()}.`);
+      showMessage(`Added “${name.trim()}” to the Library as a draft.`, { view: { href: paths.library } });
     } catch (e) {
       setError(e instanceof ListError ? e.message : 'Couldn’t create that.');
     }
@@ -89,10 +93,7 @@ function SortNote({ note, onDone }: { note: Note; onDone: () => void }) {
 
   return (
     <>
-      {note.body && <p class="note-text">{note.body}</p>}
-      {note.mediaIds.map((id) => (
-        <MediaView key={id} id={id} />
-      ))}
+      <NoteEditor note={note} />
 
       <button class="button" type="button" data-variant="primary" disabled={!hasKitchen} onClick={toKitchen}>
         Kitchen note

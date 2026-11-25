@@ -26,6 +26,13 @@ export function formatDaysAgo(days: number): string {
   return `${days} days ago`;
 }
 
+/** "0:07", "1:30", "12:05": a running stopwatch. */
+export function formatClock(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
 export const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as const;
 
 /** "Mon–Fri", "Sat, Sun", "Every day" for ISO days 1–7. */

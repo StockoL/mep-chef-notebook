@@ -11,7 +11,10 @@ import {
   createTextNote,
   deleteNote,
   discardIfEmpty,
+  listComponentNotes,
   listInbox,
+  listKitchenNotes,
+  returnToInbox,
   restoreNote,
   sortToKitchenNote,
   sortToNewComponent,
@@ -19,7 +22,7 @@ import {
 } from './notes';
 import { freshDatabase } from './testing';
 import { NO_KITCHEN_ID } from './types';
-import { listWaste, logWaste } from './waste';
+import { listWaste, logWaste, updateWaste } from './waste';
 
 let db: MepDatabase;
 beforeEach(async () => {
@@ -93,7 +96,32 @@ describe('inbox', () => {
   });
 });
 
+describe('kitchen notes and component notes', () => {
+  it('moves a kitchen note back to the inbox', async () => {
+    const kitchenId = await createKitchen('Dumbleton Hall', db);
+    await setPlace(kitchenId, null, db);
+    const id = await createTextNote('Walk-in door sticks', db);
+    await sortToKitchenNote(id, db);
+    expect(await listKitchenNotes(kitchenId, db)).toHaveLength(1);
+    await returnToInbox(id, db);
+    expect(await db.notes.get(id)).toMatchObject({ kind: 'inbox', links: [] });
+    expect(await listKitchenNotes(kitchenId, db)).toHaveLength(0);
+  });
+
+  it('finds the notes sorted into a component', async () => {
+    const id = await createTextNote('Beetroot gel: agar 2g per 250ml', db);
+    const componentId = await sortToNewComponent(id, 'Beetroot gel', db);
+    expect((await listComponentNotes(componentId, db)).map((n) => n.id)).toEqual([id]);
+  });
+});
+
 describe('waste', () => {
+  it('corrects an entry without changing where or when', async () => {
+    const id = await logWaste({ text: 'Trout', quantity: null, reasonId: null }, new Date(2026, 10, 24), db);
+    await updateWaste(id, { text: 'Chalk stream trout', quantity: { amount: 3, unit: 'portion' }, reasonId: null }, db);
+    expect(await db.wasteEntries.get(id)).toMatchObject({ text: 'Chalk stream trout', quantity: { amount: 3 }, date: '2026-11-24' });
+  });
+
   it('logs what, how much and why, dated today', async () => {
     await logWaste({ text: ' Chalk stream trout ', quantity: { amount: 2, unit: 'portion' }, reasonId: null }, new Date(2026, 10, 24), db);
     expect((await listWaste(db))[0]).toMatchObject({ text: 'Chalk stream trout', date: '2026-11-24', cost: null });

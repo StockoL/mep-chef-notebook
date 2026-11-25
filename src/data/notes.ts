@@ -77,6 +77,27 @@ export async function sortToNewComponent(id: Id, name: string, database: MepData
   });
 }
 
+/** Undo a sort into kitchen notes: back to the inbox, unattached. */
+export async function returnToInbox(id: Id, database: MepDatabase = appDb) {
+  const note = await database.notes.get(id);
+  if (!note) return;
+  await database.notes.update(id, { kind: 'inbox', links: note.links.filter((link) => link.kind !== 'kitchen') });
+}
+
+/** The notes attached to a component (sorted into it from the inbox), newest first. */
+export async function listComponentNotes(componentId: Id, database: MepDatabase = appDb): Promise<Note[]> {
+  const notes = await database.notes
+    .where('kind')
+    .equals('attempt')
+    .filter((n) => n.links.some((link) => link.kind === 'component' && link.id === componentId))
+    .toArray();
+  return notes.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+export function getNote(id: Id, database: MepDatabase = appDb) {
+  return database.notes.get(id);
+}
+
 /** Kitchen notes for one kitchen, newest first. */
 export async function listKitchenNotes(kitchenId: KitchenId, database: MepDatabase = appDb): Promise<Note[]> {
   const notes = await database.notes.where('kitchenId').equals(kitchenId).filter((n) => n.kind === 'kitchen').toArray();

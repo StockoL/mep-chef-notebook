@@ -7,6 +7,7 @@ import { Icon } from '../icons';
 import { paths } from '../router';
 import { ChipChoice } from './Controls';
 import { Sheet } from './Sheet';
+import { showMessage } from './UndoBar';
 
 /**
  * "Where are you today?" (K1, MS3): switch kitchen or section from the top bar.
@@ -35,6 +36,7 @@ function WhereBody({ onClose }: { onClose: () => void }) {
     try {
       const id = await createKitchen(newName);
       await setPlace(id, null);
+      showMessage(`Added ${newName.trim()}. You’re there now; pick your section.`);
       setNewName('');
       setError('');
     } catch (e) {
@@ -45,6 +47,13 @@ function WhereBody({ onClose }: { onClose: () => void }) {
   async function chooseSection(sectionId: string | null) {
     await setPlace(details!.place.kitchenId, sectionId);
     onClose();
+    const section = sections?.find((s) => s.id === sectionId);
+    showMessage(section ? `You’re on ${section.name}.` : 'No section chosen.');
+  }
+
+  async function chooseKitchen(kitchenId: string, name: string) {
+    await setPlace(kitchenId);
+    showMessage(`You’re at ${name}.`);
   }
 
   return (
@@ -58,7 +67,7 @@ function WhereBody({ onClose }: { onClose: () => void }) {
                 class="list-row"
                 type="button"
                 aria-pressed={kitchen.id === kitchenId}
-                onClick={() => setPlace(kitchen.id)}
+                onClick={() => chooseKitchen(kitchen.id, kitchen.name)}
               >
                 <span class="list-row__main">
                   <span class="list-row__title">{kitchen.name}</span>

@@ -67,6 +67,13 @@
   margin-block-end: var(--space-s);
 }
 
+.sheet__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-inline-start: auto;
+}
+
 .sheet__title {
   min-inline-size: 0;
   margin: 0;

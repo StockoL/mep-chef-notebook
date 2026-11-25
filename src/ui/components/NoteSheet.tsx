@@ -2,6 +2,7 @@ import type { RefObject } from 'preact';
 import { useRef, useState } from 'preact/hooks';
 import { createTextNote, discardIfEmpty, updateNoteBody } from '../../data/notes';
 import type { Id } from '../../data/types';
+import { paths } from '../router';
 import { Sheet } from './Sheet';
 import { showMessage } from './UndoBar';
 
@@ -42,7 +43,7 @@ export function NoteSheet({ open, onClose, dialogRef, fieldRef }: NoteSheetProps
     if (state.id) {
       await state.queue;
       await discardIfEmpty(await state.id);
-      if (hadText) showMessage('Saved to your inbox.');
+      if (hadText) showMessage('Note saved to your inbox.', { view: { href: paths.inbox } });
     }
   }
 

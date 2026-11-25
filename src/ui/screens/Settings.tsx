@@ -12,6 +12,7 @@ import { usePromise } from '../hooks/usePromise';
 import { Icon } from '../icons';
 import { isInstalled } from '../platform';
 import { paths } from '../router';
+import { trackSave } from '../saveStatus';
 import { getTheme, setTheme, type ThemeChoice } from '../theme';
 
 /** The chef's own lists, edited here (kitchen lists are in kitchen settings). */
@@ -72,7 +73,7 @@ export function Settings() {
                   label: days === 1 ? 'Daily' : days === 7 ? 'Weekly' : `Every ${days} days`,
                 }))}
                 value={backup.everyDays}
-                onChange={setReminderDays}
+                onChange={(days) => trackSave(setReminderDays(days))}
               />
             )}
           </div>
@@ -153,7 +154,7 @@ function StorageCheck() {
           <dt>Test marker</dt>
           <dd>{marker ? new Date(marker).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : 'Not written'}</dd>
         </dl>
-        <button class="button" type="button" onClick={() => writeMarker()}>
+        <button class="button" type="button" onClick={() => trackSave(writeMarker())}>
           Write test marker
         </button>
       </div>

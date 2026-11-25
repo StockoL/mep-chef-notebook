@@ -1,0 +1,25 @@
+/* Save indicator: "Saving…" then "Saved ✓" in a header after any automatic save. */
+.save-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3xs);
+  min-block-size: 1lh;
+  font-size: var(--step--1);
+  color: var(--color-text-muted);
+}
+
+.save-indicator[data-state='saved'] {
+  color: var(--color-status-success-text);
+  animation: save-indicator-in calc(var(--duration-quick) * var(--motion-scale)) var(--ease-standard);
+}
+
+.save-indicator[data-state='failed'] {
+  color: var(--color-status-danger-text);
+  font-weight: var(--weight-semibold);
+}
+
+@keyframes save-indicator-in {
+  from {
+    opacity: 0;
+  }
+}

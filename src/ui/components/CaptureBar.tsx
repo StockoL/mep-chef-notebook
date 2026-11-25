@@ -1,7 +1,8 @@
 import { useRef, useState } from 'preact/hooks';
 import { createMediaNote } from '../../data/notes';
 import { Icon } from '../icons';
-import { shrinkPhoto } from '../media';
+import { shrinkPhoto, unlockAudio } from '../media';
+import { paths } from '../router';
 import { NoteSheet } from './NoteSheet';
 import { showMessage } from './UndoBar';
 import { VoiceSheet } from './VoiceSheet';
@@ -35,8 +36,9 @@ export function CaptureBar() {
     const file = input.files?.[0];
     input.value = '';
     if (!file) return;
+    showMessage('Saving photo…');
     await createMediaNote(await shrinkPhoto(file));
-    showMessage('Photo saved to your inbox.');
+    showMessage('Photo saved to your inbox.', { view: { href: paths.inbox } });
   }
 
   return (
@@ -47,7 +49,15 @@ export function CaptureBar() {
       <button class="capture-bar__action" type="button" aria-label="Photo" onClick={() => photoInput.current?.click()}>
         <Icon name="camera" />
       </button>
-      <button class="capture-bar__action" type="button" aria-label="Voice note" onClick={() => setVoiceOpen(true)}>
+      <button
+        class="capture-bar__action"
+        type="button"
+        aria-label="Voice note"
+        onClick={() => {
+          unlockAudio(); // inside the tap, so the level meter can hear
+          setVoiceOpen(true);
+        }}
+      >
         <Icon name="mic" />
       </button>
       <button class="capture-bar__action" type="button" aria-label="Log waste" onClick={() => setWasteOpen(true)}>

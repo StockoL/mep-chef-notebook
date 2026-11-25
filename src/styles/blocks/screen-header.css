@@ -6,6 +6,16 @@
   gap: var(--space-3xs);
 }
 
+/* Back link on the left, save indicator on the right. */
+.screen-header__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  align-self: stretch;
+  min-block-size: var(--tap);
+}
+
 .screen-header__back {
   display: inline-flex;
   align-items: center;
@@ -15,4 +25,15 @@
   padding-inline-end: var(--space-s);
   color: var(--color-action);
   text-decoration: none;
+}
+
+/* The end of an edit screen: Done, full width, after a reminder that it's saved. */
+.done-footer {
+  padding-block-start: var(--space-s);
+}
+
+.done-footer > .button {
+  display: flex;
+  inline-size: 100%;
+  justify-content: center;
 }

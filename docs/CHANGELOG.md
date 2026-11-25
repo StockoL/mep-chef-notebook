@@ -32,3 +32,14 @@ Replaces the paper notebook for quick notes.
 - Waste log and weekly goal (with check-in and history) under the Section tab.
 - Schema v2: services hold time windows, kitchens a usual section, sections and services can be merged. Existing data upgrades in place and old exports upgrade on import (`src/data/migrations.ts`), both tested.
 - Layout survives the largest accessibility text size (simulated at 310%): headings capped to the screen width, rows and bars wrap, tab labels hide behind their icons.
+
+### Phase 1 follow-up: feedback and editing (25 Nov 2026)
+
+From the first test on the phone: it wasn't clear whether things had saved, whether a voice note was recording, or where a sorted note went.
+
+- Every automatic save shows "Saving… / ✓ Saved" in the screen or sheet header (`trackSave`, `SaveIndicator`); saving stays automatic (UX rule 4). Edit screens (service times, services and shift) end with "Changes save as you go" and a Done button. Time fields save as the wheel turns.
+- The voice sheet shows it's recording: a pulsing red dot, a running stopwatch (0:07) and a level bar that moves with your voice. The audio context is unlocked inside the tap, so the meter works on iPhone.
+- Messages say where things went, with View (and Undo where it can be undone): note, photo and voice note → inbox; sorted → kitchen notes or Library; waste → waste log.
+- Kitchen notes have their own screen (••• → Kitchen notes, and from kitchen settings): edit, move back to the inbox, delete with Undo.
+- Notes can be edited before sorting; a component in the Library shows the notes sorted into it; waste entries can be corrected or deleted.
+- Switching kitchen or section, adding a kitchen or list item, and the goal check-in each confirm with a short message.

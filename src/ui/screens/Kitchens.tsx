@@ -21,13 +21,13 @@ import { listKitchenNotes } from '../../data/notes';
 import { NO_KITCHEN_ID, type DayOfWeek, type ServiceWindow } from '../../data/types';
 import { ChipToggles, Switch } from '../components/Controls';
 import { ListEditor } from '../components/ListEditor';
-import { MediaView } from '../components/MediaView';
-import { ScreenHeader } from '../components/ScreenHeader';
+import { DoneFooter, ScreenHeader } from '../components/ScreenHeader';
 import { showMessage } from '../components/UndoBar';
-import { DAY_NAMES, formatDays, formatWhen } from '../format';
+import { DAY_NAMES, formatDays } from '../format';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
+import { trackSave } from '../saveStatus';
 
 const DAY_CHOICES = DAY_NAMES.map((label, i) => ({ value: (i + 1) as DayOfWeek, label }));
 
@@ -102,7 +102,7 @@ export function KitchenSettings({ id = '' }: { id?: string }) {
   async function saveName() {
     if (name === null || name.trim() === kitchen!.name) return;
     try {
-      await renameKitchen(id, name);
+      await trackSave(renameKitchen(id, name));
       setError('');
     } catch (e) {
       setError(e instanceof ListError ? e.message : 'Couldn’t rename it.');
@@ -115,6 +115,7 @@ export function KitchenSettings({ id = '' }: { id?: string }) {
   }
 
   const parts = [
+    { href: paths.notesFor(id), label: 'Kitchen notes', meta: notes?.length ? String(notes.length) : undefined },
     { href: paths.kitchenSections(id), label: 'Sections' },
     { href: paths.kitchenServices(id), label: 'Services and shift' },
     { href: paths.kitchenPart(id, 'equipment'), label: 'Equipment' },
@@ -148,29 +149,13 @@ export function KitchenSettings({ id = '' }: { id?: string }) {
               <span class="list-row__main">
                 <span class="list-row__title">{part.label}</span>
               </span>
+              {'meta' in part && part.meta && <span class="list-row__meta">{part.meta}</span>}
               <Icon name="chevron-right" />
             </a>
           </li>
         ))}
       </ul>
 
-      <section class="flow" aria-labelledby="kitchen-notes-title">
-        <h2 id="kitchen-notes-title">Kitchen notes</h2>
-        {notes?.length === 0 && <p class="field__hint">Notes you sort into this kitchen from the inbox appear here.</p>}
-        <ul class="row-list" role="list">
-          {notes?.map((note) => (
-            <li key={note.id} class="list-row" data-static>
-              <span class="list-row__main">
-                {note.body && <span class="list-row__title note-text">{note.body}</span>}
-                {note.mediaIds.map((mediaId) => (
-                  <MediaView key={mediaId} id={mediaId} />
-                ))}
-                <span class="list-row__meta">{formatWhen(note.createdAt)}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
 
       <button class="button" type="button" onClick={toggleArchived}>
         {kitchen.archived ? 'Bring back from archive' : 'Archive this kitchen'}
@@ -239,19 +224,20 @@ export function KitchenServices({ id = '' }: { id?: string }) {
         <div key={shift.id} class="card">
           <div class="card__body flow">
             <div class="cluster">
-              <TimeField label="Start" value={shift.start} onChange={(start) => start && updateShift(shift.id, { start })} />
-              <TimeField label="End" value={shift.end} onChange={(end) => end && updateShift(shift.id, { end })} />
+              <TimeField label="Start" value={shift.start} onChange={(start) => start && trackSave(updateShift(shift.id, { start }))} />
+              <TimeField label="End" value={shift.end} onChange={(end) => end && trackSave(updateShift(shift.id, { end }))} />
             </div>
-            <ChipToggles label="Days" choices={DAY_CHOICES} values={shift.days} onChange={(days) => updateShift(shift.id, { days })} />
-            <button class="button" type="button" data-variant="ghost" onClick={() => deleteShift(shift.id)}>
+            <ChipToggles label="Days" choices={DAY_CHOICES} values={shift.days} onChange={(days) => trackSave(updateShift(shift.id, { days }))} />
+            <button class="button" type="button" data-variant="ghost" onClick={() => trackSave(deleteShift(shift.id))}>
               Remove this shift
             </button>
           </div>
         </div>
       ))}
-      <button class="button" type="button" onClick={() => addShift(id)}>
+      <button class="button" type="button" onClick={() => trackSave(addShift(id))}>
         {shifts?.length ? 'Add a shift for other days' : 'Add your usual shift'}
       </button>
+      <DoneFooter href={paths.kitchen(id)} />
     </section>
   );
 }
@@ -262,20 +248,21 @@ export function ServiceTimes({ id = '', serviceId = '' }: { id?: string; service
   if (!service) return null;
 
   const setWindow = (index: number, changes: Partial<ServiceWindow>) =>
-    updateService(serviceId, { windows: service.windows.map((w, i) => (i === index ? { ...w, ...changes } : w)) });
+    trackSave(updateService(serviceId, { windows: service.windows.map((w, i) => (i === index ? { ...w, ...changes } : w)) }));
   const addWindow = () =>
-    updateService(serviceId, {
+    trackSave(updateService(serviceId, {
       windows: [
         ...service.windows,
         { days: service.windows.length ? [] : [1, 2, 3, 4, 5, 6, 7], firstTickets: null, lastBookings: null, usualFinish: null },
       ],
-    });
-  const removeWindow = (index: number) => updateService(serviceId, { windows: service.windows.filter((_, i) => i !== index) });
+    }));
+  const removeWindow = (index: number) =>
+    trackSave(updateService(serviceId, { windows: service.windows.filter((_, i) => i !== index) }));
 
   return (
     <section class="flow">
       <ScreenHeader title={service.name} back={{ href: paths.kitchenServices(id), label: 'Services' }} />
-      <Switch checked={service.iWorkThis} onChange={(iWorkThis) => updateService(serviceId, { iWorkThis })}>
+      <Switch checked={service.iWorkThis} onChange={(iWorkThis) => trackSave(updateService(serviceId, { iWorkThis }))}>
         I work this service
       </Switch>
 
@@ -297,6 +284,7 @@ export function ServiceTimes({ id = '', serviceId = '' }: { id?: string; service
       <button class="button" type="button" onClick={addWindow}>
         {service.windows.length ? 'Add different times for other days' : 'Add times'}
       </button>
+      <DoneFooter href={paths.kitchenServices(id)} />
     </section>
   );
 }
@@ -314,7 +302,7 @@ function TimeField(props: { label: string; value: string | null; onChange: (valu
         id={id}
         type="time"
         value={props.value ?? ''}
-        onChange={(e) => props.onChange(e.currentTarget.value || null)}
+        onInput={(e) => props.onChange(e.currentTarget.value || null)}
       />
     </div>
   );

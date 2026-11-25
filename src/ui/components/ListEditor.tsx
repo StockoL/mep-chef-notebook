@@ -15,13 +15,14 @@ import { Icon } from '../icons';
 import { ChipChoice } from './Controls';
 import { Sheet } from './Sheet';
 import { showMessage } from './UndoBar';
+import { trackSave } from '../saveStatus';
 
 interface ListEditorProps {
   listRef: ListRef;
   /** Singular, lower case: "section", "waste reason". */
   itemName: string;
   /** Marks one item as the chef's usual (sections). */
-  usual?: { id: Id | null; set: (id: Id | null) => void };
+  usual?: { id: Id | null; set: (id: Id | null) => unknown };
   /** An extra link in an item's sheet, e.g. a service's times. */
   detailLink?: (item: ListItem) => { href: string; label: string };
 }
@@ -46,7 +47,8 @@ export function ListEditor({ listRef, itemName, usual, detailLink }: ListEditorP
   async function add(event: Event) {
     event.preventDefault();
     try {
-      await addListItem(listRef, newName);
+      await trackSave(addListItem(listRef, newName));
+      showMessage(`Added “${newName.trim()}”.`);
       setNewName('');
       setError('');
     } catch (e) {
@@ -128,7 +130,7 @@ function ItemSheetBody(props: {
   async function saveName() {
     if (name.trim() === item.name) return;
     try {
-      await renameListItem(listRef, item.id, name);
+      await trackSave(renameListItem(listRef, item.id, name));
       setError('');
     } catch (e) {
       setError(e instanceof ListError ? e.message : 'Couldn’t rename that.');
@@ -137,7 +139,7 @@ function ItemSheetBody(props: {
 
   async function toggleHidden() {
     try {
-      await setListItemHidden(listRef, item.id, !item.hidden);
+      await trackSave(setListItemHidden(listRef, item.id, !item.hidden));
     } catch (e) {
       setError(e instanceof ListError ? e.message : 'Couldn’t change that.');
     }
@@ -176,14 +178,14 @@ function ItemSheetBody(props: {
       )}
 
       <div class="cluster">
-        <button class="button" type="button" disabled={index <= 0} onClick={() => moveListItem(listRef, item.id, -1)}>
+        <button class="button" type="button" disabled={index <= 0} onClick={() => trackSave(moveListItem(listRef, item.id, -1))}>
           Move up
         </button>
         <button
           class="button"
           type="button"
           disabled={index >= items.length - 1}
-          onClick={() => moveListItem(listRef, item.id, 1)}
+          onClick={() => trackSave(moveListItem(listRef, item.id, 1))}
         >
           Move down
         </button>
@@ -191,7 +193,7 @@ function ItemSheetBody(props: {
 
       <div class="cluster">
         {usual && (
-          <button class="button" type="button" onClick={() => usual.set(usual.id === item.id ? null : item.id)}>
+          <button class="button" type="button" onClick={() => trackSave(Promise.resolve(usual.set(usual.id === item.id ? null : item.id)))}>
             {usual.id === item.id ? `Not my usual ${itemName}` : `Make my usual ${itemName}`}
           </button>
         )}

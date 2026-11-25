@@ -11,6 +11,11 @@
   color: var(--color-text-inverse);
 }
 
+.undo-bar__actions {
+  display: flex;
+  flex-shrink: 0;
+}
+
 .undo-bar__undo {
   min-block-size: var(--tap);
   padding-inline: var(--space-s);

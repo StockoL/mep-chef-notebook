@@ -27,8 +27,22 @@ export async function shrinkPhoto(file: Blob): Promise<Blob> {
   return jpeg ?? file;
 }
 
+/**
+ * The audio context behind the level meter. Browsers (Safari included) start
+ * an AudioContext paused unless it's created or resumed inside a tap, so the
+ * mic button calls unlockAudio() in its click handler, before anything else.
+ */
+let audioContext: AudioContext | null = null;
+
+export function unlockAudio(): void {
+  audioContext ??= new AudioContext();
+  void audioContext.resume();
+}
+
 /** A voice recording in progress. */
 export interface Recording {
+  /** How loud the microphone is right now, 0 (silence) to 1: proof it's hearing you. */
+  level(): number;
   /** Stops and returns the audio. */
   stop(): Promise<Blob>;
   /** Stops and throws the audio away. */
@@ -47,9 +61,27 @@ export async function startRecording(): Promise<Recording> {
   recorder.addEventListener('dataavailable', (event) => chunks.push(event.data));
   recorder.start();
 
-  const release = () => stream.getTracks().forEach((track) => track.stop());
+  // A level meter: an AnalyserNode listens to the same stream.
+  unlockAudio(); // a no-op if the tap already did it
+  const audio = audioContext!;
+  const analyser = audio.createAnalyser();
+  analyser.fftSize = 512;
+  const source = audio.createMediaStreamSource(stream);
+  source.connect(analyser);
+  const samples = new Float32Array(analyser.fftSize);
+
+  const release = () => {
+    stream.getTracks().forEach((track) => track.stop());
+    source.disconnect(); // the context itself is kept for the next recording
+  };
 
   return {
+    level: () => {
+      analyser.getFloatTimeDomainData(samples);
+      // Root mean square of the waveform, scaled so speech fills most of the bar.
+      const rms = Math.sqrt(samples.reduce((sum, s) => sum + s * s, 0) / samples.length);
+      return Math.min(1, rms * 4);
+    },
     stop: () =>
       new Promise((resolve) => {
         recorder.addEventListener(

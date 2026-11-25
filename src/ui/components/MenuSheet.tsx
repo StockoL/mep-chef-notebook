@@ -10,6 +10,7 @@ export function MenuSheet({ open, onClose }: { open: boolean; onClose: () => voi
 
   const links = [
     { href: paths.inbox, label: 'Inbox', meta: inboxCount ? `${inboxCount} to sort` : undefined },
+    { href: paths.notes, label: 'Kitchen notes' },
     { href: paths.waste, label: 'Waste log' },
     { href: paths.goal, label: 'Weekly goal' },
     { href: paths.kitchens, label: 'Kitchens' },

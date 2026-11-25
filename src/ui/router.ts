@@ -10,6 +10,8 @@ export const BASE = import.meta.env.BASE_URL;
 export const paths = {
   today: BASE,
   inbox: `${BASE}inbox`,
+  notes: `${BASE}notes`,
+  notesFor: (kitchenId: string) => `${BASE}notes?kitchen=${kitchenId}`,
   library: `${BASE}library`,
   plan: `${BASE}plan`,
   section: `${BASE}section`,

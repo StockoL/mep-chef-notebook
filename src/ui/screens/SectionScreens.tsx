@@ -2,7 +2,7 @@ import { useState } from 'preact/hooks';
 import { isoWeek } from '../../core/time/calendar';
 import { getCheckInDue, getGoal, listGoals, setGoalText, setReflection } from '../../data/goals';
 import { getListItems } from '../../data/lists';
-import { deleteWaste, listWaste, restoreWaste } from '../../data/waste';
+import { listWaste } from '../../data/waste';
 import { ChipChoice } from '../components/Controls';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { showMessage } from '../components/UndoBar';
@@ -11,6 +11,7 @@ import { formatCalendarDate } from '../format';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
+import { trackSave } from '../saveStatus';
 
 /** Section tab: the chef's station admin. Stock, pars and checklists arrive in Phase 11. */
 export function Section() {
@@ -38,17 +39,14 @@ export function Section() {
   );
 }
 
-/** The waste log (A4): everything logged, newest first. */
+/** The waste log (A4): everything logged, newest first. Tap an entry to correct or delete it. */
 export function WasteLog() {
   const entries = useLiveQuery(() => listWaste());
   const reasons = useLiveQuery(() => getListItems({ kind: 'values', list: 'waste-reasons', kitchenId: null }));
   const [logging, setLogging] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const editing = entries?.find((e) => e.id === editingId);
   const reasonName = (id: string | null) => reasons?.find((r) => r.id === id)?.name;
-
-  async function remove(id: string) {
-    const entry = await deleteWaste(id);
-    if (entry) showMessage('Entry deleted.', () => restoreWaste(entry));
-  }
 
   return (
     <section class="flow">
@@ -63,23 +61,24 @@ export function WasteLog() {
       )}
       <ul class="row-list" role="list">
         {entries?.map((entry) => (
-          <li key={entry.id} class="list-row" data-static>
-            <span class="list-row__main">
-              <span class="list-row__title">
-                {entry.text}
-                {entry.quantity && ` · ${entry.quantity.amount} ${entry.quantity.unit === 'portion' ? 'portions' : entry.quantity.unit}`}
+          <li key={entry.id}>
+            <button class="list-row" type="button" onClick={() => setEditingId(entry.id)}>
+              <span class="list-row__main">
+                <span class="list-row__title">
+                  {entry.text}
+                  {entry.quantity && ` · ${entry.quantity.amount} ${entry.quantity.unit === 'portion' ? 'portions' : entry.quantity.unit}`}
+                </span>
+                <span class="list-row__meta">
+                  {[formatCalendarDate(entry.date), reasonName(entry.reasonId)].filter(Boolean).join(' · ')}
+                </span>
               </span>
-              <span class="list-row__meta">
-                {[formatCalendarDate(entry.date), reasonName(entry.reasonId)].filter(Boolean).join(' · ')}
-              </span>
-            </span>
-            <button class="button" type="button" data-variant="ghost" aria-label={`Delete ${entry.text}`} onClick={() => remove(entry.id)}>
-              <Icon name="bin" />
+              <Icon name="chevron-right" />
             </button>
           </li>
         ))}
       </ul>
       <WasteSheet open={logging} onClose={() => setLogging(false)} />
+      <WasteSheet open={!!editing} entry={editing} onClose={() => setEditingId(null)} />
     </section>
   );
 }
@@ -105,7 +104,11 @@ export function Goal() {
               label="Last week’s goal"
               choices={['Went well', 'Partly', 'Didn’t happen'].map((v) => ({ value: v, label: v }))}
               value={null}
-              onChange={(value) => value && setReflection(checkIn.week, value)}
+              onChange={async (value) => {
+                if (!value) return;
+                await trackSave(setReflection(checkIn.week, value));
+                showMessage('Thanks. Last week’s goal is in your history.');
+              }}
             />
           </div>
         </div>
@@ -123,7 +126,7 @@ export function Goal() {
           enterkeyhint="done"
           onInput={(e) => {
             setText(e.currentTarget.value);
-            void setGoalText(week, e.currentTarget.value);
+            void trackSave(setGoalText(week, e.currentTarget.value));
           }}
           onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
         />

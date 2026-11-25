@@ -1,0 +1,53 @@
+/* Voice meter: proof a recording is running. A pulsing red dot, a stopwatch,
+   and a bar that moves with the sound coming in. */
+.voice-meter__status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-weight: var(--weight-semibold);
+}
+
+.voice-meter__dot {
+  inline-size: 0.75em;
+  block-size: 0.75em;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-border-strong);
+}
+
+.voice-meter[data-status='recording'] .voice-meter__dot {
+  background-color: var(--color-status-danger);
+  animation: voice-meter-pulse calc(1.2s * var(--motion-scale, 1)) ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-meter[data-status='recording'] .voice-meter__dot {
+    animation: none;
+  }
+}
+
+@keyframes voice-meter-pulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.voice-meter__clock {
+  font-size: var(--display-task);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.voice-meter__level {
+  block-size: 0.75rem;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-surface-sunken);
+  overflow: hidden;
+}
+
+.voice-meter__level > span {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background-color: var(--color-status-danger);
+  transition: inline-size 80ms linear;
+}

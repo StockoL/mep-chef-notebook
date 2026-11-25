@@ -12,18 +12,3 @@
   block-size: 6rem;
   object-fit: cover;
 }
-
-.voice-sheet__time {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2xs);
-  font-size: var(--step-2);
-  font-variant-numeric: tabular-nums;
-}
-
-.voice-sheet__dot {
-  inline-size: 0.6em;
-  block-size: 0.6em;
-  border-radius: var(--radius-pill);
-  background-color: var(--color-status-danger);
-}

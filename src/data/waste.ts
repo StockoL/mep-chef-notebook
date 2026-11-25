@@ -31,6 +31,17 @@ export async function logWaste(input: WasteInput, now = new Date(), database: Me
   });
 }
 
+/** Corrects an entry: what, how much, why. Where and when stay as logged. */
+export async function updateWaste(id: Id, input: WasteInput, database: MepDatabase = appDb) {
+  const text = cleanName(input.text);
+  if (!text) throw new ListError('Say what was wasted.');
+  await database.wasteEntries.update(id, { text, quantity: input.quantity, reasonId: input.reasonId });
+}
+
+export function getWaste(id: Id, database: MepDatabase = appDb) {
+  return database.wasteEntries.get(id);
+}
+
 /** Every waste entry, newest first. */
 export async function listWaste(database: MepDatabase = appDb): Promise<WasteEntry[]> {
   const entries = await database.wasteEntries.toArray();

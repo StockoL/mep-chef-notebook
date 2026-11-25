@@ -1,5 +1,6 @@
 import type { ComponentChildren, RefObject } from 'preact';
 import { useEffect, useId, useRef } from 'preact/hooks';
+import { SaveIndicator } from './SaveIndicator';
 
 interface SheetProps {
   open: boolean;
@@ -47,9 +48,12 @@ export function Sheet({ open, onClose, title, children, position = 'bottom', kee
           <h2 class="sheet__title" id={titleId}>
             {title}
           </h2>
-          <button class="button" type="button" data-variant="ghost" onClick={onClose}>
-            Done
-          </button>
+          <span class="sheet__actions">
+            <SaveIndicator />
+            <button class="button" type="button" data-variant="secondary" onClick={onClose}>
+              Done
+            </button>
+          </span>
         </div>
         <div class="sheet__body flow">{(open || keepMounted) && children}</div>
       </div>
