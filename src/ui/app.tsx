@@ -11,6 +11,7 @@ import { FirstRun } from './screens/FirstRun';
 import { Inbox } from './screens/Inbox';
 import { KitchenPart, KitchenSections, KitchenServices, Kitchens, KitchenSettings, ServiceTimes } from './screens/Kitchens';
 import { Library } from './screens/Library';
+import { ComponentPage, DishPage, IngredientPage } from './screens/LibraryPages';
 import { Notes } from './screens/Notes';
 import { Plan } from './screens/Plan';
 import { Goal, Section, WasteLog } from './screens/SectionScreens';
@@ -44,6 +45,9 @@ export function App() {
               <Route path={paths.inbox} component={Inbox} />
               <Route path={paths.notes} component={Notes} />
               <Route path={paths.library} component={Library} />
+              <Route path={routes.component} component={ComponentPage} />
+              <Route path={routes.dish} component={DishPage} />
+              <Route path={routes.ingredient} component={IngredientPage} />
               <Route path={paths.plan} component={Plan} />
               <Route path={paths.section} component={Section} />
               <Route path={paths.waste} component={WasteLog} />

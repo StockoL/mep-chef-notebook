@@ -2,12 +2,13 @@ import { useState } from 'preact/hooks';
 import { getPlaceDetails } from '../../data/kitchens';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
+import { paths } from '../router';
 import { MenuSheet } from './MenuSheet';
 import { WhereSheet } from './WhereSheet';
 
 /**
  * Always at the top (UX → Navigation): where you are (tap for "Where are you
- * today?") and the menu. Search arrives with the library in Phase 2.
+ * today?"), search (opens the library's search) and the menu.
  */
 export function TopBar() {
   const details = useLiveQuery(() => getPlaceDetails());
@@ -24,6 +25,9 @@ export function TopBar() {
       </button>
 
       <div class="top-bar__actions">
+        <a class="top-bar__action" href={paths.librarySearch} aria-label="Search">
+          <Icon name="search" />
+        </a>
         <button class="top-bar__action" type="button" aria-label="Menu" onClick={() => setMenuOpen(true)}>
           <Icon name="more" />
         </button>

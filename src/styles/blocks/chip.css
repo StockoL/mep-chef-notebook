@@ -1,6 +1,8 @@
 /* Chip: one choice among several (UX → Editing rule 5). Pressed = chosen. */
 .chip {
   display: inline-flex;
+  max-inline-size: 100%;
+  overflow-wrap: anywhere; /* one long word at the largest text sizes */
   align-items: center;
   min-block-size: var(--tap);
   padding-inline: var(--space-s);
@@ -9,6 +11,7 @@
   background-color: var(--color-surface);
   color: var(--color-text);
   font: inherit;
+  text-decoration: none; /* chips that are links (Recent) look like the rest */
   cursor: pointer;
   touch-action: manipulation;
 }

@@ -13,6 +13,10 @@ export const paths = {
   notes: `${BASE}notes`,
   notesFor: (kitchenId: string) => `${BASE}notes?kitchen=${kitchenId}`,
   library: `${BASE}library`,
+  librarySearch: `${BASE}library?search=1`,
+  component: (id: string) => `${BASE}library/component/${id}`,
+  dish: (id: string) => `${BASE}library/dish/${id}`,
+  ingredient: (id: string) => `${BASE}library/ingredient/${id}`,
   plan: `${BASE}plan`,
   section: `${BASE}section`,
   waste: `${BASE}section/waste`,
@@ -30,6 +34,9 @@ export const paths = {
 /** Route patterns for preact-iso (":id" becomes a prop). */
 export const routes = {
   settingsList: `${BASE}settings/lists/:list`,
+  component: `${BASE}library/component/:id`,
+  dish: `${BASE}library/dish/:id`,
+  ingredient: `${BASE}library/ingredient/:id`,
   kitchen: `${BASE}kitchen/:id`,
   kitchenSections: `${BASE}kitchen/:id/sections`,
   kitchenServices: `${BASE}kitchen/:id/services`,

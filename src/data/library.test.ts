@@ -11,6 +11,7 @@ import {
   createIngredient,
   deleteComponent,
   deleteIngredient,
+  deleteUnusedIngredients,
   getComponentDetails,
   getDishDetails,
   getIngredientDetails,
@@ -68,6 +69,14 @@ describe('components', () => {
     expect(details?.lines[0]).toMatchObject({ name: 'Chicken stock', target: { kind: 'component', id: stock.id } });
     expect(details?.lines[1]?.line.prepNote).toBe('sliced');
     expect((await getComponentDetails(stock.id, NO_KITCHEN_ID, db))?.usedInComponents.map((c) => c.name)).toEqual(['Chicken jus']);
+  });
+
+  it('tidies away ingredients a half-typed name created', async () => {
+    const { variationId } = await component('Stock', 'bon');
+    const created = await saveLines(variationId, parseShorthand('bones 2kg'), db);
+    await deleteUnusedIngredients([...(await db.ingredients.toArray()).map((i) => i.id)], db);
+    expect((await db.ingredients.toArray()).map((i) => i.name)).toEqual(['Bones']);
+    expect(created).toHaveLength(1);
   });
 
   it('updates lines in place so ids stay stable', async () => {

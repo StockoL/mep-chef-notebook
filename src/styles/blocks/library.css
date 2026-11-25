@@ -1,0 +1,83 @@
+/* Library: the header row, type groups, ingredient rows read from shorthand. */
+.library-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+}
+
+.library-group {
+  display: grid;
+  gap: var(--space-2xs);
+}
+
+.library-group__summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  min-block-size: var(--tap);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+/* Small section labels: "In dishes", "Recent", "A". */
+.used-in__label {
+  margin: 0;
+  font-size: var(--step--1);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}
+
+/* Whose version this is: "House variation · Dumbleton Hall · Draft". */
+.variation-line {
+  color: var(--color-text-muted);
+}
+
+/* Ingredient lines as read from shorthand: quantity, name, and what it matched. */
+.line-rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--radius-surface);
+  background-color: var(--color-surface-raised);
+  overflow: hidden;
+}
+
+.line-rows > li + li {
+  border-block-start: 1px solid var(--color-border);
+}
+
+.line-rows__row {
+  display: flex;
+  flex-wrap: wrap; /* at large text sizes the name drops below the quantity */
+  align-items: baseline;
+  gap: 0 var(--space-s);
+  min-block-size: var(--tap);
+  padding: var(--space-2xs) var(--space-s);
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.line-rows__name {
+  flex: 1 1 8em;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.line-rows__quantity {
+  min-inline-size: 4.5ch;
+  font-variant-numeric: tabular-nums;
+  font-weight: var(--weight-semibold);
+}
+
+.line-rows__note {
+  color: var(--color-text-muted);
+}
+
+.line-rows__kind {
+  font-size: var(--step--1);
+  color: var(--color-action);
+}

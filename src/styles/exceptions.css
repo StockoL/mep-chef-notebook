@@ -36,3 +36,18 @@ details > summary.button::-webkit-details-marker {
   inline-size: 100%;
   justify-content: center;
 }
+
+/* Segmented controls wrap rather than run off the screen at large text sizes. */
+.choice-group[data-variant='segmented'] {
+  flex-wrap: wrap;
+  max-inline-size: 100%;
+}
+
+/* Long button and segment labels wrap at the largest text sizes instead of
+   pushing past the screen edge. */
+.button,
+.choice-group[data-variant='segmented'] > label {
+  max-inline-size: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

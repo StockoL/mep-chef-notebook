@@ -130,12 +130,14 @@ export async function setBaseYield(variationId: Id, baseYield: Quantity | null, 
  * matched to another component first ("chicken stock" → the stock), then to
  * an ingredient by name or alias; anything unknown becomes a new ingredient.
  * Rows are updated in place by position, so ids stay stable.
+ * Returns the ids of ingredients it had to create.
  */
 export async function saveLines(
   variationId: Id,
   parsed: ShorthandLine[],
   database: MepDatabase = appDb,
-): Promise<void> {
+): Promise<Id[]> {
+  const created: Id[] = [];
   await database.transaction('rw', [database.variations, database.versions, database.lines, database.ingredients, database.components], async () => {
     const variation = await database.variations.get(variationId);
     if (!variation) throw new Error('That variation no longer exists.');
@@ -151,6 +153,7 @@ export async function saveLines(
         let ingredient = findByName(ingredients, item.name);
         if (!ingredient) {
           const id = await database.ingredients.add(newIngredient(item.name));
+          created.push(id);
           ingredient = (await database.ingredients.get(id))!;
           ingredients.push(ingredient);
         }
@@ -174,6 +177,21 @@ export async function saveLines(
     }
     await database.lines.bulkDelete(existing.slice(parsed.length).map((l) => l.id));
   });
+  return created;
+}
+
+/**
+ * Deletes those of these ingredients that nothing uses: the ones an editing
+ * session created while a name was half-typed ("bon" before "bones").
+ */
+export async function deleteUnusedIngredients(ids: Id[], database: MepDatabase = appDb): Promise<void> {
+  for (const id of ids) {
+    try {
+      await deleteIngredient(id, database);
+    } catch {
+      // Still used: keep it.
+    }
+  }
 }
 
 /** Saves the method as plain steps, one per line (Phase 4 reads them). */
