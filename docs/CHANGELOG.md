@@ -176,3 +176,16 @@ Answer the pass correctly; label what you make.
 - Kitchen settings → **House rules**: shelf lives by component type or for one component ("3 days"), and targets for cooling, hot holding and reheating (the legal limit is shown as a reminder).
 - **Made**: on a sheet item or a recipe, records a batch and shows a day-dot label: name, made, **use by** (its day large), allergens and your initials. No rule, no use-by. Section → **Batches and labels** lists them.
 - Cooling, hot holding and reheating steps show the kitchen's target in the method, the plan and prep mode. The step reader now flags reheating.
+
+## Phase 11: Section admin (25 Nov 2026)
+
+Run a section's numbers from the same book.
+
+- **Costs**: a recipe shows what a batch costs and per 100 g/ml or per portion, worked out from product prices through every component it uses; ingredients can have a yield loss. A dish shows its cost per portion and GP on each menu against its target; menus show GP on each dish. GP is from the price without VAT (DECISIONS 53). What isn't priced is listed. Changing a price says which dishes it pushes below target.
+- **Count** (Section): one item at a time with a big number pad, Next and Finish; then what's below par, the stock value, and links to the draft orders.
+- **Draft orders**: ingredients below par, rounded up to whole packs, by supplier, with an estimated cost; share as text. Mep never places an order.
+- Writing the next shift's sheet tops up components below par.
+- **Opening and closing checks** per section: tick each day; edit the list (schema v7: `checklistRuns`).
+- "Also used for …" on sheet items and recipes when a component or ingredient is on other dishes on now, with a heads-up on tomorrow's sheet or a reminder.
+- **Allergen matrix** per menu (grid, print or PDF, spreadsheet), headed as a working copy.
+- **Weekly report**: goal, stock value, waste by reason and item with costs, GP against target, items often short; print or save as PDF. Goal suggestions on the weekly goal, par suggestions on the section list, waste costed in the waste log.
