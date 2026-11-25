@@ -20,7 +20,9 @@
  * 5. Service windows: a part that can't be left for a ticket waits until
  *    the window is over if it can still be ready in time; if it can't, it
  *    goes in the window, flagged "needs cover" with the reason.
- * 6. Free time is shown; anything that can't be ready in time is flagged.
+ * 6. Something held warm for a limited time isn't started so early it
+ *    would be held longer (`notBefore`).
+ * 7. Free time is shown; anything that can't be ready in time is flagged.
  */
 
 export type PlanMode = 'active' | 'check-in' | 'passive';
@@ -53,6 +55,11 @@ export interface PlanJob {
   readyBy: number | null;
   /** Jobs that must be finished before this one starts ("needs the stock"). */
   after?: readonly string[];
+  /**
+   * The earliest it may start (minutes). For something held warm for a
+   * limited time ("hold warm max 2 hrs"), so it isn't made too early.
+   */
+  notBefore?: number;
 }
 
 /** A service: prep can carry on, but someone has to cover what can't be left. */
@@ -127,7 +134,10 @@ export const greedyScheduler: Scheduler = {
   plan(input) {
     const windows = input.windows ?? [];
     const states = new Map<string, JobState>(
-      input.jobs.map((job) => [job.id, { job, next: 0, readyAt: input.start, done: job.parts.length === 0, end: input.start, start: null }]),
+      input.jobs.map((job) => [
+        job.id,
+        { job, next: 0, readyAt: Math.max(input.start, job.notBefore ?? input.start), done: job.parts.length === 0, end: input.start, start: null },
+      ]),
     );
     const placed: PlacedPart[] = [];
     const unplaced: { jobId: string; reason: string }[] = [];

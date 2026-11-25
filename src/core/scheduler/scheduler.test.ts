@@ -108,6 +108,12 @@ describe('the greedy scheduler', () => {
     expect(at(plan, 'rice')).toMatchObject({ start: 640, gapBefore: true });
   });
 
+  it('doesn’t start something held warm so early it would be held too long', () => {
+    // Beurre blanc: 20 minutes to make, holds warm 2 hours, ready by 18:00 → not before 15:40.
+    const jobs: PlanJob[] = [{ id: 'bb', label: 'Beurre blanc', readyBy: 1080, notBefore: 1080 - 120 - 20, parts: [part('bb', 'active', 20)] }];
+    expect(at(greedyScheduler.plan({ start: 600, jobs }), 'bb').start).toBe(940);
+  });
+
   it('a job with no parts or no deadline still gets placed', () => {
     const jobs: PlanJob[] = [
       { id: 'empty', label: 'Nothing', readyBy: 700, parts: [] },

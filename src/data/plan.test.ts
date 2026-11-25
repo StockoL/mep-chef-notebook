@@ -99,6 +99,14 @@ describe('the plan from today’s sheet', () => {
     expect(plan.plan.parts.filter((p) => p.jobId === todays[0]).map((p) => p.label)).toEqual(['Rinse and pat dry 10 min', 'Portion 60g 20 min']);
   });
 
+  it('makes what’s held warm close to service, not first thing', async () => {
+    const bb = await ready('Beurre blanc', 'butter 250g', ['Reduce shallot, white wine and vinegar 10 min', 'Whisk in cold butter 5-10 min', 'Hold warm max 2 hrs']);
+    await onSheet(today, [bb]);
+    const plan = await getPlanView(kitchenId, morning, db);
+    // Ready by lunch (12:00), 20 minutes' work, held at most 2 hours → from 09:40, the shift's start allowing.
+    expect(plan.plan.parts[0]!.start).toBe(580);
+  });
+
   it('starts at the start of the shift, whenever it’s looked at', async () => {
     expect((await getPlanView(kitchenId, new Date(2026, 10, 25, 7, 30), db)).start).toBe(540);
     expect((await getPlanView(kitchenId, new Date(2026, 10, 25, 15, 0), db)).start).toBe(540);

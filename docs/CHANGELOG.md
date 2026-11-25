@@ -146,3 +146,13 @@ Your own technique notes, linked from every step; methods from templates.
 - "A word here is a technique" in a step's correction sheet; Inbox → **A technique's notes**; ingredient pages list **Techniques applied** (from prep notes and steps).
 - Step reader: "rub in" and "bring together" (active, bench); a step naming the last word of an ingredient ("roast bones" → chicken bones) links to that line for scaling.
 - Search finds techniques. Videos play in place.
+
+## Phase 8: Prep scheduler v1 (25 Nov 2026)
+
+The Plan tab: today's sheet in time order, worked back from your services.
+
+- The scheduler (`src/core/scheduler/`, behind `scheduler.plan(input)`): the longest chains start first, your hands are never on two things at once, check-ins and left-alone steps run alongside, equipment doesn't clash at different settings, a recipe waits for the stock it needs, things held warm aren't made too early, and anything late is flagged (DECISIONS 50).
+- Plan tab: blocks around your services ("Before Lunch, ready by 12:00", "Lunch 12:00–14:30"…), each step with its time, what it is (hands on, keep an eye, left) and equipment; free time shaded; "needs cover: cooling" when something that can't be left has to run during service; past steps fade, the one on now is outlined. Tick a job and it's ticked on the sheet.
+- Beside the plan: drafts and things with no recipe, as to-dos. Done items under Done.
+- Tomorrow's sheet: overnight cures and sets are planned today ("For tomorrow: started before you go"); today's items skip what was started yesterday.
+- The plan starts at the start of your shift; without service times or a shift, it says what's missing.

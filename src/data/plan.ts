@@ -109,7 +109,11 @@ export async function getPlanView(kitchenId: KitchenId, now: Date, database: Mep
     }
     const { today, yesterday } = splitAtPreviousDay(recipe.parts);
     const by = readyBy(item.item.serviceId);
-    jobs.push({ id: item.item.id, label: item.name, parts: today.map(toPlanPart), readyBy: by.at, after: recipe.needs });
+    const planParts = today.map(toPlanPart);
+    // Held warm for a limited time ("hold warm max 2 hrs"): not made so early it would be held longer.
+    const total = planParts.reduce((sum, p) => sum + p.minutes, 0);
+    const notBefore = recipe.warmHoldMinutes !== null && by.at !== null ? by.at - recipe.warmHoldMinutes - total : undefined;
+    jobs.push({ id: item.item.id, label: item.name, parts: planParts, readyBy: by.at, after: recipe.needs, notBefore });
     info.set(item.item.id, { view: item, forDay: 'today', readyByLabel: by.label, startedYesterday: yesterday.map((p) => p.text) });
     if (item.componentId) componentJob.set(item.componentId, item.item.id);
   }
@@ -151,14 +155,20 @@ export async function getPlanView(kitchenId: KitchenId, now: Date, database: Mep
 }
 
 /** A sheet item's recipe parts, if its recipe is ready; otherwise why it's a to-do. */
-async function readyParts(item: SheetItemView, kitchenId: KitchenId, database: MepDatabase): Promise<{ parts: StepPart[]; needs: Id[] } | { reason: string }> {
+async function readyParts(
+  item: SheetItemView,
+  kitchenId: KitchenId,
+  database: MepDatabase,
+): Promise<{ parts: StepPart[]; needs: Id[]; warmHoldMinutes: number | null } | { reason: string }> {
   if (!item.componentId) return { reason: 'No recipe: tick it off by hand' };
   const variation = await getVariationInUse(item.componentId, kitchenId, database);
   if (!variation?.currentVersionId || variation.status !== 'ready') return { reason: 'Draft: not in the plan until its method is confirmed' };
   const steps = await database.steps.where('versionId').equals(variation.currentVersionId).sortBy('order');
-  // Done at service ("to order") and holds aren't prep.
-  const parts = steps.flatMap((s) => s.parts).filter((p) => !p.atService && !(p.mode === null && p.hold));
-  return { parts, needs: [...new Set(parts.flatMap((p) => p.dependsOnComponentIds))] };
+  const all = steps.flatMap((s) => s.parts);
+  // Done at service ("to order") and holds aren't prep; a warm hold limits how early it's made.
+  const parts = all.filter((p) => !p.atService && !(p.mode === null && p.hold));
+  const warm = all.find((p) => p.hold?.where === 'warm')?.hold;
+  return { parts, needs: [...new Set(parts.flatMap((p) => p.dependsOnComponentIds))], warmHoldMinutes: warm?.minutes ?? null };
 }
 
 /** Parts up to the last day-before part happen the day before; the rest today. */
