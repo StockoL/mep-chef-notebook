@@ -61,8 +61,9 @@ describe('draft or ready', () => {
 
     const pass = (await db.steps.where('versionId').equals((await db.variations.get(variationId))!.currentVersionId!).sortBy('order'))[1]!;
     await updateStepPart(pass.id, 0, { minutesMin: 10, minutesMax: 10 }, db);
-    await confirmAllSteps(variationId, db);
-    expect((await db.variations.get(variationId))!.status).toBe('ready');
+    const { ids, change: confirmed } = await confirmAllSteps(variationId, db);
+    expect(ids).toHaveLength(2);
+    expect(confirmed).toMatchObject({ from: 'draft', to: 'ready' });
 
     const dropped = await updateStepPart(pass.id, 0, { minutesMin: null, minutesMax: null }, db);
     expect(dropped).toMatchObject({ from: 'ready', to: 'draft', missing: [expect.objectContaining({ text: 'Step 2: no time' })] });

@@ -29,6 +29,7 @@ export const paths = {
   goal: `${BASE}section/goal`,
   settings: `${BASE}settings`,
   settingsList: (list: string) => `${BASE}settings/lists/${list}`,
+  wordList: `${BASE}settings/words`,
   kitchens: `${BASE}kitchens`,
   kitchen: (id: string) => `${BASE}kitchen/${id}`,
   kitchenSections: (id: string) => `${BASE}kitchen/${id}/sections`,

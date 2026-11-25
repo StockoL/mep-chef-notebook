@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatMinutes } from './formatMinutes';
+import { formatMinuteRange, formatMinutes } from './formatMinutes';
 
 describe('formatMinutes', () => {
   describe('under an hour', () => {
@@ -72,5 +72,17 @@ describe('formatMinutes', () => {
       expect(() => formatMinutes(Number.NaN)).toThrow(RangeError);
       expect(() => formatMinutes(Number.POSITIVE_INFINITY)).toThrow(RangeError);
     });
+  });
+});
+
+describe('formatMinuteRange', () => {
+  it('shows a step’s time the way a chip does', () => {
+    expect(formatMinuteRange(45, 45)).toBe('45 min');
+    expect(formatMinuteRange(40, 45)).toBe('40–45 min');
+    expect(formatMinuteRange(360, 480)).toBe('6h–8h');
+    expect(formatMinuteRange(45, 60)).toBe('45 min–1h');
+    expect(formatMinuteRange(120, null)).toBe('2h+');
+    expect(formatMinuteRange(480, null)).toBe('overnight');
+    expect(formatMinuteRange(1.5, 1.5)).toBe('1.5 min');
   });
 });

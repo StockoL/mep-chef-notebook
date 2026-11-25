@@ -313,11 +313,19 @@ function TimeField(props: { label: string; value: string | null; onChange: (valu
 export function KitchenPart({ id = '', part = '' }: { id?: string; part?: string }) {
   const kitchen = useLiveQuery(() => getKitchen(id), [id]);
   const copy: Record<string, { title: string; text: string }> = {
-    equipment: { title: 'Equipment', text: 'Ovens, hobs and the rest arrive with the prep plan, which uses them to avoid clashes.' },
-    suppliers: { title: 'Suppliers', text: 'Suppliers arrive with section admin, for draft orders and cut-off times.' },
+        suppliers: { title: 'Suppliers', text: 'Suppliers arrive with section admin, for draft orders and cut-off times.' },
     'house-rules': { title: 'House rules', text: 'Shelf lives and label rules arrive with food safety.' },
   };
   const page = copy[part] ?? { title: 'Not found', text: '' };
+  if (part === 'equipment') {
+    return (
+      <section class="flow">
+        <ScreenHeader title="Equipment" back={{ href: paths.kitchen(id), label: kitchen?.name ?? 'Kitchen' }} />
+        <p class="field__hint">The kinds of equipment this kitchen has. Steps are read against this list; the prep plan will use it to avoid clashes.</p>
+        <ListEditor listRef={{ kind: 'values', list: 'equipment-types', kitchenId: id }} itemName="equipment" />
+      </section>
+    );
+  }
   return (
     <section class="flow">
       <ScreenHeader title={page.title} back={{ href: paths.kitchen(id), label: kitchen?.name ?? 'Kitchen' }} />

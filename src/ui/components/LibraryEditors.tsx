@@ -8,10 +8,10 @@ import { findByName } from '../../core/ingredients/names';
 import { formatShorthand, parseShorthand } from '../../core/ingredients/shorthand';
 import { formatQuantity } from '../../core/units/units';
 import { listComponents } from '../../data/components';
-import { createComponent, deleteUnusedIngredients, listIngredients, saveLines, saveSteps, type LineView } from '../../data/library';
+import { createComponent, deleteUnusedIngredients, listIngredients, saveLines, type LineView } from '../../data/library';
 import { ListError } from '../../data/lists';
 import { createCollection, ensureTag, listCollections, listTags, tagNames, toggleInCollection } from '../../data/tags';
-import type { CollectionMember, Id, KitchenId, Step } from '../../data/types';
+import type { CollectionMember, Id, KitchenId } from '../../data/types';
 import { useAutosave } from '../hooks/useAutosave';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
@@ -96,35 +96,6 @@ export function LinesEditor({ variationId, componentId, lines }: { variationId: 
           })}
         </ul>
       )}
-    </div>
-  );
-}
-
-// ─── Method steps ─────────────────────────────────────────────────────────
-
-/** The method as plain steps, one per line; saved as you type. Phase 4 reads times and equipment from them. */
-export function StepsEditor({ variationId, steps }: { variationId: Id; steps: Step[] }) {
-  const [text, setText] = useState(() => steps.map((s) => s.text).join('\n'));
-  const { change, flush } = useAutosave((value: string) => saveSteps(variationId, value.split('\n')), 800);
-
-  return (
-    <div class="field">
-      <label class="label" for="steps">
-        Method
-      </label>
-      <textarea
-        id="steps"
-        class="textarea"
-        rows={Math.max(3, text.split('\n').length + 1)}
-        value={text}
-        placeholder={'Roast bones 200°C 45 min\nCover with water, simmer 6 hrs, skim\nPass, chill'}
-        onInput={(e) => {
-          setText(e.currentTarget.value);
-          change(e.currentTarget.value);
-        }}
-        onBlur={flush}
-      />
-      <p class="field__hint">One step per line, in your own shorthand. Saved as you type.</p>
     </div>
   );
 }

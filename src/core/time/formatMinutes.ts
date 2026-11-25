@@ -38,3 +38,16 @@ export function formatMinutes(minutes: number): string {
   }
   return `${sign}${hours}h ${String(rest).padStart(2, '0')}`;
 }
+
+/**
+ * A step's time as a chip shows it: "45 min", "40–45 min", "6h–8h",
+ * "2h+" (at least), "overnight", "1.5 min" (short times keep their half).
+ */
+export function formatMinuteRange(min: number, max: number | null): string {
+  const one = (m: number) => (m < 10 && !Number.isInteger(m) ? `${Math.round(m * 10) / 10} min` : formatMinutes(m));
+  if (max === null) return min === 480 ? 'overnight' : `${one(min)}+`;
+  if (max === min) return one(min);
+  // "40–45 min": both under an hour share the unit.
+  if (max < 60 && Number.isInteger(min)) return `${min}–${one(max)}`;
+  return `${one(min)}–${one(max)}`;
+}

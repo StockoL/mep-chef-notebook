@@ -119,3 +119,15 @@ describe('the chef’s word list', () => {
     expect(readStep('Paco twice', { words })[0]).toMatchObject({ equipment: 'Pacojet' });
   });
 });
+
+describe('typed corrections', () => {
+  it('reads bare numbers as minutes, and anything else as in a step', async () => {
+    const { readTypedMinutes } = await import('./tokens');
+    expect(readTypedMinutes('45')).toEqual({ min: 45, max: 45 });
+    expect(readTypedMinutes('40-45')).toEqual({ min: 40, max: 45 });
+    expect(readTypedMinutes('2+')).toEqual({ min: 2, max: null });
+    expect(readTypedMinutes('1h30')).toEqual({ min: 90, max: 90 });
+    expect(readTypedMinutes('overnight')).toEqual({ min: 480, max: null });
+    expect(readTypedMinutes('soon')).toBeNull();
+  });
+});

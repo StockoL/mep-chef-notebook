@@ -214,16 +214,15 @@ export async function confirmStep(stepId: Id, confirmed: boolean, database: MepD
   return variationId ? refreshStatus(variationId, database) : null;
 }
 
-/** Confirms every step of the variation's current method. Returns the ids it confirmed, for undo. */
-export async function confirmAllSteps(variationId: Id, database: MepDatabase = appDb): Promise<Id[]> {
+/** Confirms every step of the variation's current method. Returns the ids it confirmed (for undo) and the status change. */
+export async function confirmAllSteps(variationId: Id, database: MepDatabase = appDb): Promise<{ ids: Id[]; change: StatusChange | null }> {
   const variation = await database.variations.get(variationId);
-  if (!variation?.currentVersionId) return [];
+  if (!variation?.currentVersionId) return { ids: [], change: null };
   const ids = (await database.steps.where('versionId').equals(variation.currentVersionId).toArray()).filter((s) => !s.confirmed).map((s) => s.id);
   await database.transaction('rw', database.steps, async () => {
     for (const id of ids) await database.steps.update(id, { confirmed: true });
   });
-  await refreshStatus(variationId, database);
-  return ids;
+  return { ids, change: await refreshStatus(variationId, database) };
 }
 
 export async function unconfirmSteps(ids: Id[], variationId: Id, database: MepDatabase = appDb) {
@@ -273,6 +272,11 @@ export async function refreshStatus(variationId: Id, database: MepDatabase = app
 
 export function listWords(database: MepDatabase = appDb): Promise<WordListEntry[]> {
   return database.wordListEntries.orderBy('word').toArray();
+}
+
+/** Every equipment value's name by id, across kitchens: for showing word list entries. */
+export async function equipmentNames(database: MepDatabase = appDb): Promise<Map<Id, string>> {
+  return new Map((await database.listValues.where('list').equals('equipment-types').toArray()).map((v) => [v.id, v.value]));
 }
 
 /**

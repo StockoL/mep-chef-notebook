@@ -21,6 +21,7 @@ import { Goal, Section, WasteLog } from './screens/SectionScreens';
 import { Settings } from './screens/Settings';
 import { SettingsList } from './screens/SettingsList';
 import { Today } from './screens/Today';
+import { WordList } from './screens/WordList';
 
 /**
  * The app shell (docs/UX.md → Navigation): top bar, the current screen, and a
@@ -61,6 +62,7 @@ export function App() {
               <Route path={paths.goal} component={Goal} />
               <Route path={paths.settings} component={Settings} />
               <Route path={routes.settingsList} component={SettingsList} />
+              <Route path={paths.wordList} component={WordList} />
               <Route path={paths.kitchens} component={Kitchens} />
               <Route path={routes.kitchen} component={KitchenSettings} />
               <Route path={routes.kitchenSections} component={KitchenSections} />

@@ -19,11 +19,12 @@ export function useAutosave<T>(save: (value: T) => Promise<unknown>, delay: numb
   const saveRef = useRef(save);
   saveRef.current = save;
 
-  const flush = () => {
+  /** Saves now. The promise settles when the save has (for "save, then show the result"). */
+  const flush = (): Promise<unknown> => {
     clearTimeout(timer.current);
     const next = pending.current;
     pending.current = null;
-    if (next) void trackSave(saveRef.current(next.value));
+    return next ? trackSave(saveRef.current(next.value)).catch(() => undefined) : Promise.resolve();
   };
 
   const change = (value: T) => {
@@ -39,7 +40,7 @@ export function useAutosave<T>(save: (value: T) => Promise<unknown>, delay: numb
     return () => {
       document.removeEventListener('visibilitychange', onHidden);
       window.removeEventListener('pagehide', flush);
-      flush();
+      void flush();
     };
   }, []);
 

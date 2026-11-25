@@ -32,11 +32,11 @@ import {
   ComponentPicker,
   LinesEditor,
   NameField,
-  StepsEditor,
   TagEditor,
   TextAreaField,
 } from '../components/LibraryEditors';
 import { MediaView } from '../components/MediaView';
+import { MethodEditor } from '../components/MethodEditor';
 import { NoteEditor } from '../components/NoteEditor';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { showMessage } from '../components/UndoBar';
@@ -91,7 +91,7 @@ export function ComponentPage({ id = '' }: { id?: string }) {
       {variation && <YieldField key={variation.id} variation={variation} />}
 
       {variation && <LinesEditor key={`lines-${variation.id}`} variationId={variation.id} componentId={id} lines={lines} />}
-      {variation && <StepsEditor key={`steps-${variation.id}`} variationId={variation.id} steps={steps} />}
+      {variation && <MethodEditor key={`steps-${variation.id}`} variation={variation} steps={steps} />}
 
       <TagEditor tagIds={component.tagIds} onChange={(tagIds) => updateComponent(id, { tagIds })} />
       <AliasesField aliases={component.aliases} onSave={(aliases) => updateComponent(id, { aliases })} />

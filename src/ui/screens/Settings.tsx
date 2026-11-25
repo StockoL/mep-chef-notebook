@@ -118,7 +118,18 @@ export function Settings() {
             </li>
           ))}
         </ul>
-        <p class="field__hint">A kitchen’s own lists (sections, services) are in its kitchen settings.</p>
+        <p class="field__hint">A kitchen’s own lists (sections, services, equipment) are in its kitchen settings.</p>
+        <ul class="row-list" role="list">
+          <li>
+            <a class="list-row" href={paths.wordList}>
+              <span class="list-row__main">
+                <span class="list-row__title">Step reader’s words</span>
+                <span class="list-row__meta">Your corrections: what your words mean</span>
+              </span>
+              <Icon name="chevron-right" />
+            </a>
+          </li>
+        </ul>
       </section>
 
       <StorageCheck />

@@ -196,3 +196,19 @@ export function readHold(text: string): Found<HoldReading> {
   }
   return { value: null, rest: text };
 }
+
+/**
+ * A time the chef types to correct a step: "45", "40-45", "2+" are minutes;
+ * anything else is read as in a step ("1h30", "6-8 hrs", "overnight").
+ */
+export function readTypedMinutes(typed: string): Minutes | null {
+  const text = normaliseStepText(typed);
+  const bare = text.match(/^(\d+(?:\.\d+)?)(?:\s*-\s*(\d+(?:\.\d+)?))?\s*(\+)?$/);
+  if (bare) {
+    const min = Number(bare[1]);
+    if (bare[3]) return { min, max: null };
+    const max = bare[2] ? Number(bare[2]) : min;
+    return max >= min ? { min, max } : { min: max, max: min };
+  }
+  return readMinutes(text).value;
+}

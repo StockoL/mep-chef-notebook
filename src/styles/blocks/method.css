@@ -1,0 +1,93 @@
+/* The method: steps as written, each with the step reader's readings as chips
+   (SPEC → Confirming). Empty chips are dashed: something still to fill in. */
+.method-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2xs);
+}
+
+.method-head h2 {
+  margin: 0;
+}
+
+.method-steps {
+  display: grid;
+  gap: var(--space-s);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.method-step {
+  display: grid;
+  gap: var(--space-2xs);
+  padding: var(--space-s);
+  border: 1px solid var(--color-border);
+  border-inline-start: 4px solid var(--color-status-warning-border);
+  border-radius: var(--radius-surface);
+  background-color: var(--color-surface-raised);
+}
+
+.method-step[data-confirmed='true'] {
+  border-inline-start-color: var(--color-status-success-border);
+}
+
+.method-step__text {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.method-step__number {
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.method-step__part {
+  display: grid;
+  gap: var(--space-3xs);
+}
+
+.method-step__part-text {
+  margin: 0;
+  font-size: var(--step--1);
+  color: var(--color-text-muted);
+}
+
+.method-step__confirm {
+  justify-self: start;
+}
+
+/* Readings: smaller than choice chips, still a full tap target. */
+.reading-chip {
+  padding-inline: var(--space-xs);
+  font-size: var(--step--1);
+}
+
+.reading-chip[data-empty='true'] {
+  border-style: dashed;
+  color: var(--color-text-muted);
+}
+
+.reading-chip[data-cue='true'] {
+  border-color: var(--color-border);
+  background-color: var(--color-surface-sunken);
+}
+
+.missing {
+  border-color: var(--color-status-warning-border);
+  background-color: var(--color-status-warning-surface);
+}
+
+.missing h3 {
+  margin: 0;
+  font-size: inherit;
+}
+
+/* Confirmed is a quiet done state, not a call to action. */
+.method-step__confirm[aria-pressed='true'] {
+  border-color: var(--color-status-success-border);
+  background-color: var(--color-status-success-surface);
+  color: var(--color-status-success-text);
+}
