@@ -90,3 +90,33 @@ describe('formatShorthand', () => {
     }
   });
 });
+
+describe('amounts written without a number (beer batter)', () => {
+  const read = (text: string) => {
+    const { name, quantity, unit } = parseItem(text);
+    return [name, quantity, unit];
+  };
+  it('reads a unit with no number as one', () => {
+    expect(read('turmeric pinch')).toEqual(['turmeric', 1, 'pinch']);
+    expect(read('lager/beer pint')).toEqual(['lager/beer', 1, 'pint']);
+    expect(read('pinch of salt')).toEqual(['salt', 1, 'pinch']);
+    expect(read('a handful of parsley')).toEqual(['parsley', 1, 'handful']);
+    expect(read('knob butter')).toEqual(['butter', 1, 'knob']);
+    expect(read('splash vinegar')).toEqual(['vinegar', 1, 'splash']);
+    expect(read('worcester sauce dash')).toEqual(['worcester sauce', 1, 'dash']);
+  });
+  it('reads half', () => {
+    expect(read('half pint lager')).toEqual(['lager', 0.5, 'pint']);
+    expect(read('lager half a pint')).toEqual(['lager', 0.5, 'pint']);
+  });
+  it('reads pints with numbers, and shows them as written', () => {
+    expect(read('lager 1 pint')).toEqual(['lager', 1, 'pint']);
+    expect(read('2 pints milk')).toEqual(['milk', 2, 'pint']);
+    expect(read('milk ½ pint')).toEqual(['milk', 0.5, 'pint']);
+    expect(formatShorthand(parseItem('lager 2 pints'))).toBe('lager 2 pints');
+  });
+  it('leaves names that end in a unit-like word alone', () => {
+    expect(read('bay leaf')).toEqual(['bay leaf', null, null]);
+    expect(read('garlic clove')).toEqual(['garlic clove', null, null]);
+  });
+});

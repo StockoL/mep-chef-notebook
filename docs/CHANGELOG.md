@@ -83,3 +83,10 @@ Write steps your way; the app reads the scheduling data from them.
 - Draft or ready is worked out from the steps (DECISIONS 39), with "what's missing" (one tap each to fix) and a message when an edit drops a recipe back to draft.
 - Kitchen settings → Equipment is now an editable list; "Bench" added to every kitchen's list once.
 - Schema v4: steps hold parts (DECISIONS 38). Old steps are read at start-up; older exports upgrade on import.
+
+### Phase 4 follow-up: amounts without numbers (25 Nov 2026)
+
+From entering a beer batter recipe on the phone.
+
+- Ingredient lines read a unit written without a number as one: "turmeric pinch", "pinch of salt", "a handful of parsley", "half pint lager".
+- New units (DECISIONS 34): pint (shown as pints, measured as 568 ml), dash, splash, handful, knob.

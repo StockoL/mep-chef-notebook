@@ -8,6 +8,8 @@ export const UNITS = {
   kg: { dimension: 'mass', perBase: 1000, plural: 'kg' },
   ml: { dimension: 'volume', perBase: 1, plural: 'ml' },
   l: { dimension: 'volume', perBase: 1000, plural: 'l' },
+  /** A UK pint: shown as written, measured as 568 ml. */
+  pint: { dimension: 'volume', perBase: 568, plural: 'pints' },
   each: { dimension: 'count', perBase: 1, plural: 'each' },
   portion: { dimension: 'portion', perBase: 1, plural: 'portions' },
   tsp: { dimension: 'tsp', perBase: 1, plural: 'tsp' },
@@ -21,6 +23,10 @@ export const UNITS = {
   leaf: { dimension: 'leaf', perBase: 1, plural: 'leaves' },
   tin: { dimension: 'tin', perBase: 1, plural: 'tins' },
   pack: { dimension: 'pack', perBase: 1, plural: 'packs' },
+  dash: { dimension: 'dash', perBase: 1, plural: 'dashes' },
+  splash: { dimension: 'splash', perBase: 1, plural: 'splashes' },
+  handful: { dimension: 'handful', perBase: 1, plural: 'handfuls' },
+  knob: { dimension: 'knob', perBase: 1, plural: 'knobs' },
 } as const;
 
 export type Unit = keyof typeof UNITS;

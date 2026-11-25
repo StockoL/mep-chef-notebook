@@ -22,6 +22,7 @@ const UNIT_WORDS: [Unit, string[]][] = [
   ['g', ['g', 'gr', 'grm', 'gram', 'grams', 'gramme', 'grammes']],
   ['ml', ['ml', 'mls', 'millilitre', 'millilitres', 'milliliter', 'milliliters']],
   ['l', ['l', 'lt', 'ltr', 'ltrs', 'litre', 'litres', 'liter', 'liters']],
+  ['pint', ['pint', 'pints', 'pt', 'pts']],
   ['tsp', ['tsp', 'tsps', 'teaspoon', 'teaspoons']],
   ['tbsp', ['tbsp', 'tbsps', 'tbs', 'tablespoon', 'tablespoons']],
   ['pinch', ['pinch', 'pinches']],
@@ -33,11 +34,24 @@ const UNIT_WORDS: [Unit, string[]][] = [
   ['leaf', ['leaf', 'leaves']],
   ['tin', ['tin', 'tins', 'can', 'cans']],
   ['pack', ['pack', 'packs', 'pkt', 'packet', 'packets']],
+  ['dash', ['dash', 'dashes']],
+  ['splash', ['splash', 'splashes']],
+  ['handful', ['handful', 'handfuls']],
+  ['knob', ['knob', 'knobs']],
   ['portion', ['portion', 'portions', 'ptn', 'ptns']],
   ['each', ['each', 'ea', 'x']],
 ];
 
 const UNIT_BY_WORD = new Map(UNIT_WORDS.flatMap(([unit, words]) => words.map((word) => [word, unit] as const)));
+
+/**
+ * Units that mean "one" when written without a number: "turmeric pinch",
+ * "pinch of salt", "half pint lager". Not leaf, clove, slice or sheet: those
+ * are often part of the name ("bay leaf", "garlic clove").
+ */
+const UNITS_WITHOUT_NUMBER = new Set<Unit>(['pint', 'tsp', 'tbsp', 'pinch', 'bunch', 'sprig', 'dash', 'splash', 'handful', 'knob']);
+const AMOUNT_WORDS: Record<string, number> = { a: 1, an: 1, one: 1, half: 0.5, 'half a': 0.5 };
+const AMOUNT = String.raw`(?:(a|an|one|half a|half)\s+)?`;
 
 /** Centilitres are written but not kept: 5cl → 50ml. */
 const SCALED_UNITS: Record<string, { unit: Unit; factor: number }> = {
@@ -122,7 +136,11 @@ export function parseItem(item: string): ShorthandLine {
     }
   }
 
-  // 4. No quantity: "mirepoix", "tom puree".
+  // 4. A unit with no number: "turmeric pinch", "pinch of salt", "lager half pint".
+  const unitOnly = readUnitWithoutNumber(text);
+  if (unitOnly) return { ...unitOnly, prepNote };
+
+  // 5. No quantity: "mirepoix", "tom puree".
   return { name: tidy(text), quantity: null, unit: null, prepNote };
 }
 
@@ -134,6 +152,25 @@ function readUnit(quantity: number, word: string | undefined): { quantity: numbe
   if (scaled) return { quantity: quantity * scaled.factor, unit: scaled.unit };
   const unit = UNIT_BY_WORD.get(lower);
   return unit ? { quantity, unit } : null;
+}
+
+function readUnitWithoutNumber(text: string): Omit<ShorthandLine, 'prepNote'> | null {
+  const amountOf = (word: string | undefined) => (word ? (AMOUNT_WORDS[word.toLowerCase()] ?? 1) : 1);
+  const unitFor = (word: string) => {
+    const unit = UNIT_BY_WORD.get(word.toLowerCase());
+    return unit && UNITS_WITHOUT_NUMBER.has(unit) ? unit : null;
+  };
+  const atStart = new RegExp(String.raw`^${AMOUNT}([a-zA-Z]+)(?:\s+of)?\s+(.+)$`, 'i').exec(text);
+  if (atStart) {
+    const unit = unitFor(atStart[2]!);
+    if (unit) return { name: tidy(atStart[3]!), quantity: amountOf(atStart[1]), unit };
+  }
+  const atEnd = new RegExp(String.raw`^(.*?\S)\s+${AMOUNT}([a-zA-Z]+)$`, 'i').exec(text);
+  if (atEnd) {
+    const unit = unitFor(atEnd[3]!);
+    if (unit) return { name: tidy(atEnd[1]!), quantity: amountOf(atEnd[2]), unit };
+  }
+  return null;
 }
 
 /** The whole text box → rows. Items with no name ("2kg" on its own) are dropped. */

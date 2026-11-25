@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { convert } from './units';
+import { convert, formatQuantity } from './units';
 
 describe('convert', () => {
   it('converts within one kind of measure', () => {
@@ -9,5 +9,13 @@ describe('convert', () => {
 
   it('refuses weight to volume without a density', () => {
     expect(() => convert(100, 'g', 'ml')).toThrow(/density/);
+  });
+});
+
+describe('pints', () => {
+  it('measure 568 ml', () => {
+    expect(convert(1, 'pint', 'ml')).toBe(568);
+    expect(formatQuantity(1, 'pint')).toBe('1 pint');
+    expect(formatQuantity(2, 'pint')).toBe('2 pints');
   });
 });
