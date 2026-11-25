@@ -1,6 +1,5 @@
 import { useLocation } from 'preact-iso';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { ALLERGENS, type AllergenId } from '../../core/allergens/allergens';
 import { formatAmount } from '../../core/scaling/rounding';
 import { UNIT_CHOICES, type Unit } from '../../core/units/units';
 import { getPlace } from '../../data/kitchens';
@@ -26,13 +25,15 @@ import { createKitchen, getKitchen, listKitchens, setKitchenArchived } from '../
 import { getListItems, ListError } from '../../data/lists';
 import { listComponentNotes } from '../../data/notes';
 import { menusForComponent, menusForDish, tagSuggestions } from '../../data/menus';
-import { addDishToSheet, gatherDishAllergens } from '../../data/dishes';
+import { addDishToSheet } from '../../data/dishes';
+import { componentAllergens, dishAllergens } from '../../data/allergens';
+import { AllergenPicker, AllergenSummaryView, MadeButton, ProductsSection } from '../components/FoodSafety';
 import { getDishPortions } from '../../data/scaling';
 import { getScaleChoice, setScaleChoice } from '../../data/scaling';
 import { recordView } from '../../data/search';
 import { restoreSnapshot } from '../../data/snapshot';
 import type { Variation } from '../../data/types';
-import { ChipChoice, ChipToggles, Segmented } from '../components/Controls';
+import { ChipChoice, Segmented } from '../components/Controls';
 import {
   AliasesField,
   CollectionToggles,
@@ -146,6 +147,9 @@ export function ComponentPage({ id = '' }: { id?: string }) {
           </div>
         ))}
       </section>
+
+      {variation && kitchenId && <ComponentAllergens componentId={id} kitchenId={kitchenId} variationId={variation.id} />}
+      <MadeButton componentId={id} label="Made a batch: label it" />
 
       {variation && kitchenId && <VariationActions componentId={id} kitchenId={kitchenId} shown={variation} />}
 
@@ -540,17 +544,11 @@ export function IngredientPage({ id = '' }: { id?: string }) {
 
       {ingredient.kind === 'basic' ? (
         <div class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
-          <p class="label">Allergens</p>
-          <ChipToggles<AllergenId>
-            label="Allergens"
-            choices={ALLERGENS.map((a) => ({ value: a.id, label: a.label }))}
-            values={ingredient.allergens}
-            onChange={(allergens) => trackSave(updateIngredient(id, { allergens }))}
-          />
-          <p class="field__hint">What this ingredient contains. Dishes and components will gather these with food safety.</p>
+          <AllergenPicker label="Allergens" value={ingredient.allergens} onChange={(allergens) => trackSave(updateIngredient(id, { allergens }))} />
+          <p class="field__hint">What this ingredient contains. Every recipe using it gathers these.</p>
         </div>
       ) : (
-        <p class="field__hint">A bought-in ingredient’s allergens come from the exact product your kitchen uses, added with food safety.</p>
+        <ProductsSection key={ingredient.id} ingredientId={ingredient.id} ingredientName={ingredient.name} />
       )}
 
       <IngredientWeights key={ingredient.id} ingredient={ingredient} />
@@ -599,7 +597,7 @@ function UsedIn({ groups, empty }: { groups: { label: string; items: { href: str
  * number of covers is set above).
  */
 function DishAtWork({ dishId, kitchenId }: { dishId: string; kitchenId: string }) {
-  const allergens = useLiveQuery(() => gatherDishAllergens(dishId, kitchenId), [dishId, kitchenId]);
+  const allergens = useLiveQuery(() => dishAllergens(dishId, kitchenId), [dishId, kitchenId]);
   const portions = useLiveQuery(() => getDishPortions(dishId), [dishId]);
 
   async function addToSheet() {
@@ -608,18 +606,17 @@ function DishAtWork({ dishId, kitchenId }: { dishId: string; kitchenId: string }
   }
 
   return (
-    <section class="flow" aria-labelledby="allergens-title">
+    <section class="flow">
       <button class="button" type="button" data-variant="primary" onClick={addToSheet}>
         Add to today’s sheet{portions ? ` for ${portions}` : ''}
       </button>
-      <h2 id="allergens-title">Allergens</h2>
-      {allergens && (
-        <>
-          <p>{allergens.contains.length ? allergens.contains.map((a) => a.label).join(', ') : 'None recorded in its ingredients.'}</p>
-          {allergens.unconfirmed.length > 0 && <p class="field__hint">Not confirmed (bought-in): {allergens.unconfirmed.join(', ')}.</p>}
-          <p class="field__hint">Gathered from the ingredients you’ve recorded, through every component. The full allergen check comes with food safety.</p>
-        </>
-      )}
+      {allergens && <AllergenSummaryView allergens={allergens} kitchenId={kitchenId} />}
     </section>
   );
+}
+
+/** A component's allergens, through every component it uses (FS1), for the variation shown. */
+function ComponentAllergens({ componentId, kitchenId, variationId }: { componentId: string; kitchenId: string; variationId: string }) {
+  const allergens = useLiveQuery(() => componentAllergens(componentId, kitchenId, variationId), [componentId, kitchenId, variationId]);
+  return allergens ? <AllergenSummaryView allergens={allergens} kitchenId={kitchenId} /> : null;
 }

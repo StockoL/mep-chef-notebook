@@ -1,0 +1,55 @@
+/* Allergens (FS1, FS5): complete is quiet; not complete is never mistaken for "none". */
+.allergens__status {
+  margin: 0;
+  padding: var(--space-2xs) var(--space-s);
+  border-radius: var(--radius-control);
+  background-color: var(--color-status-warning-surface);
+  color: var(--color-status-warning-text);
+  font-weight: var(--weight-semibold);
+}
+
+.allergens__status[data-complete='true'] {
+  background-color: var(--color-status-success-surface);
+  color: var(--color-status-success-text);
+}
+
+.allergen-list {
+  display: grid;
+  gap: var(--space-3xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-wrap: anywhere;
+}
+
+/* The day-dot label (FS2): copied onto the real label, so it reads like one. */
+.day-dot {
+  display: grid;
+  gap: var(--space-3xs);
+  padding: var(--space-s);
+  border: 2px dashed var(--color-border-strong);
+  border-radius: var(--radius-surface);
+  background-color: var(--color-surface-raised);
+}
+
+.day-dot p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.day-dot__name {
+  font-size: var(--step-2);
+  font-weight: var(--weight-bold);
+}
+
+.day-dot__day {
+  font-size: var(--step-3);
+  font-weight: var(--weight-bold);
+}
+
+.day-dot__initials {
+  justify-self: end;
+  font-size: var(--step-1);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.1em;
+}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { minutesToTime } from '../../core/time/calendar';
+import { criticalTarget } from '../../core/foodSafety/foodSafety';
 import type { PlacedPart, ServiceWindow } from '../../core/scheduler/scheduler';
 import { getPlace } from '../../data/kitchens';
 import type { PlanView } from '../../data/plan';
@@ -159,7 +160,9 @@ function PlanRow(props: { part: PlacedPart; view: PlanView; equipment: Map<strin
   const isFirst = view.plan.parts.find((p) => p.jobId === part.jobId)?.partKey === part.partKey;
   if (!info) return null;
   const kit = [part.equipment ? equipment?.get(part.equipment) : null, part.setting].filter(Boolean).join(' ');
+  const critical = part.critical ? criticalTarget(part.critical, view.targets[part.critical]) : null;
   const flags = [
+    critical?.text ?? null,
     part.needsCover ? `Needs cover: ${part.needsCover}` : null,
     part.gapBefore ? 'Should follow straight on from the step before' : null,
     isLast && job && job.late > 0 ? `${job.late} min late for ${info.readyByLabel?.replace('Ready by ', '') ?? 'its time'}` : null,

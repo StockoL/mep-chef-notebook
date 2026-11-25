@@ -20,6 +20,7 @@ import { listKitchenNotes } from '../../data/notes';
 import { NO_KITCHEN_ID, type DayOfWeek, type ServiceWindow } from '../../data/types';
 import { ChipToggles, Switch } from '../components/Controls';
 import { ListEditor } from '../components/ListEditor';
+import { HouseRules } from './HouseRules';
 import { DoneFooter, ScreenHeader } from '../components/ScreenHeader';
 import { showMessage } from '../components/UndoBar';
 import { DAY_NAMES, formatDays } from '../format';
@@ -310,9 +311,9 @@ export function KitchenPart({ id = '', part = '' }: { id?: string; part?: string
   const kitchen = useLiveQuery(() => getKitchen(id), [id]);
   const copy: Record<string, { title: string; text: string }> = {
         suppliers: { title: 'Suppliers', text: 'Suppliers arrive with section admin, for draft orders and cut-off times.' },
-    'house-rules': { title: 'House rules', text: 'Shelf lives and label rules arrive with food safety.' },
   };
   const page = copy[part] ?? { title: 'Not found', text: '' };
+  if (part === 'house-rules') return <HouseRules kitchenId={id} />;
   if (part === 'equipment') {
     return (
       <section class="flow">

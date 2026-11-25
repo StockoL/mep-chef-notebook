@@ -45,6 +45,7 @@
 @import './blocks/techniques.css' layer(blocks);
 @import './blocks/plan.css' layer(blocks);
 @import './blocks/prep.css' layer(blocks);
+@import './blocks/food-safety.css' layer(blocks);
 
 /* 5. Exceptions to LooseLeaf's blocks: last in the blocks layer, so they win there. */
 @import './exceptions.css' layer(blocks);

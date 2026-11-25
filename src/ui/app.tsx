@@ -17,7 +17,7 @@ import { EventEditor, Events } from './screens/Events';
 import { SectionList } from './screens/SectionList';
 import { PaperEntry, SheetScreen, SheetsList } from './screens/Sheets';
 import { Plan } from './screens/Plan';
-import { Goal, Section, WasteLog } from './screens/SectionScreens';
+import { Goal, Labels, Section, WasteLog } from './screens/SectionScreens';
 import { Settings } from './screens/Settings';
 import { SettingsList } from './screens/SettingsList';
 import { Today } from './screens/Today';
@@ -69,6 +69,7 @@ export function App() {
               <Route path={paths.prep} component={Prep} />
               <Route path={paths.section} component={Section} />
               <Route path={paths.waste} component={WasteLog} />
+              <Route path={paths.labels} component={Labels} />
               <Route path={paths.goal} component={Goal} />
               <Route path={paths.settings} component={Settings} />
               <Route path={routes.settingsList} component={SettingsList} />

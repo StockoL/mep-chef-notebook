@@ -48,6 +48,8 @@ export interface PlanPart {
   stepKey?: string;
   /** Its time was learned from this many timings, rather than written. */
   learnedFrom?: number;
+  /** A critical point ("cooling", "hot-hold", "reheat"): shown with the kitchen's target. */
+  critical?: string | null;
 }
 
 /** One job to place: a sheet item, as a chain of parts. */
@@ -98,6 +100,8 @@ export interface PlacedPart {
   needsCover: string | null;
   /** Should have followed the part before at once, but couldn't. */
   gapBefore: boolean;
+  /** Carried from the part: a critical point to check. */
+  critical?: string | null;
 }
 
 export interface PlannedJob {
@@ -206,6 +210,7 @@ export const greedyScheduler: Scheduler = {
           setting: part.setting,
           needsCover: service && !part.pausable ? (part.pauseBlocker ?? 'can’t be left') : null,
           gapBefore: part.noGap && state.next > 0 && t > state.readyAt,
+          critical: part.critical ?? null,
         });
         state.start ??= t;
         state.next += 1;

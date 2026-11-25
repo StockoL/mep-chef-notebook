@@ -22,6 +22,7 @@ import { servicesOn } from '../core/services/nextService';
 import { minutesOfDay, timeToMinutes, toCalendarDate, isoDayOfWeek } from '../core/time/calendar';
 import { db as appDb, type MepDatabase } from './db';
 import { eventInputs } from './events';
+import { getTargets } from './foodSafety';
 import { getVariationInUse } from './library';
 import { listServices, listShifts } from './kitchens';
 import { findSheet, getSheetView, type SheetItemView } from './sheets';
@@ -62,6 +63,8 @@ export interface PlanView {
   /** What's missing for a better plan: "no service times", "no shift". */
   hints: string[];
   sheetId: Id | null;
+  /** The kitchen's targets for critical points (FS3). */
+  targets: Partial<Record<string, string>>;
 }
 
 /** Works out the plan for a kitchen's sheet on a date, from `now` if it's today. */
@@ -160,6 +163,7 @@ export async function getPlanView(kitchenId: KitchenId, now: Date, database: Mep
     done: items.filter((i) => i.item.done),
     hints,
     sheetId: sheet?.id ?? null,
+    targets: await getTargets(kitchenId, database),
   };
 }
 
@@ -235,5 +239,6 @@ function toPlanPart({ part, stepKey }: KeyedPart, index: number, learn: Learn, b
     noGap: part.noGap,
     stepKey,
     learnedFrom: learned?.count,
+    critical: part.criticalPoint,
   };
 }

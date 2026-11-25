@@ -19,6 +19,8 @@ import { confirmAllSteps, confirmStep, equipmentKitchenId, learnWord, listEquipm
 import { addListItem, ListError } from '../../data/lists';
 import type { Id, KitchenId, ListValue, Step, StepPart, Variation } from '../../data/types';
 import { createTechnique } from '../../data/techniques';
+import { getTargets } from '../../data/foodSafety';
+import { criticalTarget } from '../../core/foodSafety/foodSafety';
 import { useAutosave } from '../hooks/useAutosave';
 import { paths } from '../router';
 import { useLiveQuery } from '../hooks/useLiveQuery';
@@ -48,6 +50,7 @@ export function MethodEditor({ variation, steps, componentName }: { variation: V
   const [open, setOpen] = useState<{ stepId: Id; part: number } | null>(null);
   const equipmentKitchen = useLiveQuery(() => equipmentKitchenId(variation), [variation.id, variation.kitchenId]);
   const equipment = useLiveQuery(async () => (equipmentKitchen ? listEquipment(equipmentKitchen) : []), [equipmentKitchen]);
+  const targets = useLiveQuery(async () => (equipmentKitchen ? getTargets(equipmentKitchen) : {}), [equipmentKitchen]);
   const missing = whatsMissing(steps.map((s) => ({ ...s, parts: s.parts.map((p) => ({ ...p, equipment: p.equipmentTypeId })) })));
   const unconfirmed = steps.filter((s) => !s.confirmed).length;
   const openStep = open ? steps.find((s) => s.id === open.stepId) : undefined;
@@ -85,7 +88,7 @@ export function MethodEditor({ variation, steps, componentName }: { variation: V
         <>
           <ol class="method-steps" role="list">
             {steps.map((step, index) => (
-              <StepCard key={step.id} step={step} number={index + 1} equipment={equipment ?? []} onOpen={(part) => setOpen({ stepId: step.id, part })} />
+              <StepCard key={step.id} step={step} number={index + 1} equipment={equipment ?? []} targets={targets ?? {}} onOpen={(part) => setOpen({ stepId: step.id, part })} />
             ))}
           </ol>
           {unconfirmed > 1 && (
@@ -178,15 +181,16 @@ function equipmentName(part: StepPart, equipment: readonly ListValue[]) {
 }
 
 /** The small cues a part carries, as chips: "every 60 min", "to order", "holds 3 days". */
-function cueLabels(part: StepPart): string[] {
+function cueLabels(part: StepPart, targets: Partial<Record<string, string>> = {}): string[] {
   const cues: string[] = [];
   if (part.checkEveryMinutes) cues.push(`check every ${formatMinuteRange(part.checkEveryMinutes, part.checkEveryMinutes)}`);
   if (part.atService) cues.push('to order');
   if (part.relativeTime) cues.push('runs on from the step before');
   if (part.noGap) cues.push('straight after');
   if (part.previousDay) cues.push('day before');
-  if (part.criticalPoint === 'cooling') cues.push('critical: cooling');
-  if (part.criticalPoint === 'hot-hold') cues.push('critical: hot holding');
+  // Critical points with the kitchen's own target, or the legal limit as a reminder (FS3).
+  const critical = part.criticalPoint ? criticalTarget(part.criticalPoint, targets[part.criticalPoint]) : null;
+  if (critical) cues.push(critical.text);
   if (part.hold) {
     const days = part.hold.minutes / 1440;
     const length = Number.isInteger(days) ? `${days} ${days === 1 ? 'day' : 'days'}` : formatMinuteRange(part.hold.minutes, part.hold.minutes);
@@ -197,7 +201,8 @@ function cueLabels(part: StepPart): string[] {
   return cues;
 }
 
-function StepCard({ step, number, equipment, onOpen }: { step: Step; number: number; equipment: readonly ListValue[]; onOpen: (part: number) => void }) {
+function StepCard(props: { step: Step; number: number; equipment: readonly ListValue[]; targets: Partial<Record<string, string>>; onOpen: (part: number) => void }) {
+  const { step, number, equipment, targets, onOpen } = props;
   const several = step.parts.length > 1;
   return (
     <li class="method-step" data-confirmed={step.confirmed}>
@@ -222,7 +227,7 @@ function StepCard({ step, number, equipment, onOpen }: { step: Step; number: num
                   <ReadingChip value={name ? [name, part.equipmentSetting].filter(Boolean).join(' ') : part.equipmentSetting} empty="+ equipment" onClick={() => onOpen(index)} />
                 </>
               )}
-              {cueLabels(part).map((cue) => (
+              {cueLabels(part, targets).map((cue) => (
                 <ReadingChip key={cue} value={cue} cue onClick={() => onOpen(index)} />
               ))}
             </div>

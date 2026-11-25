@@ -12,6 +12,7 @@ import { trackSave } from '../saveStatus';
 import { ChipChoice, Segmented } from './Controls';
 import { Sheet } from './Sheet';
 import { showMessage } from './UndoBar';
+import { MadeButton } from './FoodSafety';
 
 /**
  * A shift sheet's items (SH1): progress at the top, then each item with a
@@ -153,6 +154,8 @@ function ItemEditor({ view, kitchenId, onDone }: { view: SheetItemView; kitchenI
           {item.quantity ? `Open the recipe for ${view.amount}` : 'Open the recipe'}
         </a>
       )}
+      {/* Made it: a batch and its day-dot label (FS2). */}
+      {view.componentId && <MadeButton componentId={view.componentId} />}
       <button class="button" type="button" data-variant="danger" onClick={remove}>
         Take off the sheet
       </button>

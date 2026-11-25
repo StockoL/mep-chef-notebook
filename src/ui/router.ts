@@ -37,6 +37,7 @@ export const paths = {
   prep: `${BASE}plan/prep`,
   section: `${BASE}section`,
   waste: `${BASE}section/waste`,
+  labels: `${BASE}section/labels`,
   goal: `${BASE}section/goal`,
   settings: `${BASE}settings`,
   settingsList: (list: string) => `${BASE}settings/lists/${list}`,

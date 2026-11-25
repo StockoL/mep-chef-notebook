@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import type { PlacedPart } from '../../core/scheduler/scheduler';
 import { minutesToTime } from '../../core/time/calendar';
+import { criticalTarget } from '../../core/foodSafety/foodSafety';
 import { getPlace } from '../../data/kitchens';
 import { finishPart, getPrepView, runKey, startPart, undoFinish, undoStart, type PrepView } from '../../data/prep';
 import { equipmentNames } from '../../data/steps';
@@ -81,6 +82,7 @@ export function Prep() {
           <p class="prep-current__job">{name(current)}</p>
           <h1 class="prep-current__task">{current.label}</h1>
           <p class="list-row__meta">{[kit(current, names), `planned ${minutesToTime(current.start)}`].filter(Boolean).join(' · ')}</p>
+          {current.critical && <p class="plan-flag">{criticalTarget(current.critical, view.plan.targets[current.critical])?.text}</p>}
           {currentRun && !state.inService && <Countdown run={currentRun} part={current} now={second} />}
           <button class="button prep-current__action" type="button" data-variant="primary" disabled={busy} onClick={() => act(current, currentRun)}>
             {currentRun ? 'Done' : current.mode === 'active' ? 'Start' : ACTION[current.mode]}

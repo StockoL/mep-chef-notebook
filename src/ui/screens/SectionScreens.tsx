@@ -3,6 +3,10 @@ import { isoWeek } from '../../core/time/calendar';
 import { getCheckInDue, getGoal, listGoals, setGoalText, setReflection } from '../../data/goals';
 import { getListItems } from '../../data/lists';
 import { listWaste } from '../../data/waste';
+import { listBatches } from '../../data/foodSafety';
+import { getPlace } from '../../data/kitchens';
+import { BatchLabelView } from '../components/FoodSafety';
+import { Sheet } from '../components/Sheet';
 import { ChipChoice } from '../components/Controls';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { showMessage } from '../components/UndoBar';
@@ -19,6 +23,7 @@ export function Section() {
   const links = [
     { href: paths.sectionList, label: 'Section lists' },
     { href: paths.waste, label: 'Waste log' },
+    { href: paths.labels, label: 'Batches and labels' },
     { href: paths.goal, label: 'Weekly goal' },
   ];
   return (
@@ -159,6 +164,44 @@ export function Goal() {
           </ul>
         </section>
       )}
+    </section>
+  );
+}
+
+/** Batches made in this kitchen, newest first, each opening its label (FS2). /section/labels */
+export function Labels() {
+  const place = useLiveQuery(() => getPlace());
+  const batches = useLiveQuery(async () => (place ? listBatches(place.kitchenId) : []), [place?.kitchenId]);
+  const [open, setOpen] = useState<string | null>(null);
+  const when = (iso: string) => new Date(iso).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  return (
+    <section class="flow">
+      <ScreenHeader title="Batches and labels" back={{ href: paths.section, label: 'Section' }} />
+      <p class="field__hint">Tap “Made” on a sheet item or a recipe to label a batch.</p>
+      {batches?.length === 0 && (
+        <div class="empty-state">
+          <p>Nothing labelled yet.</p>
+        </div>
+      )}
+      <ul class="row-list" role="list">
+        {batches?.map(({ batch, name }) => (
+          <li key={batch.id}>
+            <button class="list-row" type="button" onClick={() => setOpen(batch.id)}>
+              <span class="list-row__main">
+                <span class="list-row__title">{name}</span>
+                <span class="list-row__meta">
+                  Made {when(batch.madeAt)}
+                  {batch.useBy ? ` · use by ${when(batch.useBy)}` : ''}
+                </span>
+              </span>
+              <Icon name="chevron-right" />
+            </button>
+          </li>
+        ))}
+      </ul>
+      <Sheet open={open !== null} onClose={() => setOpen(null)} title="Label">
+        {open && <BatchLabelView batchId={open} onDeleted={() => setOpen(null)} />}
+      </Sheet>
     </section>
   );
 }
