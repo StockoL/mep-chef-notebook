@@ -44,6 +44,7 @@ import {
 } from '../components/LibraryEditors';
 import { MediaView } from '../components/MediaView';
 import { MethodEditor } from '../components/MethodEditor';
+import { techniquesForIngredient } from '../../data/techniques';
 import { menuLabel } from './Menus';
 import { AttemptLog, IdeaFields, VariationActions, VariationChips } from '../components/Variations';
 import { IngredientWeights, PerPortionButton, PortionsPanel, ScalePanel } from '../components/Scaling';
@@ -118,7 +119,7 @@ export function ComponentPage({ id = '' }: { id?: string }) {
 
       {/* While scaled, the scaled list stands in for the editor: the recipe is only edited as written. */}
       {variation && !choice && <LinesEditor key={`lines-${variation.id}`} variationId={variation.id} componentId={id} lines={lines} />}
-      {variation && <MethodEditor key={`steps-${variation.id}`} variation={variation} steps={steps} />}
+      {variation && <MethodEditor key={`steps-${variation.id}`} variation={variation} steps={steps} componentName={component.name} />}
 
       <TagEditor tagIds={component.tagIds} onChange={(tagIds) => updateComponent(id, { tagIds })} suggested={tagHints ?? []} />
       <AliasesField aliases={component.aliases} onSave={(aliases) => updateComponent(id, { aliases })} />
@@ -473,6 +474,7 @@ export function DishPage({ id = '' }: { id?: string }) {
 /** An ingredient's page (I1, UX → Ingredient): /library/ingredient/:id */
 export function IngredientPage({ id = '' }: { id?: string }) {
   const details = useLiveQuery(() => getIngredientDetails(id), [id]);
+  const applied = useLiveQuery(() => techniquesForIngredient(id), [id]);
   const { route } = useLocation();
 
   useEffect(() => void recordView({ kind: 'ingredient', id }), [id]);
@@ -501,6 +503,25 @@ export function IngredientPage({ id = '' }: { id?: string }) {
         ]}
         empty="Nothing in your book uses it yet."
       />
+
+      {applied && applied.length > 0 && (
+        <section class="flow" aria-labelledby="applied-title">
+          <h2 id="applied-title">Techniques applied</h2>
+          <ul class="row-list" role="list">
+            {applied.map(({ technique, components }) => (
+              <li key={technique.id}>
+                <a class="list-row" href={paths.technique(technique.id)}>
+                  <span class="list-row__main">
+                    <span class="list-row__title">{technique.name}</span>
+                    <span class="list-row__meta">{components.map((c) => c.name).join(', ')}</span>
+                  </span>
+                  <Icon name="chevron-right" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <NameField value={ingredient.name} onSave={(name) => updateIngredient(id, { name })} />
       <AliasesField aliases={ingredient.aliases} onSave={(aliases) => updateIngredient(id, { aliases })} />

@@ -1,6 +1,8 @@
 import { useState } from 'preact/hooks';
 import { listKitchens, listSections } from '../../data/kitchens';
 import { ListError } from '../../data/lists';
+import { createTechnique, sortToTechnique } from '../../data/techniques';
+import { TechniquePicker } from '../components/Techniques';
 import { deleteNote, listInbox, restoreNote, returnToInbox, sortToKitchenNote, sortToNewComponent } from '../../data/notes';
 import { NO_KITCHEN_ID, type Note } from '../../data/types';
 import { MediaView } from '../components/MediaView';
@@ -60,6 +62,7 @@ export function Inbox() {
 
 function SortNote({ note, onDone }: { note: Note; onDone: () => void }) {
   const [naming, setNaming] = useState(false);
+  const [toTechnique, setToTechnique] = useState(false);
   const firstLine = note.body.split('\n')[0]?.slice(0, 60) ?? '';
   const [name, setName] = useState(firstLine);
   const [error, setError] = useState('');
@@ -83,6 +86,13 @@ function SortNote({ note, onDone }: { note: Note; onDone: () => void }) {
     } catch (e) {
       setError(e instanceof ListError ? e.message : 'Couldn’t create that.');
     }
+  }
+
+  async function sortIntoTechnique(technique: { id: string } | { name: string }) {
+    const id = 'id' in technique ? technique.id : await createTechnique(technique.name);
+    await sortToTechnique(note.id, id);
+    onDone();
+    showMessage('Added to the technique’s notes.', { view: { href: paths.technique(id) }, undo: () => returnToInbox(note.id) });
   }
 
   async function remove() {
@@ -123,6 +133,14 @@ function SortNote({ note, onDone }: { note: Note; onDone: () => void }) {
       ) : (
         <button class="button" type="button" onClick={() => setNaming(true)}>
           New draft component
+        </button>
+      )}
+
+      {toTechnique ? (
+        <TechniquePicker onPick={sortIntoTechnique} />
+      ) : (
+        <button class="button" type="button" onClick={() => setToTechnique(true)}>
+          A technique’s notes
         </button>
       )}
 

@@ -79,11 +79,11 @@ export async function sortToNewComponent(id: Id, name: string, database: MepData
   });
 }
 
-/** Undo a sort into kitchen notes: back to the inbox, unattached. */
+/** Undo a sort into kitchen notes or a technique: back to the inbox, unattached. */
 export async function returnToInbox(id: Id, database: MepDatabase = appDb) {
   const note = await database.notes.get(id);
   if (!note) return;
-  await database.notes.update(id, { kind: 'inbox', links: note.links.filter((link) => link.kind !== 'kitchen') });
+  await database.notes.update(id, { kind: 'inbox', links: note.links.filter((link) => link.kind !== 'kitchen' && link.kind !== 'technique') });
 }
 
 /** The notes attached to a component (sorted into it from the inbox), newest first. */

@@ -6,6 +6,7 @@ import { getListItems, ListError } from '../../data/lists';
 import { getMenuView, listMenus } from '../../data/menus';
 import { listRecent, searchLibrary } from '../../data/search';
 import { listCollections, listTags } from '../../data/tags';
+import { createTechnique, hasOwnNotes, listTechniques } from '../../data/techniques';
 import type { Collection } from '../../data/types';
 import { ChipChoice, Segmented } from '../components/Controls';
 import { Sheet } from '../components/Sheet';
@@ -83,18 +84,14 @@ export function Library() {
           {lens === 'dishes' && <DishesLens />}
           {lens === 'components' && <ComponentsLens />}
           {lens === 'ingredients' && <IngredientsLens />}
-          {lens === 'techniques' && (
-            <div class="empty-state">
-              <p>Your technique notes will live here: julienne, quenelle, pickling, in your own words.</p>
-            </div>
-          )}
+          {lens === 'techniques' && <TechniquesLens />}
         </>
       )}
 
       <NewItemSheet
         open={creating}
         onClose={() => setCreating(false)}
-        initialKind={lens === 'dishes' ? 'dish' : lens === 'ingredients' ? 'ingredient' : 'component'}
+        initialKind={lens === 'dishes' ? 'dish' : lens === 'ingredients' ? 'ingredient' : lens === 'techniques' ? 'technique' : 'component'}
         initialName={search}
         onCreated={(href) => {
           setCreating(false);
@@ -293,6 +290,41 @@ function IngredientsLens() {
   );
 }
 
+/**
+ * Techniques grouped by category (UX → Library): filled ones have your own
+ * notes; outlined ones are a name only, waiting for them.
+ */
+function TechniquesLens() {
+  const techniques = useLiveQuery(() => listTechniques());
+  const categories = useLiveQuery(() => getListItems({ kind: 'values', list: 'technique-categories', kitchenId: null }));
+  if (!techniques || !categories) return null;
+  if (techniques.length === 0) return <Empty text="No techniques yet. Tap + New to add one." />;
+  const known = (id: string | null) => id !== null && categories.some((c) => c.id === id);
+  const groups = [
+    ...categories.map((c) => ({ key: c.id, name: c.name, items: techniques.filter((t) => t.categoryId === c.id) })),
+    { key: 'none', name: 'No category yet', items: techniques.filter((t) => !known(t.categoryId)) },
+  ].filter((g) => g.items.length > 0);
+  return (
+    <>
+      <p class="field__hint">Filled: your own notes. Outlined: a name, waiting for your notes.</p>
+      {groups.map((group) => (
+        <details key={group.key} class="library-group" open>
+          <summary class="library-group__summary">
+            {group.name} <span class="list-row__meta">{group.items.length}</span>
+          </summary>
+          <div class="cluster" style={{ '--gutter': 'var(--space-2xs)' }}>
+            {group.items.map((t) => (
+              <a key={t.id} class="chip" href={paths.technique(t.id)} data-filled={hasOwnNotes(t)}>
+                {t.name}
+              </a>
+            ))}
+          </div>
+        </details>
+      ))}
+    </>
+  );
+}
+
 // ─── Search ───────────────────────────────────────────────────────────────
 
 function SearchResults({ query }: { query: string }) {
@@ -302,14 +334,16 @@ function SearchResults({ query }: { query: string }) {
     { label: 'Dishes', rows: results.dishes.map((d) => ({ href: paths.dish(d.id), title: d.name })) },
     { label: 'Components', rows: results.components.map((c) => ({ href: paths.component(c.id), title: c.name, meta: c.aliases.join(', ') })) },
     { label: 'Ingredients', rows: results.ingredients.map((i) => ({ href: paths.ingredient(i.id), title: i.name, meta: i.aliases.join(', ') })) },
+    { label: 'Techniques', rows: results.techniques.map((t) => ({ href: paths.technique(t.id), title: t.name, meta: t.aliases.join(', ') })) },
     {
       label: 'Notes',
       rows: results.notes.map((n) => {
         const component = n.links.find((l) => l.kind === 'component');
+        const technique = n.links.find((l) => l.kind === 'technique');
         return {
-          href: component ? paths.component(component.id) : paths.notesFor(n.kitchenId),
+          href: component ? paths.component(component.id) : technique ? paths.technique(technique.id) : paths.notesFor(n.kitchenId),
           title: n.body,
-          meta: `${component ? 'Component note' : 'Kitchen note'} · ${formatWhen(n.createdAt)}`,
+          meta: `${component ? 'Component note' : technique ? 'Technique note' : 'Kitchen note'} · ${formatWhen(n.createdAt)}`,
         };
       }),
     },
@@ -330,7 +364,7 @@ function SearchResults({ query }: { query: string }) {
 
 // ─── New item ─────────────────────────────────────────────────────────────
 
-type NewKind = 'component' | 'dish' | 'ingredient';
+type NewKind = 'component' | 'dish' | 'ingredient' | 'technique';
 
 interface NewItemProps {
   open: boolean;
@@ -360,6 +394,7 @@ function NewItemForm({ initialKind, initialName, onCreated }: NewItemProps) {
       if (kind === 'component') onCreated(paths.component(await createComponent(name, place!.kitchenId)));
       if (kind === 'dish') onCreated(paths.dish(await createDish(name)));
       if (kind === 'ingredient') onCreated(paths.ingredient(await createIngredient(name)));
+      if (kind === 'technique') onCreated(paths.technique(await createTechnique(name)));
     } catch (e) {
       setError(e instanceof ListError ? e.message : 'Couldn’t create it.');
     }
@@ -373,6 +408,7 @@ function NewItemForm({ initialKind, initialName, onCreated }: NewItemProps) {
           { value: 'component', label: 'Component' },
           { value: 'dish', label: 'Dish' },
           { value: 'ingredient', label: 'Ingredient' },
+          { value: 'technique', label: 'Technique' },
         ]}
         value={kind}
         onChange={setKind}
@@ -391,6 +427,7 @@ function NewItemForm({ initialKind, initialName, onCreated }: NewItemProps) {
         {kind === 'component' && 'A recipe for one part: a stock, a sauce, a garnish. Starts as a draft.'}
         {kind === 'dish' && 'Anything served, made of components.'}
         {kind === 'ingredient' && 'Something you don’t make. Usually added for you as you write components.'}
+        {kind === 'technique' && 'A way of doing something: quenelle, brunoise, beurre blanc. Your notes, in your words.'}
       </p>
     </form>
   );

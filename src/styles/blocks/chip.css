@@ -16,7 +16,8 @@
   touch-action: manipulation;
 }
 
-.chip[aria-pressed='true'] {
+.chip[aria-pressed='true'],
+.chip[data-filled='true'] {
   border-color: var(--color-action);
   background-color: var(--color-action);
   color: var(--color-action-text);

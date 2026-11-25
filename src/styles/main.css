@@ -42,6 +42,7 @@
 @import './blocks/method.css' layer(blocks);
 @import './blocks/scale.css' layer(blocks);
 @import './blocks/menus.css' layer(blocks);
+@import './blocks/techniques.css' layer(blocks);
 
 /* 5. Exceptions to LooseLeaf's blocks: last in the blocks layer, so they win there. */
 @import './exceptions.css' layer(blocks);

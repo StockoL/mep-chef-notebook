@@ -1,0 +1,33 @@
+/* A technique word in a step (T1): looks like text, taps like a link.
+   Tall enough to hit with a thumb without breaking the line's flow. */
+.technique-link {
+  display: inline;
+  /* A bigger target than the word, without moving the lines around it. */
+  padding: 0.6em 0.1em;
+  margin: -0.6em -0.1em;
+  border: 0;
+  background: none;
+  color: var(--color-link);
+  font: inherit;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+/* This kitchen's note on a technique, first in its sheet (T2). */
+.technique-kitchen-note {
+  padding: var(--space-xs) var(--space-s);
+  border-radius: var(--radius-control);
+  background-color: var(--color-status-info-surface);
+  color: var(--color-status-info-text);
+}
+
+/* Notes written over several lines keep their line breaks. */
+.prewrap {
+  white-space: pre-wrap;
+}
+
+.template-preview {
+  padding: var(--space-xs) var(--space-s) var(--space-s);
+}

@@ -18,11 +18,14 @@ import { saveSteps } from '../../data/library';
 import { confirmAllSteps, confirmStep, equipmentKitchenId, learnWord, listEquipment, unconfirmSteps, unlearnWord, updateStepPart, type StatusChange } from '../../data/steps';
 import { addListItem, ListError } from '../../data/lists';
 import type { Id, KitchenId, ListValue, Step, StepPart, Variation } from '../../data/types';
+import { createTechnique } from '../../data/techniques';
 import { useAutosave } from '../hooks/useAutosave';
+import { paths } from '../router';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { trackSave } from '../saveStatus';
 import { ChipChoice, ChipToggles } from './Controls';
 import { Sheet } from './Sheet';
+import { SaveTemplate, TechniqueText, TemplatePicker } from './Techniques';
 import { showMessage } from './UndoBar';
 
 const MODE_LABELS: Record<StepMode, string> = { active: 'Active', 'check-in': 'Check-in', passive: 'Passive' };
@@ -39,8 +42,9 @@ export function announceStatus(change: StatusChange | null) {
   else showMessage(`Back to draft: ${change.missing[0]?.text ?? 'something is missing'}.`);
 }
 
-export function MethodEditor({ variation, steps }: { variation: Variation; steps: Step[] }) {
+export function MethodEditor({ variation, steps, componentName }: { variation: Variation; steps: Step[]; componentName: string }) {
   const [writing, setWriting] = useState(steps.length === 0);
+  const [templates, setTemplates] = useState<'use' | 'save' | null>(null);
   const [open, setOpen] = useState<{ stepId: Id; part: number } | null>(null);
   const equipmentKitchen = useLiveQuery(() => equipmentKitchenId(variation), [variation.id, variation.kitchenId]);
   const equipment = useLiveQuery(async () => (equipmentKitchen ? listEquipment(equipmentKitchen) : []), [equipmentKitchen]);
@@ -63,11 +67,16 @@ export function MethodEditor({ variation, steps }: { variation: Variation; steps
     <section class="flow" aria-labelledby="method-title">
       <div class="method-head">
         <h2 id="method-title">Method</h2>
-        {steps.length > 0 && (
-          <button class="button" type="button" data-variant="ghost" onClick={() => setWriting(!writing)}>
-            {writing ? 'Show readings' : 'Edit method'}
+        <div class="cluster" style={{ '--gutter': 'var(--space-2xs)' }}>
+          <button class="button" type="button" data-variant="ghost" onClick={() => setTemplates('use')}>
+            Use a template
           </button>
-        )}
+          {steps.length > 0 && (
+            <button class="button" type="button" data-variant="ghost" onClick={() => setWriting(!writing)}>
+              {writing ? 'Show readings' : 'Edit method'}
+            </button>
+          )}
+        </div>
       </div>
 
       {writing ? (
@@ -84,8 +93,29 @@ export function MethodEditor({ variation, steps }: { variation: Variation; steps
               Confirm all {unconfirmed} steps
             </button>
           )}
+          {steps.length > 0 && (
+            <button class="button" type="button" data-variant="ghost" onClick={() => setTemplates('save')}>
+              Save this method as a template
+            </button>
+          )}
         </>
       )}
+
+      <Sheet open={templates === 'use'} onClose={() => setTemplates(null)} title="Use a template">
+        {templates === 'use' && (
+          <TemplatePicker
+            variationId={variation.id}
+            componentName={componentName}
+            onDone={() => {
+              setTemplates(null);
+              setWriting(false);
+            }}
+          />
+        )}
+      </Sheet>
+      <Sheet open={templates === 'save'} onClose={() => setTemplates(null)} title="Save as a template">
+        {templates === 'save' && <SaveTemplate variationId={variation.id} componentName={componentName} onDone={() => setTemplates(null)} />}
+      </Sheet>
 
       {variation.status === 'draft' && missing.length > 0 && (
         <MissingList missing={missing} onFix={fix} />
@@ -172,7 +202,7 @@ function StepCard({ step, number, equipment, onOpen }: { step: Step; number: num
   return (
     <li class="method-step" data-confirmed={step.confirmed}>
       <p class="method-step__text">
-        <span class="method-step__number">{number}</span> {step.text}
+        <span class="method-step__number">{number}</span> <TechniqueText text={step.text} />
       </p>
       {step.parts.map((part, index) => {
         const holdOnly = part.mode === null && part.hold !== null && part.minutesMin === null;
@@ -313,6 +343,8 @@ function PartEditor(props: { step: Step; index: number; equipment: readonly List
       />
 
       {/* Settings and timing flags matter for some steps only: tucked away unless one is set. */}
+      <AddTechniqueWord suggestion={part.verb ?? ''} />
+
       <details class="part-more" open={Boolean(part.equipmentSetting) || flags.length > 0}>
         <summary>Setting and timing</summary>
         <div class="flow">
@@ -399,6 +431,40 @@ function AddEquipment({ kitchenId, onAdded }: { kitchenId: KitchenId | null; onA
         Add
       </button>
       {error && <p class="field__error">{error}</p>}
+    </form>
+  );
+}
+
+/**
+ * "A word here is a technique": adds it to your techniques, so it's linked
+ * in every step from now on (Phase 7: "add an unknown technique word from
+ * a step chip").
+ */
+function AddTechniqueWord({ suggestion }: { suggestion: string }) {
+  const [open, setOpen] = useState(false);
+  const [word, setWord] = useState(suggestion);
+  if (!open) {
+    return (
+      <button class="button" type="button" data-variant="ghost" onClick={() => setOpen(true)}>
+        A word here is a technique
+      </button>
+    );
+  }
+  return (
+    <form
+      class="input-group"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        if (!word.trim()) return;
+        const id = await trackSave(createTechnique(word));
+        setOpen(false);
+        showMessage(`“${word.trim()}” is a technique now, linked wherever it’s written.`, { view: { label: 'Open', href: paths.technique(id) } });
+      }}
+    >
+      <input class="input" aria-label="Technique word" value={word} placeholder="dauphinoise" autocomplete="off" onInput={(e) => setWord(e.currentTarget.value)} />
+      <button class="button" type="submit" disabled={!word.trim()}>
+        Add
+      </button>
     </form>
   );
 }
