@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
-import { listServices } from '../../data/kitchens';
-import { listSectionEntries } from '../../data/sectionItems';
+import { listSections, listServices } from '../../data/kitchens';
+import { getChosenSection, listSectionEntries, setChosenSection, type SectionListEntry } from '../../data/sectionItems';
 import { addSheetItems, readTypedItem, type SheetItemInput } from '../../data/sheets';
 import type { Id, KitchenId } from '../../data/types';
 import { formatQuantity } from '../../core/units/units';
@@ -14,36 +14,39 @@ interface AddToSheetProps {
   open: boolean;
   onClose: () => void;
   kitchenId: KitchenId;
-  sectionIds: Id[];
   /** Makes the sheet on first use (today's may not exist yet). */
   ensureSheet: () => Promise<Id>;
 }
 
 /**
  * Adding to a sheet (SH2, UX → Editing rules 6 and 7): type an item the way
- * you'd write it ("beurre blanc 2l"), or tap items on your section list to
+ * you'd write it ("beurre blanc 2l"), or tap items on a section's list to
  * collect them in a tray, then add them all at once. A section item with a
- * par is added as "top up to par".
+ * par is added as "top up to par". The list opens on the section last used;
+ * any other is one tap on its chip (DECISIONS 48).
  * Common path: + Add → tap 3 items → Add 3 (5 taps).
  */
-export function AddToSheet({ open, onClose, kitchenId, sectionIds, ensureSheet }: AddToSheetProps) {
+export function AddToSheet({ open, onClose, kitchenId, ensureSheet }: AddToSheetProps) {
   return (
     <Sheet open={open} onClose={onClose} title="Add to the sheet" position="top">
-      <AddForm kitchenId={kitchenId} sectionIds={sectionIds} ensureSheet={ensureSheet} onClose={onClose} />
+      <AddForm kitchenId={kitchenId} ensureSheet={ensureSheet} onClose={onClose} />
     </Sheet>
   );
 }
 
-function AddForm({ kitchenId, sectionIds, ensureSheet, onClose }: Omit<AddToSheetProps, 'open'>) {
-  const lists = useLiveQuery(() => listSectionEntries(sectionIds), [sectionIds.join()]);
+function AddForm({ kitchenId, ensureSheet, onClose }: Omit<AddToSheetProps, 'open'>) {
+  const sections = useLiveQuery(() => listSections(kitchenId), [kitchenId]);
+  const chosen = useLiveQuery(() => getChosenSection(kitchenId), [kitchenId]);
+  const lists = useLiveQuery(async () => (chosen ? listSectionEntries([chosen]) : []), [chosen]);
   const services = useLiveQuery(() => listServices(kitchenId), [kitchenId]);
   const [typed, setTyped] = useState('');
-  const [tray, setTray] = useState<string[]>([]);
+  // Picked items, kept while hopping between sections' lists.
+  const [tray, setTray] = useState<Map<string, SectionListEntry>>(new Map());
   const [serviceId, setServiceId] = useState<Id | null>(null);
 
   async function addTyped(event: Event) {
     event.preventDefault();
-    const input = await readTypedItem(typed, sectionIds);
+    const input = await readTypedItem(typed, kitchenId);
     if (!input) return;
     await addSheetItems(await ensureSheet(), [{ ...input, source: 'manual', serviceId }]);
     showMessage(`Added ${typed.trim()}.`);
@@ -51,15 +54,15 @@ function AddForm({ kitchenId, sectionIds, ensureSheet, onClose }: Omit<AddToShee
   }
 
   async function addTray() {
-    const chosen = (lists ?? []).filter((s) => tray.includes(s.key));
-    const inputs: SheetItemInput[] = chosen.map((s) =>
+    const picked = [...tray.values()];
+    const inputs: SheetItemInput[] = picked.map((s) =>
       s.stored
         ? { sectionItemId: s.stored.item.id, topUpTo: s.stored.item.par, serviceId, source: 'section-list' }
         : { componentId: s.componentId, serviceId, source: 'section-list' },
     );
     await addSheetItems(await ensureSheet(), inputs);
-    showMessage(`Added ${chosen.length} ${chosen.length === 1 ? 'item' : 'items'} to the sheet.`);
-    setTray([]);
+    showMessage(`Added ${picked.length} ${picked.length === 1 ? 'item' : 'items'} to the sheet.`);
+    setTray(new Map());
     onClose();
   }
 
@@ -95,21 +98,35 @@ function AddForm({ kitchenId, sectionIds, ensureSheet, onClose }: Omit<AddToShee
         />
       )}
 
-      <h3 class="used-in__label">Your section list</h3>
-      {lists && lists.length === 0 && (
-        <p class="field__hint">Nothing on your section list yet. Section tab → Section list to add what you look after.</p>
+      <h3 class="used-in__label">From a section’s list</h3>
+      {sections && sections.length > 1 && (
+        <div class="reel" role="region" aria-label="Section" tabIndex={0}>
+          {sections
+            .filter((s) => !s.hidden)
+            .map((s) => (
+              <button key={s.id} class="chip" type="button" aria-pressed={s.id === chosen} onClick={() => setChosenSection(kitchenId, s.id)}>
+                {s.name}
+              </button>
+            ))}
+        </div>
       )}
+      {lists && lists.length === 0 && <p class="field__hint">Nothing on this section’s list yet. Section tab → Section list to add what it looks after.</p>}
       <ul class="row-list" role="list">
         {lists?.map((s) => {
-          const chosen = tray.includes(s.key);
+          const picked = tray.has(s.key);
           const par = s.stored?.item.par;
           return (
             <li key={s.key}>
               <button
                 class="list-row"
                 type="button"
-                aria-pressed={chosen}
-                onClick={() => setTray(chosen ? tray.filter((key) => key !== s.key) : [...tray, s.key])}
+                aria-pressed={picked}
+                onClick={() => {
+                  const next = new Map(tray);
+                  if (picked) next.delete(s.key);
+                  else next.set(s.key, s);
+                  setTray(next);
+                }}
               >
                 <span class="list-row__main">
                   <span class="list-row__title">{s.name}</span>
@@ -119,16 +136,16 @@ function AddForm({ kitchenId, sectionIds, ensureSheet, onClose }: Omit<AddToShee
                     </span>
                   )}
                 </span>
-                {chosen && <Icon name="tick" />}
+                {picked && <Icon name="tick" />}
               </button>
             </li>
           );
         })}
       </ul>
 
-      {tray.length > 0 && (
+      {tray.size > 0 && (
         <button class="button" type="button" data-variant="primary" onClick={addTray}>
-          Add {tray.length} to the sheet
+          Add {tray.size} to the sheet
         </button>
       )}
     </>

@@ -2,10 +2,10 @@ import { useState } from 'preact/hooks';
 import { nameContains } from '../../core/ingredients/names';
 import { formatQuantity, UNIT_CHOICES, type Unit } from '../../core/units/units';
 import { listComponents } from '../../data/components';
-import { getPlaceDetails } from '../../data/kitchens';
+import { getPlace, listSections } from '../../data/kitchens';
 import { menuComponentsForSection } from '../../data/menus';
 import { createIngredient, listIngredients } from '../../data/library';
-import { addSectionItem, listSectionItems, moveSectionItem, removeSectionItem, updateSectionItem, type SectionItemView } from '../../data/sectionItems';
+import { addSectionItem, getChosenSection, listSectionItems, setChosenSection, moveSectionItem, removeSectionItem, updateSectionItem, type SectionItemView } from '../../data/sectionItems';
 import { restoreSnapshot } from '../../data/snapshot';
 import type { Id } from '../../data/types';
 import { ChipChoice } from '../components/Controls';
@@ -18,15 +18,16 @@ import { paths } from '../router';
 import { trackSave } from '../saveStatus';
 
 /**
- * Your section's list (SPEC → Sections): the components and ingredients the
- * section looks after, with pars and where they're kept. Fills the sheet in
- * a few taps; counts and orders build on it later.
+ * A section's list (SPEC → Sections): the components and ingredients the
+ * section looks after, with pars and where they're kept. Any section: chips
+ * at the top, opening on the last one used (DECISIONS 48). Fills the sheet
+ * in a few taps; counts and orders build on it later.
  */
 export function SectionList() {
-  const details = useLiveQuery(() => getPlaceDetails());
-  const sections = [details?.section, details?.alsoSection].filter((s) => s !== undefined);
-  const [chosen, setChosen] = useState<Id | null>(null);
-  const sectionId = chosen ?? sections[0]?.id ?? null;
+  const place = useLiveQuery(() => getPlace());
+  const kitchenId = place?.kitchenId;
+  const sections = useLiveQuery(async () => (kitchenId ? (await listSections(kitchenId)).filter((s) => !s.hidden) : []), [kitchenId]);
+  const sectionId = useLiveQuery(async () => (kitchenId ? getChosenSection(kitchenId) : null), [kitchenId]) ?? null;
   const items = useLiveQuery(async () => (sectionId ? listSectionItems(sectionId) : []), [sectionId]);
   // What the menus on now give this section (MS4), less what's already on the list.
   const fromMenus = useLiveQuery(async () => (sectionId ? menuComponentsForSection(sectionId) : []), [sectionId]);
@@ -35,13 +36,13 @@ export function SectionList() {
   const [adding, setAdding] = useState(false);
   const editing = items?.find((i) => i.item.id === editingId);
 
-  if (!details) return null;
-  if (!sectionId) {
+  if (!place || !sections) return null;
+  if (!sectionId || !kitchenId) {
     return (
       <section class="flow">
         <ScreenHeader title="Section list" back={{ href: paths.section, label: 'Section' }} />
         <div class="empty-state">
-          <p>Choose your section first: tap the kitchen name at the top.</p>
+          <p>This kitchen has no sections yet. Add them in kitchen settings (••• → Kitchens).</p>
         </div>
       </section>
     );
@@ -50,11 +51,13 @@ export function SectionList() {
   return (
     <section class="flow">
       <ScreenHeader title="Section list" back={{ href: paths.section, label: 'Section' }} />
-      {sections.length > 1 ? (
-        <ChipChoice label="Section" choices={sections.map((s) => ({ value: s!.id, label: s!.name }))} value={sectionId} onChange={(id) => id && setChosen(id)} />
-      ) : (
-        <p class="variation-line">{sections[0]?.name}</p>
-      )}
+      <div class="reel" role="region" aria-label="Section" tabIndex={0}>
+        {sections.map((s) => (
+          <button key={s.id} class="chip" type="button" aria-pressed={s.id === sectionId} onClick={() => setChosenSection(kitchenId, s.id)}>
+            {s.name}
+          </button>
+        ))}
+      </div>
 
       {items?.length === 0 && menuOnly.length === 0 && (
         <div class="empty-state flow">

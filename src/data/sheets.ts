@@ -30,10 +30,11 @@ export async function findSheet(
 ): Promise<Sheet | undefined> {
   const sheets = await database.sheets.where('[kitchenId+date]').equals([kitchenId, date]).toArray();
   const key = [...sectionIds].sort().join('|');
-  // The same sections exactly; failing that, a sheet that includes the chef's own section.
+  // The same sections exactly. With none given (the kitchen's sheet for the
+  // day, DECISIONS 48), any sheet that day: older ones were started per section.
   return (
     sheets.find((s) => [...s.sectionIds].sort().join('|') === key) ??
-    (sectionIds[0] ? sheets.find((s) => s.sectionIds.includes(sectionIds[0]!)) : undefined)
+    (sectionIds.length === 0 ? sheets[0] : sectionIds[0] ? sheets.find((s) => s.sectionIds.includes(sectionIds[0]!)) : undefined)
   );
 }
 
@@ -178,13 +179,15 @@ export async function setSheetPhoto(sheetId: Id, photo: Blob, database: MepDatab
 
 /**
  * Reads one typed line from chef's paper sheet ("beurre blanc 2l") into an
- * item: a component by name, then something on the section's list, else
+ * item: a component by name, then something on a section list, else
  * kept as typed text.
  */
-export async function readTypedItem(text: string, sectionIds: Id[], database: MepDatabase = appDb): Promise<SheetItemInput | null> {
+export async function readTypedItem(text: string, kitchenId: KitchenId, database: MepDatabase = appDb): Promise<SheetItemInput | null> {
   const line = parseItem(text);
   if (!line.name) return null;
   const quantity = line.quantity !== null && line.unit ? { amount: line.quantity, unit: line.unit } : null;
+  // Every section's list in the kitchen: the sheet isn't tied to one section.
+  const sectionIds = (await database.sections.where('kitchenId').equals(kitchenId).toArray()).map((s) => s.id);
   const sectionItems = (await Promise.all(sectionIds.map((id) => listSectionItems(id, database)))).flat();
   const onList = findByName(
     sectionItems.map((s) => ({ ...s, aliases: [] as string[] })),

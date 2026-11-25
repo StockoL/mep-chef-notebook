@@ -6,7 +6,8 @@
 
 import { db as appDb, type MepDatabase } from './db';
 import { menuComponentsForSection } from './menus';
-import type { Id, Quantity, SectionItem } from './types';
+import { getSetting, setSetting } from './settings';
+import type { Id, KitchenId, Quantity, SectionItem } from './types';
 
 export interface SectionItemView {
   item: SectionItem;
@@ -105,4 +106,23 @@ export async function listSectionEntries(sectionIds: Id[], database: MepDatabase
     entries.push({ key: `menu-${component.id}`, name: component.name, stored: null, componentId: component.id, menuNames });
   }
   return entries;
+}
+
+// ─── Which section's list ─────────────────────────────────────────────────
+
+const chosenKey = (kitchenId: KitchenId) => `sectionList.${kitchenId}`;
+
+/**
+ * The section list last looked at in this kitchen: the sheet's add tray and
+ * the Section list open on it. Not "where the chef is" (DECISIONS 48), just
+ * the last list they used; hopping to another is one tap on its chip.
+ */
+export async function getChosenSection(kitchenId: KitchenId, database: MepDatabase = appDb): Promise<Id | null> {
+  const sections = (await database.sections.where('kitchenId').equals(kitchenId).toArray()).filter((s) => !s.hidden && !s.mergedIntoId);
+  const saved = await getSetting<Id>(chosenKey(kitchenId), database);
+  return sections.find((s) => s.id === saved)?.id ?? sections.sort((a, b) => a.order - b.order)[0]?.id ?? null;
+}
+
+export async function setChosenSection(kitchenId: KitchenId, sectionId: Id, database: MepDatabase = appDb) {
+  await setSetting(chosenKey(kitchenId), sectionId, database);
 }

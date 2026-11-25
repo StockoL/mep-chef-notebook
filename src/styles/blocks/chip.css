@@ -21,3 +21,18 @@
   background-color: var(--color-action);
   color: var(--color-action-text);
 }
+
+/* Chips in a reel (one row that scrolls sideways): closer together, never wrapping. */
+.reel:has(> .chip) {
+  --gutter: var(--space-2xs);
+  padding-block-end: 0;
+  scrollbar-width: none; /* the cut-off chip at the edge shows there's more */
+}
+
+.reel:has(> .chip)::-webkit-scrollbar {
+  display: none;
+}
+
+.reel > .chip {
+  white-space: nowrap;
+}

@@ -2,7 +2,7 @@ import { useLocation } from 'preact-iso';
 import { useRef, useState } from 'preact/hooks';
 import { nextShiftDate } from '../../core/sheet/sheet';
 import { toCalendarDate } from '../../core/time/calendar';
-import { getKitchen, getPlace, getPlaceDetails, listShifts, placeSectionIds } from '../../data/kitchens';
+import { getKitchen, getPlace, listShifts } from '../../data/kitchens';
 import {
   addSheetItems,
   findSheet,
@@ -33,7 +33,8 @@ import { trackSave } from '../saveStatus';
 
 interface SheetPanelProps {
   kitchenId: KitchenId;
-  sectionIds: Id[];
+  /** An older sheet's sections; today's sheet is the kitchen's and has none (DECISIONS 48). */
+  sectionIds?: Id[];
   date: CalendarDate;
   /** Today's sheet offers "write the next shift's sheet". */
   isToday?: boolean;
@@ -43,7 +44,7 @@ interface SheetPanelProps {
  * A shift sheet (SH1–SH3): its heading, covers, chef's photo, items to tick,
  * and the ways to fill it. Used on Today and for any other day's sheet.
  */
-export function SheetPanel({ kitchenId, sectionIds, date, isToday }: SheetPanelProps) {
+export function SheetPanel({ kitchenId, sectionIds = [], date, isToday }: SheetPanelProps) {
   const key = sectionIds.join('|');
   const sheet = useLiveQuery(() => findSheet(kitchenId, date, sectionIds), [kitchenId, date, key]);
   const view = useLiveQuery(async () => (sheet ? getSheetView(sheet.id, kitchenId) : null), [sheet?.id, sheet?.updatedAt, kitchenId]);
@@ -58,9 +59,7 @@ export function SheetPanel({ kitchenId, sectionIds, date, isToday }: SheetPanelP
 
   async function share() {
     const id = await ensureSheet();
-    const sectionNames = (await getPlaceDetails());
-    const title = [sectionNames.section?.name, sectionNames.alsoSection?.name].filter(Boolean).join(' + ');
-    const text = await sheetText(id, kitchenId, [title, formatCalendarDate(date), kitchen?.name].filter(Boolean).join(' · '));
+    const text = await sheetText(id, kitchenId, [kitchen?.name, formatCalendarDate(date)].filter(Boolean).join(' · '));
     const result = await shareText(text);
     if (result === 'copied') showMessage('Copied the sheet. Paste it into a message.');
     if (result === 'failed') setShareFallback(text);
@@ -116,7 +115,8 @@ export function SheetPanel({ kitchenId, sectionIds, date, isToday }: SheetPanelP
         )}
       </div>
 
-      {isToday && (
+      {/* Once there's something to carry over; tomorrow's sheet is also under ••• → Sheets. */}
+      {isToday && view && view.items.length > 0 && (
         <button id="sheet-next" class="button" type="button" onClick={writeNext}>
           Write the next shift’s sheet
         </button>
@@ -126,7 +126,7 @@ export function SheetPanel({ kitchenId, sectionIds, date, isToday }: SheetPanelP
         <p class="field__hint">Sharing isn’t available here. Select the text and copy it.</p>
         <textarea class="textarea" rows={10} readOnly value={shareFallback ?? ''} onFocus={(e) => e.currentTarget.select()} />
       </Sheet>
-      <AddToSheet open={adding} onClose={() => setAdding(false)} kitchenId={kitchenId} sectionIds={sectionIds} ensureSheet={ensureSheet} />
+      <AddToSheet open={adding} onClose={() => setAdding(false)} kitchenId={kitchenId} ensureSheet={ensureSheet} />
     </section>
   );
 }
@@ -203,14 +203,14 @@ export function PaperEntry() {
   const { query } = useLocation();
   const date = query.date ?? toCalendarDate(new Date());
   const place = useLiveQuery(() => getPlace());
-  const sectionIds = place ? placeSectionIds(place) : [];
-  const sheet = useLiveQuery(async () => (place ? findSheet(place.kitchenId, date, sectionIds) : undefined), [place?.kitchenId, date, sectionIds.join()]);
+  const sheet = useLiveQuery(async () => (place ? findSheet(place.kitchenId, date, []) : undefined), [place?.kitchenId, date]);
   const view = useLiveQuery(async () => (sheet && place ? getSheetView(sheet.id, place.kitchenId) : null), [sheet?.id, place?.kitchenId]);
   const [typed, setTyped] = useState('');
   const photoInput = useRef<HTMLInputElement>(null);
 
   if (!place) return null;
-  const ensureSheet = () => getOrCreateSheet(place.kitchenId, date, sectionIds);
+  const kitchenId = place.kitchenId;
+  const ensureSheet = () => getOrCreateSheet(kitchenId, date, []);
 
   async function onPhoto(event: Event) {
     const input = event.currentTarget as HTMLInputElement;
@@ -221,7 +221,7 @@ export function PaperEntry() {
 
   async function add(event: Event) {
     event.preventDefault();
-    const input = await readTypedItem(typed, sectionIds);
+    const input = await readTypedItem(typed, kitchenId);
     if (!input) return;
     await trackSave(addSheetItems(await ensureSheet(), [input]));
     setTyped('');
@@ -257,7 +257,7 @@ export function PaperEntry() {
       </div>
       <input ref={photoInput} class="visually-hidden" type="file" accept="image/*" capture="environment" tabIndex={-1} aria-hidden="true" onChange={onPhoto} />
 
-      <p class="field__hint">Type each line as it’s written. Mep finds your components and section items; anything else is kept as typed.</p>
+      <p class="field__hint">Type each line as it’s written. Mep finds your components and section list items; anything else is kept as typed.</p>
       {view && view.items.length > 0 && <SheetItems view={view} kitchenId={place.kitchenId} />}
       {sheet?.photoId && (
         <button class="button" type="button" onClick={() => photoInput.current?.click()}>

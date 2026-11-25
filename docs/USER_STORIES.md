@@ -190,9 +190,9 @@ As a commis, I want the current menu by course, filterable to mine, so that I kn
 As a commis learning a dish, I want its plating spec and components, each linked to its recipe, so that I can prep and plate it properly.
 - Allergens gathered from all components; one tap to add components to today's sheet.
 
-**MS3. Switch section** (Must, Phase 3)
+**MS3. Switch section** (Must, Phase 3; changed 25 Nov 2026, DECISIONS 48)
 As a commis moved to fish for the day, I want to switch section in two taps so that my sheet, pars and count follow me, while my components and notes stay with me.
-- Covering two sections shares one sheet.
+- Now: the app doesn't ask which section you're on. Today's sheet is the kitchen's; any section's list is one tap away on its chip, so moving to fish costs nothing.
 
 **MS4. Change the menu** (Must, Phase 6)
 As a commis at the start of a new season, I want to copy the current menu and change what's new, and to see how ready the coming-up menu is, so that I've learned the new dishes before launch day.

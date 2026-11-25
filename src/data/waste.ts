@@ -17,7 +17,8 @@ export interface WasteInput {
 export async function logWaste(input: WasteInput, now = new Date(), database: MepDatabase = appDb): Promise<Id> {
   const text = cleanName(input.text);
   if (!text) throw new ListError('Say what was wasted.');
-  const { kitchenId, sectionId } = await getPlace(database);
+  const { kitchenId } = await getPlace(database);
+  const sectionId = null; // not asked any more (DECISIONS 48)
   return database.wasteEntries.add({
     kitchenId,
     sectionId,

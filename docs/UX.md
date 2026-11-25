@@ -18,8 +18,8 @@ The person using this is mid-shift: wet hands, one hand free at most, glancing a
 
 ### Today (home)
 
-Opens on today's shift sheet, never on something half-finished: the day, service time and covers, the weekly goal as one quiet line, a slim "next" bar (next job, Start), and today's sheet with progress and tick-off rows. "Needs you" items (notes to sort, backup due) appear only when something does. Near the end of the shift, "Write tomorrow's sheet" is offered.
-A capture bar sits above the tab bar on every main screen: tap it and a sheet slides up with the keyboard ready; photo, voice and waste are one tap each from the bar.
+Opens on today's shift sheet, never on something half-finished: the day, then today's sheet first (covers, progress, tick-off rows, + Add). Below it, quietly: the next service, "needs you" items only when something does (notes to sort, backup due, near the end of the shift "write the next shift's sheet"), the weekly goal as one line, and other days' sheets. Later: a slim "next" bar (next job, Start).
+A capture bar sits above the tab bar on every main screen: tap it and a sheet slides up with the keyboard ready; photo and voice are one tap each from the bar. Waste is logged from the Section tab (DECISIONS 48).
 Common path for a note: tap the bar → type → done.
 
 ### Component
@@ -50,7 +50,7 @@ One current task, large; countdown (into negative); one big "done" button. Next 
 
 Four tabs, plus three things that are always there. A navigation map is on the design canvas.
 
-- Always there: the top bar (kitchen and section; tap for "Where are you today?" to switch section or kitchen, and reach services and shift), the capture bar on every main screen, and search in the top bar.
+- Always there: the top bar (the kitchen's name, search, and ••• for everything else, including switching kitchen), the capture bar on every main screen. The app doesn't ask which section you're on (DECISIONS 48).
 - Today: today's sheet, the next job, "needs you". Opens add-to-sheet, prep mode, tomorrow's sheet and the inbox.
 - Library: a cookbook with four ways in, behind one segmented control, plus one search box and + to add:
     - Dishes: by menu and course; switch menu (on now, coming up, past) at the top. A dish opens its components; a component opens its recipe.
@@ -70,11 +70,11 @@ Rules:
 5. Full-screen modes (prep mode, stock count) are entered deliberately and left with one clear Exit or Finish.
 6. No dead ends: every screen has a way back or forward, and nothing is more than three taps from a tab.
 
-"No kitchen" sits at the top of the kitchen list in "Where are you today?".
+"No kitchen" sits at the top of the kitchen list in ••• → Kitchen.
 
 ## Kitchen settings
 
-Reached from the top bar: "Where are you today?" → Kitchen settings. One screen per kitchen:
+Reached from ••• → Kitchens → a kitchen. One screen per kitchen:
 
 - the kitchen's name (tap to rename);
 - its sections: add, drag to reorder, swipe to rename, set as usual or hide;
@@ -85,7 +85,7 @@ Reached from the top bar: "Where are you today?" → Kitchen settings. One scree
 
 On iPhone in Safari (not yet installed), first run opens with "Add to your home screen": a short illustrated step (Share → Add to Home Screen) and why it matters (your notebook is kept safe and works offline). It can be skipped but returns as a "needs you" item until installed.
 
-Then two screens, both skippable: "Where do you work?" (name a kitchen, or no kitchen) and "Your usual section" (from the kitchen's sections, which can be edited right there). The app then asks for persistent storage and shows one line about backups. It lands on an empty Today with a hint pointing at the capture bar.
+Then one screen, skippable: "Where do you work?" (name a kitchen, or no kitchen). The app then asks for persistent storage and shows one line about backups. It lands on an empty Today with a hint pointing at the capture bar.
 
 ## App settings
 

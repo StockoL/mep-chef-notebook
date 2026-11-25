@@ -124,3 +124,14 @@ One component, several ways of making it; menus by course; changeover.
 - Dish page: the menus it's on, allergens gathered from its components, **Add to today's sheet** (with amounts when covers are set), tag suggestions from its menus and courses (components too).
 - Section list: everything the menus on now give your section, alongside what you've added (DECISIONS 47); the sheet's add tray includes them.
 - The undo bar's buttons wrap at large text sizes.
+
+### Phase 6 follow-up: a quieter app (25 Nov 2026)
+
+From using it: too much on the home screen, cluttered chips, and "Where are you today?" was friction.
+
+- The app no longer asks which section you're on (DECISIONS 48). The top bar shows the kitchen's name, search and •••; switch kitchen from ••• → Kitchen. First run is one screen. "Also covering" is gone.
+- Today's sheet is the kitchen's sheet for the day. In + Add, chips choose any section's list (the last one used opens first). The Section list works the same way.
+- Menus: "Only dishes my section touches" became section chips (All sections, Fish, Veg…).
+- Today: the sheet comes first; next service, needs-you, goal and other days' sheets sit underneath. "Write the next shift's sheet" appears once the sheet has something on it.
+- Waste left the capture bar (now note, photo, voice); Section tab → Log waste.
+- Recent, the Library's lenses, tag, collection, menu and section chips sit on one row that scrolls sideways.

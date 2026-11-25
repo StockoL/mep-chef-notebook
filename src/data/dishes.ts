@@ -8,7 +8,7 @@
 import { ALLERGENS, type AllergenId } from '../core/allergens/allergens';
 import { toCalendarDate } from '../core/time/calendar';
 import { db as appDb, type MepDatabase } from './db';
-import { getPlace, placeSectionIds } from './kitchens';
+import { getPlace } from './kitchens';
 import { getDishDetails, getVariationInUse } from './library';
 import { getDishNeeds } from './scaling';
 import { addSheetItems, getOrCreateSheet } from './sheets';
@@ -57,7 +57,7 @@ export async function gatherDishAllergens(dishId: Id, kitchenId: KitchenId, data
  */
 export async function addDishToSheet(dishId: Id, portions: number | null, database: MepDatabase = appDb): Promise<{ sheetId: Id; added: number }> {
   const place = await getPlace(database);
-  const sheetId = await getOrCreateSheet(place.kitchenId, toCalendarDate(new Date()), placeSectionIds(place), database);
+  const sheetId = await getOrCreateSheet(place.kitchenId, toCalendarDate(new Date()), [], database);
   const needs = await getDishNeeds(dishId, place.kitchenId, portions ?? 1, database);
   const ids = await addSheetItems(
     sheetId,

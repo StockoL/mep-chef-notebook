@@ -35,7 +35,7 @@ afterEach(async () => {
 describe('capture', () => {
   it('tags a note with where the chef is', async () => {
     const kitchenId = await createKitchen('Dumbleton Hall', db);
-    await setPlace(kitchenId, null, db);
+    await setPlace(kitchenId, db);
     const id = await createTextNote('Q', db);
     await updateNoteBody(id, 'Quenelles three-sided here', db);
     expect(await db.notes.get(id)).toMatchObject({ kind: 'inbox', body: 'Quenelles three-sided here', kitchenId });
@@ -69,7 +69,7 @@ describe('inbox', () => {
 
   it('sorts a note into a kitchen note', async () => {
     const kitchenId = await createKitchen('Dumbleton Hall', db);
-    await setPlace(kitchenId, null, db);
+    await setPlace(kitchenId, db);
     const id = await createTextNote('Walk-in door sticks', db);
     await sortToKitchenNote(id, db);
     expect(await db.notes.get(id)).toMatchObject({ kind: 'kitchen', links: [{ kind: 'kitchen', id: kitchenId }] });
@@ -99,7 +99,7 @@ describe('inbox', () => {
 describe('kitchen notes and component notes', () => {
   it('moves a kitchen note back to the inbox', async () => {
     const kitchenId = await createKitchen('Dumbleton Hall', db);
-    await setPlace(kitchenId, null, db);
+    await setPlace(kitchenId, db);
     const id = await createTextNote('Walk-in door sticks', db);
     await sortToKitchenNote(id, db);
     expect(await listKitchenNotes(kitchenId, db)).toHaveLength(1);

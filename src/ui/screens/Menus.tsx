@@ -3,7 +3,7 @@ import { useState } from 'preact/hooks';
 import { formatPrice, parsePrice } from '../../core/money/money';
 import { toCalendarDate } from '../../core/time/calendar';
 import { createDish, listDishSummaries } from '../../data/library';
-import { getPlace, getKitchen, placeSectionIds } from '../../data/kitchens';
+import { getPlace, getKitchen, listSections } from '../../data/kitchens';
 import { getListItems, ListError } from '../../data/lists';
 import {
   addDishToMenu,
@@ -24,7 +24,7 @@ import {
 } from '../../data/menus';
 import { restoreSnapshot } from '../../data/snapshot';
 import type { Id, KitchenId, Menu, MenuStatus } from '../../data/types';
-import { ChipChoice, Switch } from '../components/Controls';
+import { ChipChoice } from '../components/Controls';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Sheet } from '../components/Sheet';
 import { showMessage } from '../components/UndoBar';
@@ -113,10 +113,8 @@ export function MenusList() {
 
 /** A menu by course (MS1), filterable to mine, with its changeover tools (MS4). /menu/:id */
 export function MenuScreen({ id = '' }: { id?: string }) {
-  const place = useLiveQuery(() => getPlace());
-  const mine = place ? placeSectionIds(place) : [];
-  const view = useLiveQuery(() => getMenuView(id, mine), [id, mine.join()]);
-  const [onlyMine, setOnlyMine] = useState(false);
+  const view = useLiveQuery(() => getMenuView(id, []), [id]);
+  const [sectionId, setSectionId] = useState<Id | null>(null);
   const [sheet, setSheet] = useState<'settings' | 'add' | 'launch' | null>(null);
   const [openPlace, setOpenPlace] = useState<Id | null>(null);
   const { route } = useLocation();
@@ -155,13 +153,8 @@ export function MenuScreen({ id = '' }: { id?: string }) {
           Menu details
         </button>
       </div>
-      {mine.length > 0 && (
-        <Switch checked={onlyMine} onChange={setOnlyMine}>
-          Only dishes my section touches
-        </Switch>
-      )}
-
-      <MenuCourses view={view} onlyMine={onlyMine} onOpen={(placeId) => setOpenPlace(placeId)} />
+      <SectionFilter kitchenId={menu.kitchenId} value={sectionId} onChange={setSectionId} />
+      <MenuCourses view={view} sectionId={sectionId} onOpen={(placeId) => setOpenPlace(placeId)} />
 
       <section class="flow" aria-label="Changeover">
         <h2>Changeover</h2>
@@ -196,13 +189,35 @@ export function MenuScreen({ id = '' }: { id?: string }) {
   );
 }
 
+/**
+ * "All · Fish · Veg…": show only the dishes a section makes part of (MS1).
+ * Any section, not "mine": the chef isn't asked where they are (DECISIONS 48).
+ */
+export function SectionFilter({ kitchenId, value, onChange }: { kitchenId: KitchenId; value: Id | null; onChange: (id: Id | null) => void }) {
+  const sections = useLiveQuery(async () => (await listSections(kitchenId)).filter((s) => !s.hidden), [kitchenId]);
+  if (!sections || sections.length === 0) return null;
+  return (
+    <div class="reel" role="region" aria-label="Show dishes for a section" tabIndex={0}>
+      <button class="chip" type="button" aria-pressed={value === null} onClick={() => onChange(null)}>
+        All sections
+      </button>
+      {sections.map((s) => (
+        <button key={s.id} class="chip" type="button" aria-pressed={value === s.id} onClick={() => onChange(s.id)}>
+          {s.name}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** Dishes by course: price, sections, readiness (MS1). Used on the menu screen and in the library. */
-export function MenuCourses({ view, onlyMine, onOpen }: { view: MenuView; onlyMine: boolean; onOpen?: (placeId: Id) => void }) {
-  const courses = view.courses.map((c) => ({ ...c, dishes: onlyMine ? c.dishes.filter((d) => d.mine) : c.dishes })).filter((c) => c.dishes.length > 0);
+export function MenuCourses({ view, sectionId, onOpen }: { view: MenuView; sectionId: Id | null; onOpen?: (placeId: Id) => void }) {
+  const touches = (d: MenuDishView) => sectionId === null || d.components.some((c) => c.sectionId === sectionId);
+  const courses = view.courses.map((c) => ({ ...c, dishes: c.dishes.filter(touches) })).filter((c) => c.dishes.length > 0);
   if (courses.length === 0) {
     return (
       <div class="empty-state">
-        <p>{onlyMine ? 'Nothing on this menu is assigned to your section yet.' : 'No dishes on this menu yet.'}</p>
+        <p>{sectionId ? 'Nothing on this menu is made by that section yet.' : 'No dishes on this menu yet.'}</p>
       </div>
     );
   }
@@ -224,10 +239,7 @@ export function MenuCourses({ view, onlyMine, onOpen }: { view: MenuView; onlyMi
               const content = (
                 <>
                   <span class="list-row__main">
-                    <span class="list-row__title">
-                      {d.dish.name}
-                      {d.mine ? ' ●' : ''}
-                    </span>
+                    <span class="list-row__title">{d.dish.name}</span>
                     <span class="list-row__meta">{meta}</span>
                   </span>
                   <Icon name="chevron-right" />
@@ -250,7 +262,6 @@ export function MenuCourses({ view, onlyMine, onOpen }: { view: MenuView; onlyMi
           </ul>
         </section>
       ))}
-      <p class="field__hint">● one of your sections makes part of it.</p>
     </>
   );
 }

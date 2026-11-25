@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { getBackupStatus } from '../../data/backup';
 import { getCheckInDue, getThisWeeksGoal } from '../../data/goals';
-import { getNextService, getPlace, getPlaceDetails, getServiceTimesOn, listShifts, placeSectionIds } from '../../data/kitchens';
+import { getNextService, getPlace, getPlaceDetails, getServiceTimesOn, listShifts } from '../../data/kitchens';
 import { setTimeChange } from '../../data/events';
 import { isoDayOfWeek, minutesOfDay, timeToMinutes, toCalendarDate } from '../../core/time/calendar';
 import { Sheet } from '../components/Sheet';
@@ -17,9 +17,9 @@ import { Icon } from '../icons';
 import { paths } from '../router';
 
 /**
- * Today (UX → Today): the day, the next service (tap it to change today's
- * times), the weekly goal as one quiet line, "needs you" items only when
- * something does, and today's sheet.
+ * Today (UX → Today): the date, then today's sheet first. Under it, quietly:
+ * the next service (tap it to change today's times), "needs you" items only
+ * when something does, the weekly goal, and other days' sheets.
  */
 export function Today() {
   const now = useNow();
@@ -29,29 +29,20 @@ export function Today() {
 
   return (
     <section class="flow">
-      <InstallHint />
-      <header class="flow" style={{ '--flow-space': 'var(--space-3xs)' }}>
-        <h1>{day}</h1>
+      <h1>{day}</h1>
+      {details && <SheetPanel kitchenId={details.place.kitchenId} date={toCalendarDate(now)} isToday />}
+
+      <div class="today-more flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
         {details && <NextServiceLine kitchenId={details.place.kitchenId} now={now} />}
-      </header>
-
-      <a class="goal-line" href={paths.goal}>
-        {goal ? <>This week: {goal.text}</> : 'Set a goal for this week'}
-      </a>
-
-      <NeedsYou now={now} />
-
-      {details && (
-        <SheetPanel
-          kitchenId={details.place.kitchenId}
-          sectionIds={placeSectionIds(details.place)}
-          date={toCalendarDate(now)}
-          isToday
-        />
-      )}
-      <a class="goal-line" href={paths.sheets}>
-        Other days’ sheets
-      </a>
+        <NeedsYou now={now} />
+        <a class="goal-line" href={paths.goal}>
+          {goal ? <>This week: {goal.text}</> : 'Set a goal for this week'}
+        </a>
+        <a class="goal-line" href={paths.sheets}>
+          Other days’ sheets
+        </a>
+      </div>
+      <InstallHint />
     </section>
   );
 }

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { MepDatabase } from './db';
 import { createEvent, deleteEvent, setTimeChange } from './events';
 import { importData } from './importData';
-import { createKitchen, getNextService, getPlace, listSections, listServices, placeSectionIds, setAlsoCovering, setPlace, updateService } from './kitchens';
+import { createKitchen, getNextService, listSections, listServices, updateService } from './kitchens';
 import { createComponent, getVariationInUse } from './library';
 import { addSectionItem, listSectionItems, removeSectionItem } from './sectionItems';
 import {
@@ -42,16 +42,11 @@ describe('which sheet', () => {
     expect(await getOrCreateSheet(kitchenId, '2026-11-26', [fish], db)).not.toBe(a);
   });
 
-  it('covering two sections shares one sheet (MS3)', async () => {
-    await setPlace(kitchenId, fish, db);
-    await setAlsoCovering(starters, db);
-    const place = await getPlace(db);
-    expect(placeSectionIds(place)).toEqual([fish, starters]);
-    const shared = await getOrCreateSheet(kitchenId, '2026-11-25', placeSectionIds(place), db);
-    expect((await db.sheets.get(shared))?.sectionIds).toEqual([fish, starters]);
-    // Switching section ends covering.
-    await setPlace(kitchenId, starters, db);
-    expect((await getPlace(db)).alsoSectionId).toBeNull();
+  it('today’s sheet is the kitchen’s, whatever sections it was started with (DECISIONS 48)', async () => {
+    const old = await getOrCreateSheet(kitchenId, '2026-11-25', [fish, starters], db);
+    expect(await getOrCreateSheet(kitchenId, '2026-11-25', [], db)).toBe(old);
+    const fresh = await getOrCreateSheet(kitchenId, '2026-11-26', [], db);
+    expect((await db.sheets.get(fresh))?.sectionIds).toEqual([]);
   });
 });
 
@@ -82,9 +77,9 @@ describe('sheet items', () => {
     const componentId = await createComponent('Beurre blanc', kitchenId, db);
     const chives = (await db.ingredients.add({ name: 'Chives', aliases: [], kind: 'basic', allergens: [], density: null, yieldLossPercent: null, unitWeights: {} }));
     const sectionItemId = await addSectionItem(fish, { ingredientId: chives }, db);
-    expect(await readTypedItem('beurre blanc 2l', [fish], db)).toEqual({ componentId, quantity: { amount: 2, unit: 'l' }, source: 'paper' });
-    expect(await readTypedItem('chives 2 bunches', [fish], db)).toEqual({ sectionItemId, quantity: { amount: 2, unit: 'bunch' }, source: 'paper' });
-    expect(await readTypedItem('pick cress', [fish], db)).toEqual({ text: 'Pick cress', quantity: null, source: 'paper' });
+    expect(await readTypedItem('beurre blanc 2l', kitchenId, db)).toEqual({ componentId, quantity: { amount: 2, unit: 'l' }, source: 'paper' });
+    expect(await readTypedItem('chives 2 bunches', kitchenId, db)).toEqual({ sectionItemId, quantity: { amount: 2, unit: 'bunch' }, source: 'paper' });
+    expect(await readTypedItem('pick cress', kitchenId, db)).toEqual({ text: 'Pick cress', quantity: null, source: 'paper' });
   });
 });
 

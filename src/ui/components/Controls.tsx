@@ -19,12 +19,20 @@ export function ChipChoice<T extends string | number>(props: {
   value: T | null;
   onChange: (value: T | null) => void;
   allowNone?: boolean;
+  /** One row that scrolls sideways (filters that grow), instead of wrapping. */
+  reel?: boolean;
 }) {
-  const { label, choices, value, onChange, allowNone } = props;
+  const { label, choices, value, onChange, allowNone, reel } = props;
   return (
     <div class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
       <p class="label">{label}</p>
-      <div class="cluster" role="group" aria-label={label} style={{ '--gutter': 'var(--space-2xs)' }}>
+      <div
+        class={reel ? 'reel' : 'cluster'}
+        role={reel ? 'region' : 'group'}
+        aria-label={label}
+        tabIndex={reel ? 0 : undefined}
+        style={reel ? undefined : { '--gutter': 'var(--space-2xs)' }}
+      >
         {choices.map((choice) => {
           const chosen = choice.value === value;
           return (

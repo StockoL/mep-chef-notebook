@@ -199,7 +199,7 @@ describe('where a recipe is from', () => {
     const { setKitchenArchived, setPlace } = await import('./kitchens');
     const { saveSteps } = await import('./library');
     const dumbleton = await createKitchen('Dumbleton Hall', db);
-    await setPlace(dumbleton, null, db);
+    await setPlace(dumbleton, db);
     const id = await createComponent('Beer batter', dumbleton, db);
     const variation = (await getVariationInUse(id, dumbleton, db))!;
     await saveSteps(variation.id, ['Whisk in a bowl 5 min'], db);

@@ -29,16 +29,11 @@
   color: var(--color-text);
   text-align: start;
   font: inherit;
-  cursor: pointer;
+  margin: 0;
 }
 
 .top-bar__kitchen {
   font-weight: var(--weight-semibold);
-}
-
-.top-bar__section {
-  font-size: var(--step--1);
-  color: var(--color-text-muted);
 }
 
 .top-bar__actions {

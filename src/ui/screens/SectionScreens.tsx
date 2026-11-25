@@ -15,14 +15,20 @@ import { trackSave } from '../saveStatus';
 
 /** Section tab: the chef's station admin. Stock, pars and checklists arrive in Phase 11. */
 export function Section() {
+  const [logging, setLogging] = useState(false);
   const links = [
-    { href: paths.sectionList, label: 'Section list' },
+    { href: paths.sectionList, label: 'Section lists' },
     { href: paths.waste, label: 'Waste log' },
     { href: paths.goal, label: 'Weekly goal' },
   ];
   return (
     <section class="flow">
       <h1>Section</h1>
+      {/* Waste moved here from the capture bar: it's logged at the end of a shift. */}
+      <button class="button" type="button" data-variant="primary" onClick={() => setLogging(true)}>
+        <Icon name="bin" /> Log waste
+      </button>
+      <WasteSheet open={logging} onClose={() => setLogging(false)} />
       <ul class="row-list" role="list">
         {links.map((link) => (
           <li key={link.href}>

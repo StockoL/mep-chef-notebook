@@ -59,7 +59,7 @@ export async function setKitchenArchived(id: Id, archived: boolean, database: Me
   await guardBuiltIn(id, database);
   await database.kitchens.update(id, { archived });
   if (archived && (await getPlace(database)).kitchenId === id) {
-    await setPlace(NO_KITCHEN_ID, null, database);
+    await setPlace(NO_KITCHEN_ID, database);
   }
 }
 
@@ -76,51 +76,35 @@ async function guardBuiltIn(id: Id, database: MepDatabase) {
 
 const PLACE_KEY = 'place';
 
+/**
+ * Where the chef works: the kitchen. Which section they're on isn't asked
+ * (DECISIONS 48): today's sheet is the kitchen's, and a section's list is
+ * picked when it's needed. Older saved places may still carry a sectionId;
+ * it's ignored.
+ */
 export interface Place {
   kitchenId: KitchenId;
-  sectionId: Id | null;
-  /** A second section the chef is covering today; both share one sheet (MS3, DECISIONS 37). */
-  alsoSectionId?: Id | null;
 }
 
-/** The sections the chef is on: their own, plus one they're also covering. */
-export function placeSectionIds(place: Place): Id[] {
-  return [place.sectionId, place.alsoSectionId].filter((id): id is Id => !!id && id !== undefined);
-}
-
-/** The current kitchen and section; "No kitchen" if the saved one is gone or archived. */
+/** The current kitchen; "No kitchen" if the saved one is gone or archived. */
 export async function getPlace(database: MepDatabase = appDb): Promise<Place> {
   const saved = await getSetting<Place>(PLACE_KEY, database);
-  if (!saved) return { kitchenId: NO_KITCHEN_ID, sectionId: null };
+  if (!saved) return { kitchenId: NO_KITCHEN_ID };
   const kitchen = await database.kitchens.get(saved.kitchenId);
-  if (!kitchen || kitchen.archived) return { kitchenId: NO_KITCHEN_ID, sectionId: null };
-  return saved;
+  if (!kitchen || kitchen.archived) return { kitchenId: NO_KITCHEN_ID };
+  return { kitchenId: saved.kitchenId };
 }
 
-/**
- * Moves the chef to a kitchen (and section). Switching kitchen without
- * naming a section picks the chef's usual section there.
- */
-export async function setPlace(kitchenId: KitchenId, sectionId?: Id | null, database: MepDatabase = appDb) {
-  const kitchen = await database.kitchens.get(kitchenId);
-  const section = sectionId === undefined ? (kitchen?.usualSectionId ?? null) : sectionId;
-  // Switching kitchen or section ends "also covering".
-  await setSetting<Place>(PLACE_KEY, { kitchenId, sectionId: section, alsoSectionId: null }, database);
+/** Moves the chef to a kitchen. */
+export async function setPlace(kitchenId: KitchenId, database: MepDatabase = appDb) {
+  await setSetting<Place>(PLACE_KEY, { kitchenId }, database);
 }
 
-/** Also covering a second section today (or stop, with null). */
-export async function setAlsoCovering(sectionId: Id | null, database: MepDatabase = appDb) {
-  const place = await getPlace(database);
-  await setSetting<Place>(PLACE_KEY, { ...place, alsoSectionId: sectionId === place.sectionId ? null : sectionId }, database);
-}
-
-/** The current kitchen and section as rows, for the top bar. */
+/** The current kitchen as a row, for the top bar. */
 export async function getPlaceDetails(database: MepDatabase = appDb) {
   const place = await getPlace(database);
   const kitchen = await database.kitchens.get(place.kitchenId);
-  const section = place.sectionId ? await database.sections.get(place.sectionId) : undefined;
-  const alsoSection = place.alsoSectionId ? await database.sections.get(place.alsoSectionId) : undefined;
-  return { place, kitchen, section, alsoSection };
+  return { place, kitchen };
 }
 
 // ─── Sections, services and shifts of one kitchen ─────────────────────────

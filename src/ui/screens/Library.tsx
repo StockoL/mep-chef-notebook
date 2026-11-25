@@ -1,19 +1,19 @@
 import { useLocation } from 'preact-iso';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { getPlace, placeSectionIds } from '../../data/kitchens';
+import { getPlace } from '../../data/kitchens';
 import { createComponent, createDish, createIngredient, listComponentSummaries, listDishSummaries, listIngredients } from '../../data/library';
 import { getListItems, ListError } from '../../data/lists';
 import { getMenuView, listMenus } from '../../data/menus';
 import { listRecent, searchLibrary } from '../../data/search';
 import { listCollections, listTags } from '../../data/tags';
 import type { Collection } from '../../data/types';
-import { ChipChoice, Segmented, Switch } from '../components/Controls';
+import { ChipChoice, Segmented } from '../components/Controls';
 import { Sheet } from '../components/Sheet';
 import { formatWhen } from '../format';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
-import { MenuCourses, menuLabel } from './Menus';
+import { MenuCourses, menuLabel, SectionFilter } from './Menus';
 
 type Lens = 'dishes' | 'components' | 'ingredients' | 'techniques';
 const LENSES: { value: Lens; label: string }[] = [
@@ -72,8 +72,8 @@ export function Library() {
       ) : (
         <>
           <Recent />
-          {/* Chips rather than a segmented control: four long labels don't fit across a phone. */}
-          <div class="cluster" role="group" aria-label="Show" style={{ '--gutter': 'var(--space-2xs)' }}>
+          {/* Chips on one row that scrolls: four long labels don't fit across a phone. */}
+          <div class="reel" role="region" aria-label="Show" tabIndex={0}>
             {LENSES.map((choice) => (
               <button key={choice.value} class="chip" type="button" aria-pressed={lens === choice.value} onClick={() => setLens(choice.value)}>
                 {choice.label}
@@ -116,7 +116,7 @@ function Recent() {
       <h2 id="recent" class="used-in__label">
         Recent
       </h2>
-      <div class="cluster" style={{ '--gutter': 'var(--space-2xs)' }}>
+      <div class="reel" role="region" aria-label="Recent" tabIndex={0}>
         {recent.map((item) => (
           <a key={`${item.kind}-${item.id}`} class="chip" href={href[item.kind](item.id)}>
             {item.name}
@@ -141,7 +141,7 @@ function useFilters(kind: 'dish' | 'component') {
   const controls = (
     <>
       {tags && tags.length > 0 && (
-        <ChipChoice label="Tag" choices={tags.map((t) => ({ value: t.id, label: t.name }))} value={tagId} onChange={setTagId} allowNone />
+        <ChipChoice label="Tag" choices={tags.map((t) => ({ value: t.id, label: t.name }))} value={tagId} onChange={setTagId} allowNone reel />
       )}
       {collections && collections.length > 0 && (
         <ChipChoice
@@ -150,6 +150,7 @@ function useFilters(kind: 'dish' | 'component') {
           value={collectionId}
           onChange={setCollectionId}
           allowNone
+          reel
         />
       )}
     </>
@@ -170,15 +171,14 @@ function DishesLens() {
   const place = useLiveQuery(() => getPlace());
   const menus = useLiveQuery(async () => (place ? (await listMenus(place.kitchenId)).filter((m) => m.status !== 'past') : []), [place?.kitchenId]);
   const [chosen, setChosen] = useState<string | null>(null);
-  const [onlyMine, setOnlyMine] = useState(false);
+  const [sectionId, setSectionId] = useState<string | null>(null);
   const menuId = chosen ?? menus?.[0]?.id ?? 'all';
-  const mine = place ? placeSectionIds(place) : [];
-  const view = useLiveQuery(async () => (menuId !== 'all' ? getMenuView(menuId, mine) : undefined), [menuId, mine.join()]);
+  const view = useLiveQuery(async () => (menuId !== 'all' ? getMenuView(menuId, []) : undefined), [menuId]);
   const { matches, controls } = useFilters('dish');
   if (!dishes || !menus) return null;
 
   const menuChips = (
-    <div class="cluster" role="group" aria-label="Menu" style={{ '--gutter': 'var(--space-2xs)' }}>
+    <div class="reel" role="region" aria-label="Menu" tabIndex={0}>
       {menus.map((m) => (
         <button key={m.id} class="chip" type="button" aria-pressed={menuId === m.id} onClick={() => setChosen(m.id)}>
           {menuLabel(m)}
@@ -197,12 +197,8 @@ function DishesLens() {
     return (
       <>
         {menuChips}
-        {mine.length > 0 && (
-          <Switch checked={onlyMine} onChange={setOnlyMine}>
-            Only dishes my section touches
-          </Switch>
-        )}
-        {view && <MenuCourses view={view} onlyMine={onlyMine} />}
+        {view && <SectionFilter kitchenId={view.menu.kitchenId} value={sectionId} onChange={setSectionId} />}
+        {view && <MenuCourses view={view} sectionId={sectionId} />}
         {view && (
           <a class="button" href={paths.menu(view.menu.id)}>
             Edit {view.menu.name}

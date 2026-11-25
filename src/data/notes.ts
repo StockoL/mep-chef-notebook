@@ -12,7 +12,8 @@ import type { Id, KitchenId, Media, Note } from './types';
 
 /** Starts a text note in the inbox. Called on the first keystroke. */
 export async function createTextNote(body: string, database: MepDatabase = appDb): Promise<Id> {
-  const { kitchenId, sectionId } = await getPlace(database);
+  const { kitchenId } = await getPlace(database);
+  const sectionId = null; // not asked any more (DECISIONS 48)
   return database.notes.add({ kind: 'inbox', body, mediaIds: [], kitchenId, sectionId, links: [] });
 }
 
@@ -29,7 +30,8 @@ export async function discardIfEmpty(id: Id, database: MepDatabase = appDb) {
 
 /** A photo or voice note: stores the file and an inbox note pointing at it. */
 export async function createMediaNote(blob: Blob, database: MepDatabase = appDb): Promise<Id> {
-  const { kitchenId, sectionId } = await getPlace(database);
+  const { kitchenId } = await getPlace(database);
+  const sectionId = null; // not asked any more (DECISIONS 48)
   return database.transaction('rw', database.media, database.notes, async () => {
     const mediaId = await database.media.add({ blob, type: blob.type || 'application/octet-stream' });
     return database.notes.add({ kind: 'inbox', body: '', mediaIds: [mediaId], kitchenId, sectionId, links: [] });

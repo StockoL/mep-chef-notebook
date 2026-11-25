@@ -40,20 +40,18 @@ describe('kitchens', () => {
 
 describe('where the chef is', () => {
   it('defaults to No kitchen', async () => {
-    expect(await getPlace(db)).toEqual({ kitchenId: NO_KITCHEN_ID, sectionId: null });
+    expect(await getPlace(db)).toEqual({ kitchenId: NO_KITCHEN_ID });
   });
 
-  it('switching kitchen picks the usual section there', async () => {
+  it('remembers the kitchen only', async () => {
     const id = await createKitchen('Dumbleton Hall', db);
-    const [starters] = await listSections(id, db);
-    await setUsualSection(id, starters!.id, db);
-    await setPlace(id, undefined, db);
-    expect(await getPlace(db)).toEqual({ kitchenId: id, sectionId: starters!.id, alsoSectionId: null });
+    await setPlace(id, db);
+    expect(await getPlace(db)).toEqual({ kitchenId: id });
   });
 
   it('falls back to No kitchen when the current one is archived', async () => {
     const id = await createKitchen('Old job', db);
-    await setPlace(id, null, db);
+    await setPlace(id, db);
     await setKitchenArchived(id, true, db);
     expect((await getPlace(db)).kitchenId).toBe(NO_KITCHEN_ID);
   });

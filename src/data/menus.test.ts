@@ -31,7 +31,7 @@ let section: (name: string) => Promise<string>;
 beforeEach(async () => {
   db = await freshDatabase();
   kitchenId = await createKitchen('Dumbleton Hall', db);
-  await setPlace(kitchenId, null, db);
+  await setPlace(kitchenId, db);
   course = async (name) => (await getListItems({ kind: 'values', list: 'courses', kitchenId }, db)).find((c) => c.name === name)!.id;
   section = async (name) => (await db.sections.where('kitchenId').equals(kitchenId).toArray()).find((s) => s.name === name)!.id;
 });

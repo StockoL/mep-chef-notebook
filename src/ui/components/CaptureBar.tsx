@@ -6,12 +6,12 @@ import { paths } from '../router';
 import { NoteSheet } from './NoteSheet';
 import { showMessage } from './UndoBar';
 import { VoiceSheet } from './VoiceSheet';
-import { WasteSheet } from './WasteSheet';
 
 /**
- * Above the tabs on every main screen (C1, C2, A4): one tap to write a note,
- * and photo, voice and waste one tap each. Everything saves at once, tagged
- * with the current kitchen, section and time.
+ * Above the tabs on every main screen (C1, C2): one tap to write a note,
+ * and photo and voice one tap each. Everything saves at once, tagged with
+ * the current kitchen and the time. Waste is logged from the Section tab,
+ * at the end of a shift (A4).
  *
  * Common path for a note: tap the bar → type → Done (2 taps).
  */
@@ -21,7 +21,6 @@ export function CaptureBar() {
   const photoInput = useRef<HTMLInputElement>(null);
   const [noteOpen, setNoteOpen] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
-  const [wasteOpen, setWasteOpen] = useState(false);
 
   // iPhone only shows the keyboard if focus happens inside the tap itself,
   // so the sheet is opened and the field focused right here, not after a render.
@@ -60,9 +59,6 @@ export function CaptureBar() {
       >
         <Icon name="mic" />
       </button>
-      <button class="capture-bar__action" type="button" aria-label="Log waste" onClick={() => setWasteOpen(true)}>
-        <Icon name="bin" />
-      </button>
 
       {/* capture="environment" opens the back camera straight away. */}
       <input
@@ -78,7 +74,6 @@ export function CaptureBar() {
 
       <NoteSheet open={noteOpen} onClose={() => setNoteOpen(false)} dialogRef={noteDialog} fieldRef={noteField} />
       <VoiceSheet open={voiceOpen} onClose={() => setVoiceOpen(false)} />
-      <WasteSheet open={wasteOpen} onClose={() => setWasteOpen(false)} />
     </div>
   );
 }

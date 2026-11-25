@@ -11,7 +11,7 @@ let kitchenId: string;
 beforeEach(async () => {
   db = await freshDatabase();
   kitchenId = await createKitchen('Dumbleton Hall', db);
-  await setPlace(kitchenId, null, db);
+  await setPlace(kitchenId, db);
 });
 afterEach(async () => {
   await db.delete();

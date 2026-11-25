@@ -9,7 +9,6 @@ import {
   renameKitchen,
   setKitchenArchived,
   setPlace,
-  setUsualSection,
   addShift,
   updateShift,
   deleteShift,
@@ -46,7 +45,7 @@ export function Kitchens() {
       const id = await createKitchen(name);
       setName('');
       setError('');
-      await setPlace(id, null);
+      await setPlace(id);
       showMessage(`Added ${name.trim()}. You’re there now.`);
     } catch (e) {
       setError(e instanceof ListError ? e.message : 'Couldn’t add that kitchen.');
@@ -174,11 +173,7 @@ export function KitchenSections({ id = '' }: { id?: string }) {
   return (
     <section class="flow">
       <ScreenHeader title="Sections" back={{ href: paths.kitchen(id), label: kitchen.name }} />
-      <ListEditor
-        listRef={{ kind: 'sections', kitchenId: id }}
-        itemName="section"
-        usual={{ id: kitchen.usualSectionId ?? null, set: (sectionId) => setUsualSection(id, sectionId) }}
-      />
+      <ListEditor listRef={{ kind: 'sections', kitchenId: id }} itemName="section" />
     </section>
   );
 }
