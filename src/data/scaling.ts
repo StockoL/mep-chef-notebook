@@ -18,7 +18,7 @@ export type ScaleChoice =
   /** "Make 3 l" (or "40 portions"). */
   | { by: 'yield'; amount: number; unit: string }
   /** "I've got 340 g of butter": the line, and how much there is. */
-  | { by: 'anchor'; lineId: Id; amount: number; unit: string };
+  | { by: 'anchor'; lineId: Id; amount: number; unit: string; /** Finds the line again in a later version. */ ingredientId?: Id | null };
 
 const choiceKey = (componentId: Id) => `scale.${componentId}`;
 
@@ -49,6 +49,7 @@ export interface ScaledLine {
   canAnchor: boolean;
   /** For the anchor sheet: the line's own unit. */
   unit: string | null;
+  ingredientId: Id | null;
 }
 
 export interface ScaledComponent {
@@ -91,7 +92,9 @@ export async function getScaledComponent(
       else factor = f;
     }
   } else if (choice?.by === 'anchor') {
-    const anchor = details.lines.find((l) => l.line.id === choice.lineId);
+    const anchor =
+      details.lines.find((l) => l.line.id === choice.lineId) ??
+      (choice.ingredientId ? details.lines.find((l) => l.line.ingredientId === choice.ingredientId) : undefined);
     if (!anchor || anchor.line.quantity === null) problem = 'That ingredient is no longer in the recipe, or has no amount.';
     else {
       const lineUnit = anchor.line.unit ?? 'each';
@@ -116,6 +119,7 @@ export async function getScaledComponent(
       component: target?.kind === 'component' && line.quantity !== null ? { id: target.id, amount: line.quantity * factor, unit: unit! } : null,
       canAnchor: line.quantity !== null && line.quantity > 0,
       unit,
+      ingredientId: line.ingredientId,
     };
   });
 

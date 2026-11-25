@@ -15,6 +15,7 @@ import { db as appDb, type MepDatabase } from './db';
 import { ListError } from './lists';
 import type { Snapshot } from './snapshot';
 import { refreshStatus, writeSteps, type StatusChange } from './steps';
+import { versionForEditing } from './versions';
 import type { Component, Dish, DishComponent, Id, Ingredient, KitchenId, Line, Quantity, Step, Variation } from './types';
 
 // ─── Variations ───────────────────────────────────────────────────────────
@@ -80,13 +81,6 @@ export async function setVariationOrigin(variationId: Id, origin: VariationOrigi
   });
 }
 
-/** The variation's current version id, creating the first version if there isn't one. */
-async function currentVersionId(variation: Variation, database: MepDatabase): Promise<Id> {
-  if (variation.currentVersionId) return variation.currentVersionId;
-  const versionId = await database.versions.add({ variationId: variation.id, parentId: null, changeNote: null });
-  await database.variations.update(variation.id, { currentVersionId: versionId });
-  return versionId;
-}
 
 // ─── Components ───────────────────────────────────────────────────────────
 
@@ -108,14 +102,20 @@ export interface ComponentDetails {
   usedInComponents: Component[];
 }
 
+/**
+ * A component with one variation's recipe: the one in use in this kitchen,
+ * or `variationId` when the chef is looking at another (V4).
+ */
 export async function getComponentDetails(
   id: Id,
   kitchenId: KitchenId,
   database: MepDatabase = appDb,
+  variationId?: Id | null,
 ): Promise<ComponentDetails | undefined> {
   const component = await database.components.get(id);
   if (!component) return undefined;
-  const variation = await getVariationInUse(id, kitchenId, database);
+  const chosen = variationId ? await database.variations.get(variationId) : undefined;
+  const variation = chosen?.componentId === id ? chosen : await getVariationInUse(id, kitchenId, database);
   const versionId = variation?.currentVersionId;
   const lines = versionId ? await database.lines.where('versionId').equals(versionId).sortBy('order') : [];
   const steps = versionId ? await database.steps.where('versionId').equals(versionId).sortBy('order') : [];
@@ -181,10 +181,10 @@ export async function saveLines(
   database: MepDatabase = appDb,
 ): Promise<Id[]> {
   const created: Id[] = [];
-  await database.transaction('rw', [database.variations, database.versions, database.lines, database.ingredients, database.components], async () => {
+  await database.transaction('rw', [database.variations, database.versions, database.lines, database.steps, database.ingredients, database.components], async () => {
     const variation = await database.variations.get(variationId);
     if (!variation) throw new Error('That variation no longer exists.');
-    const versionId = await currentVersionId(variation, database);
+    const versionId = await versionForEditing(variation, database);
     const existing = await database.lines.where('versionId').equals(versionId).sortBy('order');
     const components = (await database.components.toArray()).filter((c) => c.id !== variation.componentId);
     const ingredients = await database.ingredients.toArray();
@@ -248,7 +248,7 @@ export async function saveSteps(variationId: Id, texts: string[], database: MepD
     async () => {
       const variation = await database.variations.get(variationId);
       if (!variation) throw new Error('That variation no longer exists.');
-      const versionId = await currentVersionId(variation, database);
+      const versionId = await versionForEditing(variation, database);
       await writeSteps(variation, versionId, texts, database);
     },
   );

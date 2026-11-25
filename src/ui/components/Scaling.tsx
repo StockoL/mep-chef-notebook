@@ -212,7 +212,7 @@ function AnchorForm({ lines, current, onScale }: { lines: ScaledLine[]; current:
       class="flow"
       onSubmit={(e) => {
         e.preventDefault();
-        if (value) onScale({ by: 'anchor', lineId: line.lineId, amount: value, unit });
+        if (value) onScale({ by: 'anchor', lineId: line.lineId, ingredientId: line.ingredientId, amount: value, unit });
       }}
     >
       <p class="field__hint">
