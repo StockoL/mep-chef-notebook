@@ -17,6 +17,7 @@ export async function createDraftComponent(
   name: string,
   kitchenId: KitchenId,
   database: MepDatabase = appDb,
+  changeNote = 'Created from a note',
 ): Promise<{ componentId: Id; variationId: Id }> {
   const cleaned = cleanName(name);
   if (!cleaned) throw new ListError('Give the component a name.');
@@ -36,7 +37,7 @@ export async function createDraftComponent(
       suggestedToChef: null,
       currentVersionId: null,
     });
-    const versionId = await database.versions.add({ variationId, parentId: null, changeNote: 'Created from a note' });
+    const versionId = await database.versions.add({ variationId, parentId: null, changeNote });
     await database.variations.update(variationId, { currentVersionId: versionId });
     return { componentId, variationId };
   });
