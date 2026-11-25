@@ -41,6 +41,9 @@
 | 35 | A sheet keeps the photo of chef's paper sheet it was entered from (`Sheet.photoId`, schema v3) | So the original can be checked later |
 | 36 | "Today" for the sheet is the calendar date; it rolls over at midnight | Simple and predictable; a late finish can still open yesterday's sheet from the sheet list |
 | 37 | Covering two sections: the usual section switch stays 2 taps, and "Also covering" in Where are you today? adds a second. Both share one sheet (`Sheet.sectionIds`) | MS3 without slowing the common switch |
+| 38 | A written method line is one `Step`; the step reader stores the pieces of work it found in it as `Step.parts` (schema v4). The chef's text is never rewritten; the planner schedules parts | Splitting into separate lines would change the chef's text under them as they type |
+| 39 | Draft or ready is worked out from the steps, never set by hand: every step confirmed, every part with a mode and a time, and check-in and passive parts with equipment. A part done to order needs no time; a part that is only a hold ("holds 3 days") needs nothing. No method = draft | A plan must never be quietly wrong (DECISIONS 5); service work isn't prep |
+| 40 | A correction to a part's kind or equipment teaches the word list for that part's verb, at once, with Undo; time and setting corrections stay with the recipe. "Bench" joins the equipment list for work done by hand | Learning the word is P2; Undo covers one-off exceptions ("these nuts burn: check-in") |
 
 ## Open
 

@@ -44,6 +44,7 @@ From `src/data/types.ts`:
 - Money is whole pence.
 - Fields ending in `Id` point at another row by id. Editable-list fields point at a `listValues` row.
 - `kitchenId: "none"` means "No kitchen". `kitchenId: null` means "not tied to any kitchen" (the chef's own).
+- A step (`steps`) is a method line as written (`text`) with the step reader's `parts`: one object per piece of work, each with its own mode, minutes, equipment and flags (schema v4). The chef's corrections to the reader are in `wordListEntries`.
 
 ## Import
 

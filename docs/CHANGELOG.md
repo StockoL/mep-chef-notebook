@@ -71,3 +71,15 @@ Run a real shift from the app's sheet.
 - Covering two sections: "Also covering" in Where are you today?; both share one sheet, and the top bar shows "Fish + Starters" (DECISIONS 37).
 - Events (kitchen settings → Events): weddings and functions with covers, notes and their own service times, replacing a usual service or alongside. A one-off time change takes 2 taps from Today: tap the next-service line, change the time.
 - Schema v3: sheets keep a photo; older data and exports upgrade. "Today" rolls over at midnight (DECISIONS 36).
+
+## Phase 4: Step parser (25 Nov 2026)
+
+Write steps your way; the app reads the scheduling data from them.
+
+- The step reader (`src/core/parser/`): times ("40-45 min", "1h30", "2½ hrs", "min 2 hrs", "overnight"), settings ("220c", "160 fan", gas marks and °F converted to °C, "low"), equipment from verbs and equipment words, the three modes with overrides ("turning", "by hand", short check-ins become active), several steps on one line, times that run on ("roast 15 more", "then 5-10"), "while hot", "to order", "the day before", "then as brown stock", @component references, "skim every hour", holds and critical points (cooling, hot holding; 63°C in a water bath isn't hot holding).
+- `npm run parser:score`: 58 of 58 test-set lines fully correct (100%). The rules were written against these lines, so expect real-world misses; new lines in `parseStep.test.ts` check the rules beyond the set.
+- The method on a component page: each step shows its readings as chips, empty chips for what's missing ("+ time"). Tap a chip to correct kind, time, equipment, setting or timing; "Looks right" confirms a step, "Confirm all" the rest. "Edit method" goes back to the text box.
+- Corrections teach the word list ("From now on, “blend” reads as Mixer", with Undo). Settings → Step reader's words lists them, to forget one. Exported with everything else.
+- Draft or ready is worked out from the steps (DECISIONS 39), with "what's missing" (one tap each to fix) and a message when an edit drops a recipe back to draft.
+- Kitchen settings → Equipment is now an editable list; "Bench" added to every kitchen's list once.
+- Schema v4: steps hold parts (DECISIONS 38). Old steps are read at start-up; older exports upgrade on import.

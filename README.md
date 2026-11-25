@@ -8,7 +8,7 @@ Your data stays on your device. No account, no server.
 
 **Use it:** https://stockol.github.io/mep-chef-notebook/ (on iPhone, open it in Safari and add it to your Home Screen).
 
-Status: Phase 3 (shift sheet). See `docs/SPEC.md` and `docs/BUILD_ORDER.md`.
+Status: Phase 4 (step parser). See `docs/SPEC.md` and `docs/BUILD_ORDER.md`.
 
 ## Development
 
@@ -22,6 +22,7 @@ npm run test:watch     # unit tests, re-run on save
 npm run typecheck      # TypeScript, app and config
 npm run build          # production build into dist/ (type-checks first)
 npm run preview        # serve dist/ at http://localhost:4173/mep-chef-notebook/
+npm run parser:score   # score the step reader against tests/fixtures/step-parser-test-set.json
 ```
 
 Every push to `main` runs the tests, builds, and publishes to GitHub Pages (`.github/workflows/deploy.yml`).
