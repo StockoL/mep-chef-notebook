@@ -146,3 +146,9 @@ describe('by hand, and the kitchen’s own equipment', () => {
     expect(one('Make batter the day before').previousDay).toBe(true);
   });
 });
+
+describe('reheating', () => {
+  it('is a critical point', () => {
+    expect(readStep('Reheat in a pan 5 min')[0]).toMatchObject({ critical: 'reheat', pausable: true });
+  });
+});

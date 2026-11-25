@@ -41,7 +41,7 @@ import {
 export const STEP_MODES = ['active', 'check-in', 'passive'] as const;
 export type StepMode = (typeof STEP_MODES)[number];
 
-export type CriticalPoint = 'cooling' | 'hot-hold';
+export type CriticalPoint = 'cooling' | 'hot-hold' | 'reheat';
 
 /** What the reader got from one part of a line. null = couldn't tell (an empty chip). */
 export interface ReadPart {
@@ -296,6 +296,7 @@ interface Piece {
   activeWord: boolean;
   dayBefore: boolean;
   cooling: boolean;
+  reheat: boolean;
   fridgeRest: boolean;
 }
 
@@ -369,6 +370,7 @@ function readPiece(raw: string, words: readonly ChefWord[], equipmentNames: read
     activeWord: ACTIVE_WORDS.test(text),
     dayBefore,
     cooling: /\bblast chill/.test(raw) || /\b(chill|cool)(ed)?\s+(to|below|under)\b/.test(text),
+    reheat: /\b(reheat|regenerate|regen)/.test(raw),
     fridgeRest: FRIDGE_REST_WORDS.test(raw),
   };
 }
@@ -482,7 +484,9 @@ function buildPart(group: Piece[], previous: ReadPart | null): ReadPart {
   } else if (meaning?.pauseBlocker) {
     part.pausable = false;
     part.pauseBlocker = meaning.pauseBlocker;
-  }
+  }  // Reheating is a critical point (a temperature check), but can be dropped for a ticket.
+  if (!part.critical && group.some((p) => p.reheat)) part.critical = 'reheat';
+
   return part;
 }
 

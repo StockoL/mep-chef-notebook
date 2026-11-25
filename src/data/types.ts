@@ -23,7 +23,7 @@
  *   lists). IndexedDB can't index null, so query those by another index.
  */
 
-import type { AllergenId } from '../core/allergens/allergens';
+import type { AllergenCode } from '../core/allergens/allergens';
 import type { StepMode } from '../core/parser/parseStep';
 import type { Id } from './ids';
 
@@ -173,7 +173,8 @@ export interface Supplier extends Row {
 /** A kitchen rule: shelf life or label format, for a component or a component type. */
 export interface HouseRule extends Row {
   kitchenId: KitchenId;
-  kind: 'shelf-life' | 'label';
+  /** Shelf life (for a component or a type), or a target for a critical point (kitchen-wide). */
+  kind: 'shelf-life' | 'label' | 'cooling' | 'hot-hold' | 'reheat';
   componentId: Id | null;
   /** ListValue in 'component-types'. */
   componentTypeId: Id | null;
@@ -345,7 +346,8 @@ export interface Ingredient extends Row {
   aliases: string[];
   kind: 'basic' | 'bought-in';
   /** For basic ingredients; bought-in ones get theirs from a Product. */
-  allergens: AllergenId[];
+  /** The 14, or a sub-type: "tree-nuts:hazelnut" (DECISIONS 52). */
+  allergens: AllergenCode[];
   /** Grams per millilitre, for volume ↔ weight. */
   density: number | null;
   /**
@@ -364,8 +366,8 @@ export interface Product extends Row {
   supplierId: Id | null;
   brand: string;
   pack: Quantity | null;
-  contains: AllergenId[];
-  mayContain: AllergenId[];
+  contains: AllergenCode[];
+  mayContain: AllergenCode[];
   labelPhotoId: Id | null;
   checkedOn: CalendarDate | null;
   price: Pence | null;

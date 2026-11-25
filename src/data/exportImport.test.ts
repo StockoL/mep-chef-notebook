@@ -110,6 +110,11 @@ describe('export → import', () => {
     // Phase 9: a prep record and the timing it left.
     await source.partRuns.add({ kitchenId: NO_KITCHEN_ID, date: '2026-11-25', jobId: 'item-1', partKey: '0', stepKey: 'c|brunoise shallots|0', mode: 'active', equipmentTypeId: null, quantity: 2, startedAt: '2026-11-25T10:00:00.000Z', doneAt: '2026-11-25T10:28:00.000Z', interrupted: false, inServiceWindow: false });
     await source.timings.add({ stepKey: 'c|brunoise shallots|0', equipmentId: null, kitchenId: NO_KITCHEN_ID, quantity: 2, minutes: 28, interrupted: false, inServiceWindow: false });
+    // Phase 10: a supplier, a product with allergens and sub-types, a house rule and a batch.
+    const supplierId = await source.suppliers.add({ kitchenId: NO_KITCHEN_ID, name: 'Brakes', contact: '', cutOff: null, minimumOrder: null, deliveryDays: [] });
+    await source.products.add({ ingredientId: 'mayo', kitchenId: NO_KITCHEN_ID, supplierId, brand: 'Hellmann’s', pack: { amount: 5, unit: 'l' }, contains: ['eggs', 'tree-nuts:walnut'], mayContain: ['milk'], labelPhotoId: null, checkedOn: '2026-11-25', price: null, priceDate: null });
+    await source.houseRules.add({ kitchenId: NO_KITCHEN_ID, kind: 'cooling', componentId: null, componentTypeId: null, value: 'below 5°C within 90 min' });
+    await source.batches.add({ componentId: 'c1', kitchenId: NO_KITCHEN_ID, madeAt: '2026-11-25T10:00:00.000Z', useBy: '2026-11-27T10:00:00.000Z' });
 
     await importData(await exportData(source), target);
     expect(await snapshot(target)).toEqual(await snapshot(source));

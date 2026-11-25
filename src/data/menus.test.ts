@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { parseShorthand } from '../core/ingredients/shorthand';
 import type { MepDatabase } from './db';
-import { addDishToSheet, gatherDishAllergens } from './dishes';
+import { dishAllergens } from './allergens';
+import { addDishToSheet } from './dishes';
 import { createKitchen, setPlace } from './kitchens';
 import { addComponentToDish, createComponent, createDish, createIngredient, getVariationInUse, saveLines, updateIngredient } from './library';
 import { getListItems } from './lists';
@@ -140,7 +141,10 @@ describe('dishes at work (MS2, R3)', () => {
 
     const dishId = await createDish('Cod', db);
     await addComponentToDish(dishId, garnish, db);
-    expect(await gatherDishAllergens(dishId, kitchenId, db)).toEqual({ contains: [{ id: 'milk', label: 'Milk' }], unconfirmed: ['Mayonnaise'] });
+    const allergens = await dishAllergens(dishId, kitchenId, db);
+    expect(allergens.contains.map((c) => [c.label, c.from])).toEqual([['Milk', ['Butter (via Tartare → Beurre blanc)']]]);
+    expect(allergens.unconfirmed).toEqual(['Mayonnaise (via Tartare)']);
+    expect(allergens.complete).toBe(false);
   });
 
   it('puts the components on today’s sheet, with amounts for a number of portions', async () => {
