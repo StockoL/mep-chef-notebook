@@ -43,3 +43,17 @@ From the first test on the phone: it wasn't clear whether things had saved, whet
 - Kitchen notes have their own screen (••• → Kitchen notes, and from kitchen settings): edit, move back to the inbox, delete with Undo.
 - Notes can be edited before sorting; a component in the Library shows the notes sorted into it; waste entries can be corrected or deleted.
 - Switching kitchen or section, adding a kitchen or list item, and the goal check-in each confirm with a short message.
+
+## Phase 2: Library (25 Nov 2026)
+
+Components and dishes are easier to find in the app than in the notebook.
+
+- Library tab: one search box (names, aliases, descriptions and notes, grouped by kind), Recent, and four lenses: dishes, components grouped by type, ingredients A–Z, and techniques (empty until Phase 7). Tag and collection filters. "+ New" makes a component, dish or ingredient. The top bar's search opens it.
+- Components: name, type, tags, aliases, collections; one variation to start (house in a kitchen, your own with no kitchen), base yield, "used in" dishes and components, its notes. Delete with Undo (refused while another component uses it).
+- Ingredients in shorthand ("bones 2kg, mirepoix, tom puree 1 tbsp"), read into rows as you type, each saying whether it's a known ingredient, another component, or new. Unknown ingredients are created on save; half-typed ones are tidied away.
+- Method as plain steps, one per line (read by the step parser in Phase 4).
+- Dishes: description, plating photo and spec, components (add, reorder, remove with Undo; add a new draft component from the picker), tags, collections.
+- Ingredients: name, aliases, basic or bought-in, the 14 allergens (data only), and everything that uses it, through components (the jus uses the stock that uses the bones).
+- Units gain kitchen count words: tsp, tbsp, pinch, bunch, sprig, clove, slice, sheet, leaf, tin, pack (DECISIONS 34).
+- Every text box saves after a pause, when you leave it, when the app goes to the background, and when the screen closes (`useAutosave`).
+- Layout checked at the largest text size again: rows, chips, buttons and segmented controls wrap.
