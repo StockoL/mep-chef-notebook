@@ -27,7 +27,7 @@ describe('upgrading a version 1 database already on the phone', () => {
 
     const upgraded = new MepDatabase(name);
     await upgraded.open();
-    expect(upgraded.verno).toBe(6);
+    expect(upgraded.verno).toBe(7);
     expect(await upgraded.kitchens.get('none')).toMatchObject({ name: 'No kitchen', usualSectionId: null });
     expect(await upgraded.settings.get('storage.marker')).toEqual({ key: 'storage.marker', value: '2026-11-24T18:00:00.000Z' });
     expect(await upgraded.services.get('s1')).toMatchObject({

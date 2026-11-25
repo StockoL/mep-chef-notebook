@@ -115,6 +115,10 @@ describe('export → import', () => {
     await source.products.add({ ingredientId: 'mayo', kitchenId: NO_KITCHEN_ID, supplierId, brand: 'Hellmann’s', pack: { amount: 5, unit: 'l' }, contains: ['eggs', 'tree-nuts:walnut'], mayContain: ['milk'], labelPhotoId: null, checkedOn: '2026-11-25', price: null, priceDate: null });
     await source.houseRules.add({ kitchenId: NO_KITCHEN_ID, kind: 'cooling', componentId: null, componentTypeId: null, value: 'below 5°C within 90 min' });
     await source.batches.add({ componentId: 'c1', kitchenId: NO_KITCHEN_ID, madeAt: '2026-11-25T10:00:00.000Z', useBy: '2026-11-27T10:00:00.000Z' });
+    // Phase 11: a count, a checklist with a day's ticks, and a costed waste entry's raw data.
+    await source.stockCounts.add({ sectionId: 's1', date: '2026-11-25', counts: [{ sectionItemId: 'i1', quantity: { amount: 1.5, unit: 'kg' } }] });
+    const checklistId = await source.checklists.add({ sectionId: 's1', kind: 'open', items: [{ id: 'c1', text: 'Fridge temps', order: 0 }] });
+    await source.checklistRuns.add({ checklistId, date: '2026-11-25', ticked: [{ itemId: 'c1', at: '2026-11-25T09:00:00.000Z' }] });
 
     await importData(await exportData(source), target);
     expect(await snapshot(target)).toEqual(await snapshot(source));

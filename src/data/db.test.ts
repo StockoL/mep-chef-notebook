@@ -29,10 +29,12 @@ describe('schema', () => {
       'weeklyGoals', 'collections', 'listValues', 'wordListEntries', 'media', 'settings',
       // Added in v6 (Phase 9).
       'partRuns',
+      // Added in v7 (Phase 11).
+      'checklistRuns',
     ];
     expect([...TABLE_NAMES].sort()).toEqual([...expected].sort());
     expect(db.tables.map((table) => table.name).sort()).toEqual([...expected].sort());
-    expect(db.verno).toBe(6);
+    expect(db.verno).toBe(7);
   });
 
   it('stores and reads back a row in every table', async () => {

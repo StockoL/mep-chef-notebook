@@ -41,6 +41,7 @@ import {
   type TechniqueKitchenNote,
   type TechniqueVariant,
   type PartRun,
+  type ChecklistRun,
   type Timing,
   type Variation,
   type Version,
@@ -111,6 +112,8 @@ export const SCHEMA_V1 = {
 export const TABLES_ADDED = {
   /** v6 (Phase 9): prep mode's record of what's been started and done. */
   partRuns: 'id, [kitchenId+date], stepKey',
+  /** v7 (Phase 11): each day's ticks on a section's opening and closing checklists. */
+  checklistRuns: 'id, [checklistId+date]',
 } as const;
 
 export type TableName = keyof typeof SCHEMA_V1 | keyof typeof TABLES_ADDED;
@@ -119,9 +122,10 @@ export type TableName = keyof typeof SCHEMA_V1 | keyof typeof TABLES_ADDED;
  * The schema version this code writes. Goes into every export.
  * v1: Phase 0. v2: Phase 1 row changes. v3: Phase 3, sheets keep a photo.
  * v4: steps hold parts. v5: ingredient weights. v6: the partRuns table.
+ * v7: the checklistRuns table.
  * (Row changes are in migrations.ts.)
  */
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 /** Every table name, in schema order. */
 export const TABLE_NAMES = [...Object.keys(SCHEMA_V1), ...Object.keys(TABLES_ADDED)] as TableName[];
@@ -166,6 +170,7 @@ export class MepDatabase extends Dexie {
   declare sheetItems: RowTable<SheetItem>;
   declare timings: RowTable<Timing>;
   declare partRuns: RowTable<PartRun>;
+  declare checklistRuns: RowTable<ChecklistRun>;
   declare batches: RowTable<Batch>;
   declare stockCounts: RowTable<StockCount>;
   declare orderDrafts: RowTable<OrderDraft>;
@@ -192,6 +197,8 @@ export class MepDatabase extends Dexie {
     }
     // Schema v6 (Phase 9): prep mode's record of what's been started and done.
     this.version(6).stores({ partRuns: TABLES_ADDED.partRuns });
+    // Schema v7 (Phase 11): checklist ticks per day.
+    this.version(7).stores({ checklistRuns: TABLES_ADDED.checklistRuns });
     this.addRowHooks();
   }
 

@@ -96,6 +96,14 @@ export interface ChecklistItem {
   order: number;
 }
 
+/** One day's ticks on a checklist (A6, schema v7): a history of what was checked. */
+export interface ChecklistRun extends Row {
+  checklistId: Id;
+  date: CalendarDate;
+  /** Ticked item ids, with when each was ticked. */
+  ticked: { itemId: Id; at: string }[];
+}
+
 export interface Checklist extends Row {
   sectionId: Id;
   kind: 'open' | 'close';

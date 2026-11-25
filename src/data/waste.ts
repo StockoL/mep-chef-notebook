@@ -1,5 +1,10 @@
-/** The waste log (A4): logged from capture from day one; costs come in Phase 11. */
+/**
+ * The waste log (A4): logged from day one; costed from Phase 11. What was
+ * wasted is matched by name to a component or ingredient, so its cost can be
+ * worked out from prices (never stored: a price change shows at once).
+ */
 
+import { findByName } from '../core/ingredients/names';
 import { cleanName } from '../core/lists/lists';
 import { toCalendarDate } from '../core/time/calendar';
 import { db as appDb, type MepDatabase } from './db';
@@ -13,6 +18,14 @@ export interface WasteInput {
   reasonId: Id | null;
 }
 
+/** What a typed name means: a component, else an ingredient, else neither. */
+async function matchWhat(text: string, database: MepDatabase): Promise<{ componentId: Id | null; ingredientId: Id | null }> {
+  const component = findByName(await database.components.toArray(), text);
+  if (component) return { componentId: component.id, ingredientId: null };
+  const ingredient = findByName(await database.ingredients.toArray(), text);
+  return { componentId: null, ingredientId: ingredient?.id ?? null };
+}
+
 /** Logs waste where the chef is now, dated today. */
 export async function logWaste(input: WasteInput, now = new Date(), database: MepDatabase = appDb): Promise<Id> {
   const text = cleanName(input.text);
@@ -22,8 +35,7 @@ export async function logWaste(input: WasteInput, now = new Date(), database: Me
   return database.wasteEntries.add({
     kitchenId,
     sectionId,
-    componentId: null,
-    ingredientId: null,
+    ...(await matchWhat(text, database)),
     text,
     quantity: input.quantity,
     reasonId: input.reasonId,
@@ -36,7 +48,7 @@ export async function logWaste(input: WasteInput, now = new Date(), database: Me
 export async function updateWaste(id: Id, input: WasteInput, database: MepDatabase = appDb) {
   const text = cleanName(input.text);
   if (!text) throw new ListError('Say what was wasted.');
-  await database.wasteEntries.update(id, { text, quantity: input.quantity, reasonId: input.reasonId });
+  await database.wasteEntries.update(id, { text, quantity: input.quantity, reasonId: input.reasonId, ...(await matchWhat(text, database)) });
 }
 
 export function getWaste(id: Id, database: MepDatabase = appDb) {

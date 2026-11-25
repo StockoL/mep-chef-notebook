@@ -15,6 +15,7 @@ import { db as appDb, type MepDatabase } from './db';
 import { nowTimestamp } from './ids';
 import { getVariationInUse } from './library';
 import { listSectionItems } from './sectionItems';
+import { belowParComponents } from './stock';
 import type { CalendarDate, Id, KitchenId, Quantity, Sheet, SheetItem, SheetItemSource } from './types';
 
 export function getSheet(id: Id, database: MepDatabase = appDb) {
@@ -207,6 +208,19 @@ export async function readTypedItem(text: string, kitchenId: KitchenId, database
  * duplicates). Returns the new sheet's id.
  */
 export async function writeNextSheet(fromSheetId: Id, date: CalendarDate, database: MepDatabase = appDb): Promise<Id> {
+  return (await writeNextSheetWithSummary(fromSheetId, date, database)).id;
+}
+
+/**
+ * Writes the next shift's sheet (SH3) and says what went on it: today's
+ * unfinished items carried over, and (from Phase 11) components short of par
+ * at the latest count, to top up (A2). Running it again adds nothing twice.
+ */
+export async function writeNextSheetWithSummary(
+  fromSheetId: Id,
+  date: CalendarDate,
+  database: MepDatabase = appDb,
+): Promise<{ id: Id; carried: number; toppedUp: number }> {
   const from = await database.sheets.get(fromSheetId);
   if (!from) throw new Error('That sheet no longer exists.');
   const nextId = await getOrCreateSheet(from.kitchenId, date, from.sectionIds, database);
@@ -220,8 +234,22 @@ export async function writeNextSheet(fromSheetId: Id, date: CalendarDate, databa
     toCarry.map((i) => ({ ...i, source: 'carried-over' as const })),
     database,
   );
+
+  // Below par at the latest count: top up to par, unless it's on already.
+  const onNext = [...already, ...toCarry];
+  const sectionItems = new Map((await database.sectionItems.toArray()).map((s) => [s.id, s]));
+  const listed = (sectionItemId: Id) => {
+    const componentId = sectionItems.get(sectionItemId)?.componentId;
+    return onNext.some((i) => i.sectionItemId === sectionItemId || (componentId && i.componentId === componentId));
+  };
+  const toTopUp = (await belowParComponents(from.kitchenId, database)).filter((b) => !listed(b.sectionItemId));
+  await addSheetItems(
+    nextId,
+    toTopUp.map((b) => ({ sectionItemId: b.sectionItemId, topUpTo: b.par, source: 'section-list' as const })),
+    database,
+  );
   await database.sheets.update(nextId, { writtenAt: nowTimestamp() });
-  return nextId;
+  return { id: nextId, carried: toCarry.length, toppedUp: toTopUp.length };
 }
 
 /** The sheet as text to share (SH3). */

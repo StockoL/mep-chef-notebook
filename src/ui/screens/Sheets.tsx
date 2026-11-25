@@ -14,7 +14,7 @@ import {
   setSheetCovers,
   setSheetPhoto,
   sheetText,
-  writeNextSheet,
+  writeNextSheetWithSummary,
 } from '../../data/sheets';
 import type { CalendarDate, Id, KitchenId } from '../../data/types';
 import { AddToSheet } from '../components/AddToSheet';
@@ -70,13 +70,15 @@ export function SheetPanel({ kitchenId, sectionIds = [], date, isToday }: SheetP
     const shiftDays = [...new Set((shifts ?? []).flatMap((s) => s.days))];
     const nextDate = toCalendarDate(nextShiftDate(today, shiftDays));
     const fromId = await ensureSheet();
-    const before = sheet ? (view?.items.filter((v) => !v.item.done).length ?? 0) : 0;
-    const nextId = await writeNextSheet(fromId, nextDate);
-    route(paths.sheet(nextId));
-    showMessage(
-      before ? `Started the sheet for ${formatCalendarDate(nextDate)}, with ${before} unfinished ${before === 1 ? 'item' : 'items'} carried over.` : `Started the sheet for ${formatCalendarDate(nextDate)}.`,
-    );
+    const { id, carried, toppedUp } = await writeNextSheetWithSummary(fromId, nextDate);
+    route(paths.sheet(id));
+    const parts = [
+      carried ? `${carried} unfinished ${carried === 1 ? 'item' : 'items'} carried over` : null,
+      toppedUp ? `${toppedUp} below par at the count, to top up` : null,
+    ].filter(Boolean);
+    showMessage(`Started the sheet for ${formatCalendarDate(nextDate)}${parts.length ? `, with ${parts.join(' and ')}` : ''}.`);
   }
+
 
   return (
     <section class="flow" aria-label={heading}>

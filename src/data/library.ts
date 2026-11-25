@@ -435,7 +435,7 @@ export function listIngredients(database: MepDatabase = appDb): Promise<Ingredie
 
 export async function updateIngredient(
   id: Id,
-  changes: Partial<Pick<Ingredient, 'name' | 'aliases' | 'kind' | 'allergens' | 'density' | 'unitWeights'>>,
+  changes: Partial<Pick<Ingredient, 'name' | 'aliases' | 'kind' | 'allergens' | 'density' | 'unitWeights' | 'yieldLossPercent'>>,
   database: MepDatabase = appDb,
 ) {
   if (changes.name !== undefined) {
