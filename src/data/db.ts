@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
-import { addBenchOnce, seedChefLists, seedNoKitchenEquipment } from './defaults';
+import { addBenchOnce, seedChefLists, seedNoKitchenEquipment, seedTechniquesOnce } from './defaults';
 import { newId, nowTimestamp } from './ids';
 import { ROW_FIXES } from './migrations';
 import {
@@ -234,4 +234,5 @@ export async function ensureBuiltIns(database: MepDatabase = db): Promise<void> 
     await seedNoKitchenEquipment(database, NO_KITCHEN_ID);
   });
   await addBenchOnce(database);
+  await seedTechniquesOnce(database);
 }

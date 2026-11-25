@@ -83,12 +83,13 @@ export function toStepParts(readParts: readonly ReadPart[], context: ReaderConte
     const dependsOn = part.dependsOn.map((name) => findByName(others, name)?.id).filter((id) => id !== undefined);
     const words = normalizeName(part.text);
     // A line whose ingredient the part names: its time scales with that amount.
-    const scales = context.lines.find((line) =>
-      [line.name, ...line.aliases].some((n) => {
-        const name = normalizeName(n);
-        return name.length > 2 && (` ${words} `.includes(` ${name} `) || ` ${words} `.includes(` ${name}s `));
-      }),
-    );
+    // The whole name first; failing that, its last word ("roast bones" →
+    // "chicken bones"), if that's a real word and only one line ends with it.
+    const says = (name: string) => name.length > 2 && (` ${words} `.includes(` ${name} `) || ` ${words} `.includes(` ${name}s `));
+    const byName = context.lines.find((line) => [line.name, ...line.aliases].some((n) => says(normalizeName(n))));
+    const lastWord = (line: { name: string }) => normalizeName(line.name).split(' ').at(-1) ?? '';
+    const byLastWord = context.lines.filter((line) => lastWord(line).length >= 4 && says(lastWord(line)));
+    const scales = byName ?? (byLastWord.length === 1 ? byLastWord[0] : undefined);
     return {
       text: part.text,
       verb: part.verb,

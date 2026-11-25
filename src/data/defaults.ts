@@ -4,6 +4,7 @@
  * (DECISIONS 16), so nothing in the app may depend on these words.
  */
 
+import { BUILT_IN_TECHNIQUES, BUILT_IN_TEMPLATES } from '../core/techniques/builtIn';
 import type { MepDatabase } from './db';
 import type { Id, ListName } from './types';
 
@@ -105,4 +106,29 @@ export async function seedNoKitchenEquipment(database: MepDatabase, noKitchenId:
   await database.listValues.bulkAdd(
     values.map((value, order) => ({ list: 'equipment-types' as const, kitchenId: noKitchenId, value, order, hidden: false, mergedIntoId: null })),
   );
+}
+
+const TECHNIQUES_SEEDED = 'techniques-seeded';
+
+/**
+ * Technique names and aliases, and the method templates that go with them
+ * (SPEC → Techniques: "the app ships with technique names and aliases only").
+ * Added once; whatever the chef then renames or deletes stays that way.
+ */
+export async function seedTechniquesOnce(database: MepDatabase): Promise<void> {
+  await database.transaction('rw', [database.settings, database.techniques, database.methodTemplates, database.listValues], async () => {
+    if (await database.settings.get(TECHNIQUES_SEEDED)) return;
+    const categories = await database.listValues.where('list').equals('technique-categories').filter((v) => v.kitchenId === null).toArray();
+    const ids = new Map<string, Id>();
+    for (const technique of BUILT_IN_TECHNIQUES) {
+      const categoryId = categories.find((c) => c.value === technique.category)?.id ?? null;
+      const id = await database.techniques.add({ name: technique.name, aliases: technique.aliases, categoryId, notes: '', mistakes: '', mediaIds: [] });
+      ids.set(technique.name, id);
+    }
+    for (const template of BUILT_IN_TEMPLATES) {
+      const techniqueId = ids.get(template.technique);
+      if (techniqueId) await database.methodTemplates.add({ techniqueId, steps: template.steps.map((text) => ({ text, parts: [] })) });
+    }
+    await database.settings.put({ key: TECHNIQUES_SEEDED, value: true });
+  });
 }

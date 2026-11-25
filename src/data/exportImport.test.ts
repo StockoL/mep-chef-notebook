@@ -102,6 +102,11 @@ describe('export → import', () => {
     await source.wordListEntries.add({ word: 'toast', mode: 'passive', equipmentTypeId: 'oven-id' });
     // Phase 5: an ingredient with a density and the chef's own weights.
     await source.ingredients.add({ name: 'Parsley', aliases: [], kind: 'basic', allergens: [], density: null, yieldLossPercent: null, unitWeights: { handful: 40 } });
+    // Phase 7: a technique with a variant, a kitchen note and a method template.
+    const techniqueId = await source.techniques.add({ name: 'Quenelle', aliases: ['rocher'], categoryId: null, notes: 'Warm spoon', mistakes: 'Too big', mediaIds: [] });
+    await source.techniqueVariants.add({ techniqueId, context: 'textured mixes', notes: 'Three passes' });
+    await source.techniqueKitchenNotes.add({ techniqueId, kitchenId: NO_KITCHEN_ID, notes: 'Three-sided here' });
+    await source.methodTemplates.add({ techniqueId, steps: [{ text: 'Quenelle to order', parts: [] }] });
 
     await importData(await exportData(source), target);
     expect(await snapshot(target)).toEqual(await snapshot(source));
