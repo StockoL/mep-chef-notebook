@@ -10,7 +10,8 @@
  * - steps that start the day before (cures, overnight sets) are planned on
  *   the day before: tomorrow's sheet puts them in today's plan (PS3), and
  *   today's items skip them, noting they were started yesterday.
- * Nothing is stored: the plan is worked out each time it's shown.
+ * Nothing is stored: the plan is worked out each time it's shown, from the
+ * start of today's shift.
  */
 
 import { scheduler, type Plan, type PlanJob, type PlanPart, type ServiceWindow } from '../core/scheduler/scheduler';
@@ -68,7 +69,10 @@ export async function getPlanView(kitchenId: KitchenId, now: Date, database: Mep
   const shift = shifts.find((s) => s.days.includes(isoDayOfWeek(now) as never));
   const shiftStart = shift ? timeToMinutes(shift.start) : null;
   const shiftEnd = shift ? timeToMinutes(shift.end) : null;
-  const start = Math.max(minutesOfDay(now), shiftStart ?? 0);
+  // The whole shift is planned from its start, so the plan holds still as the
+  // day goes on (what's started is only known once prep mode tracks it).
+  // With no shift set, it starts now.
+  const start = shiftStart ?? minutesOfDay(now);
 
   const hints: string[] = [];
   if (windows.length === 0) hints.push('No service times today, so nothing has a ready-by time. Set them in kitchen settings → Services.');

@@ -54,15 +54,16 @@ describe('the plan from today’s sheet', () => {
     const [stockItem] = await onSheet(today, [stock, shallots, draft]);
 
     const plan = await getPlanView(kitchenId, morning, db);
-    expect(plan.start).toBe(600);
+    // Planned from the start of the shift (09:00), not from when it's looked at.
+    expect(plan.start).toBe(540);
     expect(plan.windows.map((w) => w.name)).toEqual(['Lunch', 'Dinner']);
     expect(plan.todos.map((t) => [t.view.name, t.reason])).toEqual([['Pickled walnuts', 'Draft: not in the plan until its method is confirmed']]);
     expect(plan.jobs.get(stockItem!)?.readyByLabel).toBe('Ready by Lunch');
     // The stock starts first (it's the longer chain); the brunoise runs alongside the boil and simmer.
     expect(plan.plan.parts.map((p) => [plan.jobs.get(p.jobId)!.view.name, p.start])).toEqual([
-      ['Chicken stock', 600],
-      ['Brunoise shallots', 600],
-      ['Chicken stock', 620],
+      ['Chicken stock', 540],
+      ['Brunoise shallots', 540],
+      ['Chicken stock', 560],
     ]);
     expect(plan.plan.jobs.every((j) => j.late === 0)).toBe(true);
   });
@@ -98,8 +99,8 @@ describe('the plan from today’s sheet', () => {
     expect(plan.plan.parts.filter((p) => p.jobId === todays[0]).map((p) => p.label)).toEqual(['Rinse and pat dry 10 min', 'Portion 60g 20 min']);
   });
 
-  it('starts at the start of the shift when looked at before it', async () => {
-    const plan = await getPlanView(kitchenId, new Date(2026, 10, 25, 7, 30), db);
-    expect(plan.start).toBe(540);
+  it('starts at the start of the shift, whenever it’s looked at', async () => {
+    expect((await getPlanView(kitchenId, new Date(2026, 10, 25, 7, 30), db)).start).toBe(540);
+    expect((await getPlanView(kitchenId, new Date(2026, 10, 25, 15, 0), db)).start).toBe(540);
   });
 });
