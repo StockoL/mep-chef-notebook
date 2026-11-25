@@ -38,7 +38,7 @@ async function costComponent(componentId: Id, kitchenId: KitchenId, products: Pr
   if (!variation?.currentVersionId || seen.has(componentId)) return result;
   seen.add(componentId);
   const productKitchen = variation.kitchenId ?? kitchenId;
-  for (const line of await database.lines.where('versionId').equals(variation.currentVersionId).toArray()) {
+  for (const line of await database.lines.where('versionId').equals(variation.currentVersionId).sortBy('order')) {
     const row = line.ingredientId ? await database.ingredients.get(line.ingredientId) : line.componentId ? await database.components.get(line.componentId) : undefined;
     const name = (row?.name ?? 'an ingredient').toLowerCase();
     if (line.quantity === null) {
