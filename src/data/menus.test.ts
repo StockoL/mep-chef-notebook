@@ -22,7 +22,6 @@ import {
 } from './menus';
 import { getSheetView } from './sheets';
 import { restoreSnapshot } from './snapshot';
-import { refreshStatus } from './steps';
 import { freshDatabase } from './testing';
 
 let db: MepDatabase;
