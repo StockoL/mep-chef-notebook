@@ -26,6 +26,7 @@ import { ComponentCompare, ComponentHistory } from './screens/ComponentHistory';
 import { MenuScreen, MenusList } from './screens/Menus';
 import { TechniquePage } from './screens/TechniquePage';
 import { Prep } from './screens/Prep';
+import { AllergenMatrix, Checklists, Count, Orders, WeeklyReportScreen } from './screens/SectionAdmin';
 
 /**
  * The app shell (docs/UX.md → Navigation): top bar, the current screen, and a
@@ -70,6 +71,11 @@ export function App() {
               <Route path={paths.section} component={Section} />
               <Route path={paths.waste} component={WasteLog} />
               <Route path={paths.labels} component={Labels} />
+              <Route path={paths.count} component={Count} />
+              <Route path={paths.orders} component={Orders} />
+              <Route path={paths.checklists} component={Checklists} />
+              <Route path={paths.report} component={WeeklyReportScreen} />
+              <Route path={routes.matrix} component={AllergenMatrix} />
               <Route path={paths.goal} component={Goal} />
               <Route path={paths.settings} component={Settings} />
               <Route path={routes.settingsList} component={SettingsList} />

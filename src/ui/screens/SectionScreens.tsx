@@ -3,6 +3,10 @@ import { isoWeek } from '../../core/time/calendar';
 import { getCheckInDue, getGoal, listGoals, setGoalText, setReflection } from '../../data/goals';
 import { getListItems } from '../../data/lists';
 import { listWaste } from '../../data/waste';
+import { itemCost } from '../../data/costing';
+import { goalSuggestions } from '../../data/report';
+import { formatPence } from '../../core/costing/costing';
+import type { WasteEntry } from '../../data/types';
 import { listBatches } from '../../data/foodSafety';
 import { getPlace } from '../../data/kitchens';
 import { BatchLabelView } from '../components/FoodSafety';
@@ -21,10 +25,14 @@ import { trackSave } from '../saveStatus';
 export function Section() {
   const [logging, setLogging] = useState(false);
   const links = [
+    { href: paths.count, label: 'Count', meta: 'Against pars, with stock value' },
+    { href: paths.orders, label: 'Draft orders', meta: 'What’s below par, by supplier' },
+    { href: paths.checklists, label: 'Opening and closing checks' },
     { href: paths.sectionList, label: 'Section lists' },
     { href: paths.waste, label: 'Waste log' },
     { href: paths.labels, label: 'Batches and labels' },
     { href: paths.goal, label: 'Weekly goal' },
+    { href: paths.report, label: 'Weekly report', meta: 'One page, to print or save as PDF' },
   ];
   return (
     <section class="flow">
@@ -40,13 +48,13 @@ export function Section() {
             <a class="list-row" href={link.href}>
               <span class="list-row__main">
                 <span class="list-row__title">{link.label}</span>
+                {'meta' in link && link.meta && <span class="list-row__meta">{link.meta}</span>}
               </span>
               <Icon name="chevron-right" />
             </a>
           </li>
         ))}
       </ul>
-      <p class="field__hint">Stock counts, checklists and orders come later.</p>
     </section>
   );
 }
@@ -68,7 +76,7 @@ export function WasteLog() {
       </button>
       {entries?.length === 0 && (
         <div class="empty-state">
-          <p>Nothing logged yet. The bin on the capture bar logs waste in a few taps.</p>
+          <p>Nothing logged yet. “Log waste” above logs it in a few taps.</p>
         </div>
       )}
       <ul class="row-list" role="list">
@@ -82,6 +90,7 @@ export function WasteLog() {
                 </span>
                 <span class="list-row__meta">
                   {[formatCalendarDate(entry.date), reasonName(entry.reasonId)].filter(Boolean).join(' · ')}
+                  <WasteCost entry={entry} />
                 </span>
               </span>
               <Icon name="chevron-right" />
@@ -144,6 +153,12 @@ export function Goal() {
         />
         <p class="field__hint">Shown as one quiet line on Today. Saved as you type.</p>
       </div>
+      <GoalSuggestions
+        onUse={async (suggestion) => {
+          setText(suggestion);
+          await trackSave(setGoalText(week, suggestion));
+        }}
+      />
 
       {history && history.filter((g) => g.week !== week).length > 0 && (
         <section class="flow" aria-labelledby="goal-history">
@@ -202,6 +217,41 @@ export function Labels() {
       <Sheet open={open !== null} onClose={() => setOpen(null)} title="Label">
         {open && <BatchLabelView batchId={open} onDeleted={() => setOpen(null)} />}
       </Sheet>
+    </section>
+  );
+}
+
+/** What a waste entry cost, from today's prices (A4). Nothing when it can't be costed. */
+function WasteCost({ entry }: { entry: WasteEntry }) {
+  const cost = useLiveQuery(
+    async () => (entry.quantity ? itemCost({ componentId: entry.componentId, ingredientId: entry.ingredientId }, entry.quantity, entry.kitchenId) : null),
+    [entry.id, entry.updatedAt],
+  );
+  return cost ? <> · {formatPence(cost)}</> : null;
+}
+
+/** Goals the last week's patterns suggest (G1): the chef chooses, or writes their own. */
+function GoalSuggestions({ onUse }: { onUse: (text: string) => void }) {
+  const place = useLiveQuery(() => getPlace());
+  const suggestions = useLiveQuery(async () => (place ? goalSuggestions(place.kitchenId) : []), [place?.kitchenId]);
+  if (!suggestions?.length) return null;
+  return (
+    <section class="flow" aria-labelledby="goal-ideas" style={{ '--flow-space': 'var(--space-2xs)' }}>
+      <h2 id="goal-ideas" class="used-in__label">
+        Ideas from last week
+      </h2>
+      <ul class="row-list" role="list">
+        {suggestions.map((s) => (
+          <li key={s.text}>
+            <button class="list-row" type="button" onClick={() => onUse(s.text)}>
+              <span class="list-row__main">
+                <span class="list-row__title">{s.text}</span>
+                <span class="list-row__meta">{s.from}</span>
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

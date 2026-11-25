@@ -12,6 +12,7 @@ import { ALLERGENS, SUB_TYPES, allergenLabel, baseAllergen, type AllergenCode, t
 import { parsePrice } from '../../core/money/money';
 import { UNIT_CHOICES } from '../../core/units/units';
 import type { Allergens, UnconfirmedLine } from '../../data/allergens';
+import { menuGps } from '../../data/costing';
 import { deleteBatch, getBatchLabel, makeBatch, setInitials } from '../../data/foodSafety';
 import { getPlace } from '../../data/kitchens';
 import { createProduct, deleteProduct, ensureSupplier, listProducts, listSuppliers, markChecked, setLineProduct, setProductLabelPhoto, updateProduct } from '../../data/products';
@@ -261,6 +262,15 @@ function ProductEditor({ product, onDone }: { product: Product; onDone: () => vo
     if (names.length) showMessage(`Re-checked: ${names.slice(0, 4).join(', ')}${names.length > 4 ? ` and ${names.length - 4} more` : ''}.`);
   }
 
+  // A price change moves every dish's GP at once (A1): say if one drops below its target.
+  async function savePrice() {
+    const pence = parsePrice(price);
+    if (pence === product.price) return;
+    await trackSave(updateProduct(product.id, { price: pence, priceDate: pence !== null ? new Date().toISOString().slice(0, 10) : null }));
+    const below = (await menuGps(product.kitchenId)).filter((g) => g.belowTarget);
+    if (below.length) showMessage(`Below GP target now: ${below.map((g) => `${g.dishName} ${g.gp}%`).slice(0, 3).join(', ')}.`);
+  }
+
   const savePack = (amount: string, unit: string) => {
     const n = Number(amount.replace(',', '.'));
     return trackSave(updateProduct(product.id, { pack: amount.trim() && Number.isFinite(n) ? { amount: n, unit } : null }));
@@ -344,7 +354,7 @@ function ProductEditor({ product, onDone }: { product: Product; onDone: () => vo
           <label class="label" for="pack-price">
             Price (£)
           </label>
-          <input class="input" id="pack-price" inputMode="decimal" autocomplete="off" value={price} onInput={(e) => setPrice(e.currentTarget.value)} onBlur={() => trackSave(updateProduct(product.id, { price: parsePrice(price), priceDate: price.trim() ? new Date().toISOString().slice(0, 10) : null }))} />
+          <input class="input" id="pack-price" inputMode="decimal" autocomplete="off" value={price} onInput={(e) => setPrice(e.currentTarget.value)} onBlur={() => savePrice()} />
         </div>
       </div>
       <ChipChoice

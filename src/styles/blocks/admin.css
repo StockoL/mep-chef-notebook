@@ -1,0 +1,151 @@
+/* Counting (A2): one item large, a number pad big enough for a wet thumb. */
+.count-current {
+  display: grid;
+  gap: var(--space-xs);
+}
+
+.count-current__name {
+  margin: 0;
+  font-size: min(var(--step-3), 11vw);
+  overflow-wrap: anywhere;
+}
+
+.count-current__value {
+  margin: 0;
+  font-size: min(var(--step-5), 20vw);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.count-current__unit {
+  font-size: var(--step-1);
+  font-weight: var(--weight-regular);
+  color: var(--color-text-muted);
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2xs);
+}
+
+.keypad__key {
+  min-block-size: calc(var(--tap) * 1.3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+  font: inherit;
+  font-size: var(--step-2);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.keypad__key:active {
+  background-color: var(--color-surface-sunken);
+}
+
+.count-current__next {
+  flex: 1;
+  min-block-size: calc(var(--tap) * 1.3);
+}
+
+/* A checklist item: one tap anywhere on the row ticks it. */
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-s);
+  min-block-size: var(--tap);
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.checklist-item[aria-pressed='true'] .list-row__title {
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.also-used {
+  padding: var(--space-2xs) var(--space-s);
+  border-inline-start: 3px solid var(--color-status-info-border);
+}
+
+/* Reports (A5, A8): tables that read on a phone and print on one page. */
+.report__working {
+  padding: var(--space-2xs) var(--space-s);
+  border: 2px solid var(--color-status-warning-border);
+  border-radius: var(--radius-control);
+  font-weight: var(--weight-semibold);
+}
+
+.matrix-wrap {
+  overflow-x: auto;
+}
+
+.matrix,
+.gp-table {
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.matrix th,
+.matrix td,
+.gp-table th,
+.gp-table td {
+  padding: var(--space-3xs) var(--space-2xs);
+  border: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.matrix tbody th,
+.gp-table tbody th {
+  text-align: start;
+}
+
+/* Allergen names run upwards so fourteen columns fit. */
+.matrix thead th span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  font-size: var(--step--1);
+}
+
+.matrix td[data-cell='Y'] {
+  background-color: var(--color-status-danger-surface);
+  color: var(--color-status-danger-text);
+  font-weight: var(--weight-bold);
+}
+
+.matrix td[data-cell='May'],
+.matrix td[data-cell='?'] {
+  background-color: var(--color-status-warning-surface);
+  color: var(--color-status-warning-text);
+}
+
+.gp-table tr[data-below='true'] td {
+  color: var(--color-status-danger-text);
+  font-weight: var(--weight-semibold);
+}
+
+/* Printing a report: just the report. */
+@media print {
+  .top-bar,
+  .app-shell__dock,
+  .tab-bar,
+  .capture-bar,
+  .undo-bar,
+  .screen-header a,
+  [data-print='hide'] {
+    display: none !important;
+  }
+
+  .report {
+    font-size: 11pt;
+  }
+}

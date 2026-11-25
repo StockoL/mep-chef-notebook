@@ -3,6 +3,7 @@ import { nameContains } from '../../core/ingredients/names';
 import { formatQuantity, UNIT_CHOICES, type Unit } from '../../core/units/units';
 import { listComponents } from '../../data/components';
 import { getPlace, listSections } from '../../data/kitchens';
+import { getCountView } from '../../data/stock';
 import { menuComponentsForSection } from '../../data/menus';
 import { createIngredient, listIngredients } from '../../data/library';
 import { addSectionItem, getChosenSection, listSectionItems, setChosenSection, moveSectionItem, removeSectionItem, updateSectionItem, type SectionItemView } from '../../data/sectionItems';
@@ -145,6 +146,14 @@ function ItemEditor(props: { view: SectionItemView; sectionId: Id; isFirst: bool
         </label>
         <input class="input" id="par" inputMode="decimal" value={amount} onInput={(e) => setAmount(e.currentTarget.value)} onBlur={() => savePar(amount, unit)} />
       </div>
+      <ParSuggestion
+        sectionId={sectionId}
+        itemId={item.id}
+        onUse={(par) => {
+          setAmount(String(par));
+          savePar(String(par), unit);
+        }}
+      />
       <ChipChoice
         label="Unit"
         choices={UNIT_CHOICES.map((u) => ({ value: u, label: u === 'portion' ? 'portions' : u }))}
@@ -241,5 +250,21 @@ function AddItemSheet({ open, onClose, sectionId }: { open: boolean; onClose: ()
         ))}
       </ul>
     </Sheet>
+  );
+}
+
+/** A new par to consider, from counts and waste: only ever a suggestion. */
+function ParSuggestion({ sectionId, itemId, onUse }: { sectionId: Id; itemId: Id; onUse: (par: number) => void }) {
+  const place = useLiveQuery(() => getPlace());
+  const view = useLiveQuery(async () => (place ? getCountView(sectionId, place.kitchenId) : undefined), [sectionId, place?.kitchenId]);
+  const suggestion = view?.rows.find((r) => r.view.item.id === itemId)?.suggestion;
+  if (!suggestion) return null;
+  return (
+    <p class="field__hint">
+      {suggestion.reason}{' '}
+      <button class="button" type="button" data-variant="ghost" onClick={() => onUse(suggestion.par)}>
+        Make the par {suggestion.par}
+      </button>
+    </p>
   );
 }

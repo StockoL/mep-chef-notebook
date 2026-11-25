@@ -2,6 +2,7 @@ import { useLocation } from 'preact-iso';
 import { useState } from 'preact/hooks';
 import { formatPrice, parsePrice } from '../../core/money/money';
 import { toCalendarDate } from '../../core/time/calendar';
+import { menuGps } from '../../data/costing';
 import { createDish, listDishSummaries } from '../../data/library';
 import { getPlace, getKitchen, listSections } from '../../data/kitchens';
 import { getListItems, ListError } from '../../data/lists';
@@ -154,6 +155,11 @@ export function MenuScreen({ id = '' }: { id?: string }) {
         </button>
       </div>
       <SectionFilter kitchenId={menu.kitchenId} value={sectionId} onChange={setSectionId} />
+      <div class="cluster">
+        <a class="button" href={paths.matrix(menu.id)}>
+          Allergen matrix
+        </a>
+      </div>
       <MenuCourses view={view} sectionId={sectionId} onOpen={(placeId) => setOpenPlace(placeId)} />
 
       <section class="flow" aria-label="Changeover">
@@ -212,6 +218,7 @@ export function SectionFilter({ kitchenId, value, onChange }: { kitchenId: Kitch
 
 /** Dishes by course: price, sections, readiness (MS1). Used on the menu screen and in the library. */
 export function MenuCourses({ view, sectionId, onOpen }: { view: MenuView; sectionId: Id | null; onOpen?: (placeId: Id) => void }) {
+  const gps = useLiveQuery(() => menuGps(view.menu.kitchenId, view.menu.id), [view.menu.id, view.menu.kitchenId]);
   const touches = (d: MenuDishView) => sectionId === null || d.components.some((c) => c.sectionId === sectionId);
   const courses = view.courses.map((c) => ({ ...c, dishes: c.dishes.filter(touches) })).filter((c) => c.dishes.length > 0);
   if (courses.length === 0) {
@@ -229,8 +236,10 @@ export function MenuCourses({ view, sectionId, onOpen }: { view: MenuView; secti
           <ul class="row-list" role="list">
             {course.dishes.map((d) => {
               const ready = d.components.filter((c) => c.ready).length;
+              const gp = gps?.find((g) => g.menuDishId === d.place.id);
               const meta = [
                 d.place.price !== null ? formatPrice(d.place.price) : null,
+                gp?.gp != null ? `${gp.gp}% GP${gp.belowTarget ? ` (below ${gp.target}%)` : ''}` : null,
                 d.sectionNames.join(', ') || null,
                 d.components.length ? `${ready}/${d.components.length} ready` : 'no components',
               ]

@@ -366,6 +366,13 @@ export function IngredientWeights({ ingredient }: { ingredient: Ingredient }) {
       <h2 id="weights-title">Weights</h2>
       <p class="field__hint">For scaling between measures, and turning a handful or a knob into grams. Leave blank if you don’t know.</p>
       <NumberField
+        id="yield-loss"
+        label="Lost to peeling and trimming (%)"
+        value={ingredient.yieldLossPercent}
+        placeholder="0"
+        onSave={(yieldLossPercent) => trackSave(updateIngredient(ingredient.id, { yieldLossPercent }))}
+      />
+      <NumberField
         id="density"
         label="1 ml weighs (g)"
         value={ingredient.density}

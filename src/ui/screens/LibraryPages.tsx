@@ -46,6 +46,7 @@ import {
 import { MediaView } from '../components/MediaView';
 import { MethodEditor } from '../components/MethodEditor';
 import { techniquesForIngredient } from '../../data/techniques';
+import { ComponentCostView, DishCostView } from '../components/Costs';
 import { menuLabel } from './Menus';
 import { AttemptLog, IdeaFields, VariationActions, VariationChips } from '../components/Variations';
 import { IngredientWeights, PerPortionButton, PortionsPanel, ScalePanel } from '../components/Scaling';
@@ -149,6 +150,7 @@ export function ComponentPage({ id = '' }: { id?: string }) {
       </section>
 
       {variation && kitchenId && <ComponentAllergens componentId={id} kitchenId={kitchenId} variationId={variation.id} />}
+      {kitchenId && <ComponentCostView componentId={id} kitchenId={kitchenId} />}
       <MadeButton componentId={id} label="Made a batch: label it" />
 
       {variation && kitchenId && <VariationActions componentId={id} kitchenId={kitchenId} shown={variation} />}
@@ -444,6 +446,7 @@ export function DishPage({ id = '' }: { id?: string }) {
 
       {components.length > 0 && place && <PortionsPanel dishId={id} kitchenId={place.kitchenId} />}
       {components.length > 0 && place && <DishAtWork dishId={id} kitchenId={place.kitchenId} />}
+      {components.length > 0 && place && <DishCostView dishId={id} kitchenId={place.kitchenId} />}
 
       <UsedIn
         groups={[{ label: 'On menus', items: (dishMenus ?? []).map(({ menu }) => ({ href: paths.menu(menu.id), name: menuLabel(menu) })) }]}
