@@ -156,3 +156,13 @@ The Plan tab: today's sheet in time order, worked back from your services.
 - Beside the plan: drafts and things with no recipe, as to-dos. Done items under Done.
 - Tomorrow's sheet: overnight cures and sets are planned today ("For tomorrow: started before you go"); today's items skip what was started yesterday.
 - The plan starts at the start of your shift; without service times or a shift, it says what's missing.
+
+## Phase 9: Prep mode, live timers, learned durations (25 Nov 2026)
+
+Follow the plan with a glance; the plan learns your times.
+
+- Plan → **Start prep**: the current task large, with a countdown that carries on into negative time and one big button. Start, then **Done**: done starts the next hands-on task. "Done, but I was interrupted" keeps that time out of learning. The next two tasks show smaller; things left to cook (in the oven, simmering) are **Started** and run in a strip with their own countdowns.
+- "6 min behind" when late; the unstarted tasks are re-ordered only if a job would otherwise miss its time ("Re-ordered so … can still be ready in time"). During service: no countdown, order kept.
+- Progress is kept (schema v6): close the app and prep mode picks up where it was. The plan marks steps "✓ Done in 12 min" and "Running now"; a job's last step done ticks it on the sheet.
+- Learned times (DECISIONS 51): after three timings of a step, the plan uses your time ("your time (3 timings)"): the median, recent ones counting more, scaled by batch size. Your hands-on times come with you to any kitchen; oven and hob times stay with the kitchen. Recipes keep their written times.
+- The screen stays on in prep mode (where the phone allows it).

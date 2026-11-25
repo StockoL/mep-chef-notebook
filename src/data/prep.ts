@@ -79,7 +79,8 @@ export async function finishPart(runId: Id, view: PrepView, options: { interrupt
     await database.partRuns.update(runId, { doneAt: now.toISOString(), interrupted });
 
     const minutes = Math.round(((now.getTime() - Date.parse(run.startedAt)) / 60_000) * 10) / 10;
-    const timingId = run.stepKey
+    // Done within half a minute of starting is a mis-tap, not a time to learn from.
+    const timingId = run.stepKey && minutes >= 0.5
       ? await database.timings.add({
           stepKey: run.stepKey,
           // Hands-on times are yours; times left in equipment belong to this kitchen's equipment.

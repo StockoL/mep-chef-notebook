@@ -40,6 +40,15 @@ async function shallotsOnSheet(day = '2026-11-25', amount: { amount: number; uni
 }
 
 describe('prep mode (SM1–SM3)', () => {
+  it('doesn’t learn from a mis-tap (done straight after starting)', async () => {
+    await shallotsOnSheet();
+    let view = await getPrepView(kitchenId, at(10), db);
+    const peel = await startPart(kitchenId, view.state.queue[0]!, view, at(10), db);
+    view = await getPrepView(kitchenId, at(10), db);
+    await finishPart(peel, view, {}, new Date(at(10).getTime() + 10_000), db);
+    expect(await db.timings.count()).toBe(0);
+  });
+
   it('starts, finishes, ticks the sheet when the job is done, and picks up after a restart', async () => {
     const itemId = await shallotsOnSheet();
     let view = await getPrepView(kitchenId, at(10), db);
