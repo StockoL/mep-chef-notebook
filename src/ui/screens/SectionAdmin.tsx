@@ -288,6 +288,8 @@ export function Checklists() {
             if (!text.trim()) return;
             await trackSave(addChecklistItem(sectionId, kind, text));
             setText('');
+            // Keep the box open for the next check (it only shows while editing once there are items).
+            setEditing(true);
           }}
         >
           <input class="input" aria-label="New check" placeholder="Fridge temps logged" autocomplete="off" value={text} onInput={(e) => setText(e.currentTarget.value)} />
@@ -404,7 +406,7 @@ export function WeeklyReportScreen() {
       {report.stock.length === 0 ? (
         <p>No counts.</p>
       ) : (
-        <ul role="list">
+        <ul class="flow" role="list">
           {report.stock.map((s) => (
             <li key={s.section}>
               {s.section}: {formatPence(s.pence)} {s.date ? `(counted ${formatCalendarDate(s.date)})` : ''}
