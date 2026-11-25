@@ -12,7 +12,7 @@ import { findMentions } from '../../core/techniques/mentions';
 import { getPlace } from '../../data/kitchens';
 import { ListError } from '../../data/lists';
 import type { Id } from '../../data/types';
-import { applyTemplate, getTechniqueDetails, hasOwnNotes, listTechniques, listTemplates, saveAsTemplate } from '../../data/techniques';
+import { applyTemplate, getTechniqueDetails, hasOwnNotes, listTechniques, listTemplates, namesNotTechniques, saveAsTemplate } from '../../data/techniques';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
@@ -25,8 +25,9 @@ import { showMessage } from './UndoBar';
 /** Text with its technique words as links that open the technique over the page. */
 export function TechniqueText({ text }: { text: string }) {
   const techniques = useLiveQuery(() => listTechniques());
+  const notWithin = useLiveQuery(() => namesNotTechniques());
   const [open, setOpen] = useState<Id | null>(null);
-  const pieces = findMentions(text, techniques ?? []);
+  const pieces = findMentions(text, techniques ?? [], notWithin ?? []);
   const name = techniques?.find((t) => t.id === open)?.name ?? '';
   return (
     <>

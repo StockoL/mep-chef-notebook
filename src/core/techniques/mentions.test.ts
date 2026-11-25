@@ -33,4 +33,10 @@ describe('technique mentions', () => {
   it('returns the text whole when there are no techniques', () => {
     expect(findMentions('Roast bones', [])).toEqual([{ text: 'Roast bones', techniqueId: null }]);
   });
+
+  it('doesn’t link a technique word inside an ingredient or component name', () => {
+    const withPuree = [...techniques, { id: 'p', name: 'Purée', aliases: ['puree'] }];
+    expect(mentionedIds('Add mirepoix and tom puree, roast', withPuree, ['Tom puree', 'Mirepoix'])).toEqual([]);
+    expect(mentionedIds('Purée the carrots, add tom puree', withPuree, ['Tom puree'])).toEqual(['p']);
+  });
 });

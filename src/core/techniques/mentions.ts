@@ -40,8 +40,13 @@ function fold(text: string): string {
     .join('');
 }
 
-/** Splits text into pieces, linking each technique mention. Text with none comes back as one piece. */
-export function findMentions(text: string, techniques: readonly Named[]): TextPiece[] {
+/**
+ * Splits text into pieces, linking each technique mention. Text with none
+ * comes back as one piece. A technique word inside one of `notWithin` (the
+ * book's multi-word ingredient and component names: "tom puree", "pickled
+ * shallots") isn't a technique there.
+ */
+export function findMentions(text: string, techniques: readonly Named[], notWithin: readonly string[] = []): TextPiece[] {
   const names = techniques
     .flatMap((t) => [t.name, ...t.aliases].map((name) => ({ id: t.id, name })))
     .filter((n) => normalizeName(n.name).length >= 3)
@@ -49,6 +54,12 @@ export function findMentions(text: string, techniques: readonly Named[]): TextPi
   if (names.length === 0 || !text) return [{ text, techniqueId: null }];
 
   const folded = fold(text);
+  const blocked: { start: number; end: number }[] = [];
+  for (const name of notWithin) {
+    if (!normalizeName(name).includes(' ')) continue;
+    const regex = new RegExp(`(?<![a-z0-9])${pattern(name)}${ENDINGS}(?![a-z0-9])`, 'g');
+    for (const match of folded.matchAll(regex)) blocked.push({ start: match.index, end: match.index + match[0].length });
+  }
   const taken: { start: number; end: number; id: string }[] = [];
   for (const { id, name } of names) {
     const regex = new RegExp(`(?<![a-z0-9])${pattern(name)}${ENDINGS}(?![a-z0-9])`, 'g');
@@ -56,6 +67,7 @@ export function findMentions(text: string, techniques: readonly Named[]): TextPi
       const start = match.index;
       const end = start + match[0].length;
       if (taken.some((t) => start < t.end && end > t.start)) continue;
+      if (blocked.some((b) => start >= b.start && end <= b.end)) continue;
       taken.push({ start, end, id });
     }
   }
@@ -73,6 +85,6 @@ export function findMentions(text: string, techniques: readonly Named[]): TextPi
 }
 
 /** The techniques a text mentions, each once. */
-export function mentionedIds(text: string, techniques: readonly Named[]): string[] {
-  return [...new Set(findMentions(text, techniques).flatMap((p) => (p.techniqueId ? [p.techniqueId] : [])))];
+export function mentionedIds(text: string, techniques: readonly Named[], notWithin: readonly string[] = []): string[] {
+  return [...new Set(findMentions(text, techniques, notWithin).flatMap((p) => (p.techniqueId ? [p.techniqueId] : [])))];
 }

@@ -8,7 +8,7 @@ Your data stays on your device. No account, no server.
 
 **Use it:** https://stockol.github.io/mep-chef-notebook/ (on iPhone, open it in Safari and add it to your Home Screen).
 
-Status: Phase 6 (menus, variations and versions). See `docs/SPEC.md` and `docs/BUILD_ORDER.md`.
+Status: Phase 7 (techniques and method templates). See `docs/SPEC.md` and `docs/BUILD_ORDER.md`.
 
 ## Development
 

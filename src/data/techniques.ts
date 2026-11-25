@@ -172,6 +172,12 @@ export async function sortToTechnique(noteId: Id, techniqueId: Id, database: Mep
 
 // ─── Where it's used ──────────────────────────────────────────────────────
 
+/** Ingredient and component names (and aliases) a technique word inside of isn't a technique: "tom puree". */
+export async function namesNotTechniques(database: MepDatabase = appDb): Promise<string[]> {
+  const [ingredients, components] = await Promise.all([database.ingredients.toArray(), database.components.toArray()]);
+  return [...ingredients, ...components].flatMap((r) => [r.name, ...r.aliases]);
+}
+
 /** The text of each component's current recipes: steps and prep notes, with the lines' ingredient ids. */
 async function recipeTexts(database: MepDatabase) {
   const [components, variations] = await Promise.all([database.components.toArray(), database.variations.toArray()]);
@@ -189,9 +195,9 @@ async function recipeTexts(database: MepDatabase) {
 export async function techniqueUsedIn(techniqueId: Id, database: MepDatabase = appDb): Promise<Component[]> {
   const technique = await database.techniques.get(techniqueId);
   if (!technique) return [];
-  const recipes = await recipeTexts(database);
+  const [recipes, notWithin] = await Promise.all([recipeTexts(database), namesNotTechniques(database)]);
   return recipes
-    .filter(({ texts }) => texts.some((text) => mentionedIds(text, [technique]).length > 0))
+    .filter(({ texts }) => texts.some((text) => mentionedIds(text, [technique], notWithin).length > 0))
     .map((r) => r.component)
     .sort((a, b) => a.name.localeCompare(b.name));
 }
@@ -211,6 +217,7 @@ export async function techniquesForIngredient(ingredientId: Id, database: MepDat
   const ingredient = await database.ingredients.get(ingredientId);
   if (!ingredient) return [];
   const techniques = await database.techniques.toArray();
+  const notWithin = await namesNotTechniques(database);
   const names = [ingredient.name, ...ingredient.aliases].map(normalizeName).filter((n) => n.length > 2);
   const mentionsIngredient = (text: string) => {
     const words = ` ${normalizeName(text)} `;
@@ -222,7 +229,7 @@ export async function techniquesForIngredient(ingredientId: Id, database: MepDat
       ...lines.filter((l) => l.ingredientId === ingredientId).map((l) => l.prepNote),
       ...(lines.some((l) => l.ingredientId === ingredientId) ? steps.filter(mentionsIngredient) : []),
     ];
-    for (const id of texts.flatMap((t) => mentionedIds(t, techniques))) found.set(id, (found.get(id) ?? new Set()).add(component));
+    for (const id of texts.flatMap((t) => mentionedIds(t, techniques, notWithin))) found.set(id, (found.get(id) ?? new Set()).add(component));
   }
   return techniques
     .filter((t) => found.has(t.id))

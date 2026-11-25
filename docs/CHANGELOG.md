@@ -135,3 +135,14 @@ From using it: too much on the home screen, cluttered chips, and "Where are you 
 - Today: the sheet comes first; next service, needs-you, goal and other days' sheets sit underneath. "Write the next shift's sheet" appears once the sheet has something on it.
 - Waste left the capture bar (now note, photo, voice); Section tab → Log waste.
 - Recent, the Library's lenses, tag, collection, menu and section chips sit on one row that scrolls sideways.
+
+## Phase 7: Techniques and method templates (25 Nov 2026)
+
+Your own technique notes, linked from every step; methods from templates.
+
+- Techniques (Library → Techniques, by category; filled chips have your notes): name, aliases, category, how you do it, common mistakes, ways by context ("textured mixes"), photos and video, a note for the kitchen you're in, method templates, notes from the inbox, and where it's used. 46 names and aliases ship built in; the notes are yours.
+- In a method, technique words are underlined: tap one and the technique opens over the recipe (this kitchen's note first); Done puts you back where you were. Words inside ingredient names ("tom puree") aren't linked.
+- Method → **Use a template**: 11 built-in methods (brown, white and fish stock, braise, reduction sauce, beurre blanc, pickle, purée, pasta dough, shortcrust, confit), the one matching the recipe's name first. Its steps are read with every chip filled, so **Confirm all** makes the recipe ready. **Save this method as a template** for any technique.
+- "A word here is a technique" in a step's correction sheet; Inbox → **A technique's notes**; ingredient pages list **Techniques applied** (from prep notes and steps).
+- Step reader: "rub in" and "bring together" (active, bench); a step naming the last word of an ingredient ("roast bones" → chicken bones) links to that line for scaling.
+- Search finds techniques. Videos play in place.
