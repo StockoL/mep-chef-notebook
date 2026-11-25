@@ -179,3 +179,20 @@ export async function getDishPortions(dishId: Id, database: MepDatabase = appDb)
 export async function setDishPortions(dishId: Id, portions: number | null, database: MepDatabase = appDb) {
   await setSetting(dishPortionsKey(dishId), portions, database);
 }
+
+// ─── An ingredient's weights ──────────────────────────────────────────────
+
+/**
+ * The count and rough units this ingredient is written with ("handful",
+ * "each", "knob"): the ones worth giving a weight. Weight and volume units
+ * are left out: they convert by themselves or by density.
+ */
+export async function ingredientCountUnits(ingredientId: Id, database: MepDatabase = appDb): Promise<string[]> {
+  const lines = await database.lines.where('ingredientId').equals(ingredientId).toArray();
+  const units = new Set<string>();
+  for (const line of lines) {
+    const unit = line.quantity !== null ? (line.unit ?? 'each') : null;
+    if (unit && isUnit(unit) && !['g', 'kg', 'ml', 'l', 'pint'].includes(unit)) units.add(unit);
+  }
+  return [...units].sort();
+}

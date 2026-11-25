@@ -144,8 +144,13 @@ function ItemEditor({ view, kitchenId, onDone }: { view: SheetItemView; kitchenI
         />
       )}
       {view.componentId && (
-        <a class="button" href={paths.component(view.componentId)} onClick={onDone}>
-          Open the recipe
+        // With an amount, the recipe opens scaled to make it (S1).
+        <a
+          class="button"
+          href={item.quantity ? paths.componentMaking(view.componentId, item.quantity.amount, item.quantity.unit) : paths.component(view.componentId)}
+          onClick={onDone}
+        >
+          {item.quantity ? `Open the recipe for ${view.amount}` : 'Open the recipe'}
         </a>
       )}
       <button class="button" type="button" data-variant="danger" onClick={remove}>

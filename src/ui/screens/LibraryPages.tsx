@@ -1,6 +1,7 @@
 import { useLocation } from 'preact-iso';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { ALLERGENS, type AllergenId } from '../../core/allergens/allergens';
+import { formatAmount } from '../../core/scaling/rounding';
 import { UNIT_CHOICES, type Unit } from '../../core/units/units';
 import { getPlace } from '../../data/kitchens';
 import {
@@ -22,6 +23,7 @@ import {
 import { getKitchen } from '../../data/kitchens';
 import { getListItems, ListError } from '../../data/lists';
 import { listComponentNotes } from '../../data/notes';
+import { getScaleChoice, setScaleChoice } from '../../data/scaling';
 import { recordView } from '../../data/search';
 import { restoreSnapshot } from '../../data/snapshot';
 import type { Variation } from '../../data/types';
@@ -37,6 +39,7 @@ import {
 } from '../components/LibraryEditors';
 import { MediaView } from '../components/MediaView';
 import { MethodEditor } from '../components/MethodEditor';
+import { IngredientWeights, PerPortionButton, PortionsPanel, ScalePanel } from '../components/Scaling';
 import { NoteEditor } from '../components/NoteEditor';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { showMessage } from '../components/UndoBar';
@@ -58,9 +61,17 @@ export function ComponentPage({ id = '' }: { id?: string }) {
   const details = useLiveQuery(async () => (kitchenId ? getComponentDetails(id, kitchenId) : undefined), [id, kitchenId]);
   const types = useLiveQuery(() => getListItems(COMPONENT_TYPES));
   const notes = useLiveQuery(() => listComponentNotes(id), [id]);
-  const { route } = useLocation();
+  const choice = useLiveQuery(() => getScaleChoice(id), [id]);
+  const { route, query } = useLocation();
 
   useEffect(() => void recordView({ kind: 'component', id }), [id]);
+  // Opened "to make" an amount (from a dish, a sheet item or a recipe that uses it): scale to it.
+  useEffect(() => {
+    const amount = Number(query.make);
+    if (query.make && Number.isFinite(amount) && amount > 0 && query.unit) {
+      void setScaleChoice(id, { by: 'yield', amount, unit: query.unit });
+    }
+  }, [id, query.make, query.unit]);
 
   if (!details) return <ScreenHeader title="" back={BACK} />;
   const { component, variation, lines, steps, dishes, usedInComponents } = details;
@@ -79,6 +90,7 @@ export function ComponentPage({ id = '' }: { id?: string }) {
     <section class="flow" key={id}>
       <ScreenHeader title={component.name} back={BACK} />
       {variation && <VariationLine variation={variation} />}
+      {kitchenId && choice !== undefined && <ScalePanel componentId={id} kitchenId={kitchenId} choice={choice} />}
 
       <NameField value={component.name} onSave={(name) => updateComponent(id, { name })} />
       <ChipChoice
@@ -90,7 +102,8 @@ export function ComponentPage({ id = '' }: { id?: string }) {
       />
       {variation && <YieldField key={variation.id} variation={variation} />}
 
-      {variation && <LinesEditor key={`lines-${variation.id}`} variationId={variation.id} componentId={id} lines={lines} />}
+      {/* While scaled, the scaled list stands in for the editor: the recipe is only edited as written. */}
+      {variation && !choice && <LinesEditor key={`lines-${variation.id}`} variationId={variation.id} componentId={id} lines={lines} />}
       {variation && <MethodEditor key={`steps-${variation.id}`} variation={variation} steps={steps} />}
 
       <TagEditor tagIds={component.tagIds} onChange={(tagIds) => updateComponent(id, { tagIds })} />
@@ -249,6 +262,7 @@ export function DishPage({ id = '' }: { id?: string }) {
                 <div class="list-row" data-static>
                   <span class="list-row__main">
                     <span class="list-row__title">{component.name}</span>
+                    <PerPortionButton link={link} name={component.name} />
                   </span>
                   <button class="button" type="button" data-variant="ghost" aria-label={`Move ${component.name} up`} disabled={index === 0} onClick={() => trackSave(moveDishComponent(id, link.id, -1))}>
                     ↑
@@ -273,6 +287,9 @@ export function DishPage({ id = '' }: { id?: string }) {
                 <a class="list-row" href={paths.component(component.id)}>
                   <span class="list-row__main">
                     <span class="list-row__title">{component.name}</span>
+                    {link.quantityPerPortion && (
+                      <span class="list-row__meta">{formatAmount(link.quantityPerPortion.amount, link.quantityPerPortion.unit)} a portion</span>
+                    )}
                   </span>
                   <Icon name="chevron-right" />
                 </a>
@@ -286,11 +303,13 @@ export function DishPage({ id = '' }: { id?: string }) {
           </button>
           {components.length > 0 && (
             <button class="button" type="button" onClick={() => setEditingList(!editingList)} aria-pressed={editingList}>
-              {editingList ? 'Done reordering' : 'Reorder or remove'}
+              {editingList ? 'Done' : 'Amounts, order, remove'}
             </button>
           )}
         </div>
       </section>
+
+      {components.length > 0 && place && <PortionsPanel dishId={id} kitchenId={place.kitchenId} />}
 
       <TagEditor tagIds={dish.tagIds} onChange={(tagIds) => updateDish(id, { tagIds })} />
       <CollectionToggles member={{ kind: 'dish', id }} />
@@ -378,6 +397,8 @@ export function IngredientPage({ id = '' }: { id?: string }) {
       ) : (
         <p class="field__hint">A bought-in ingredient’s allergens come from the exact product your kitchen uses, added with food safety.</p>
       )}
+
+      <IngredientWeights key={ingredient.id} ingredient={ingredient} />
 
       <button class="button" type="button" data-variant="danger" onClick={remove}>
         Delete ingredient

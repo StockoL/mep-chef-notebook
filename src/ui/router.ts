@@ -21,6 +21,8 @@ export const paths = {
   library: `${BASE}library`,
   librarySearch: `${BASE}library?search=1`,
   component: (id: string) => `${BASE}library/component/${id}`,
+  /** A component opened scaled to make this much: from a dish's portions, a sheet item or a recipe that uses it. */
+  componentMaking: (id: string, amount: number, unit: string) => `${BASE}library/component/${id}?make=${Math.round(amount * 1000) / 1000}&unit=${encodeURIComponent(unit)}`,
   dish: (id: string) => `${BASE}library/dish/${id}`,
   ingredient: (id: string) => `${BASE}library/ingredient/${id}`,
   plan: `${BASE}plan`,
