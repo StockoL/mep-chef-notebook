@@ -38,6 +38,9 @@
 | 32 | A service is one row (name, order, hidden, "I work this") holding a list of time windows, each for given days. SPEC's flat service fields became `windows` in schema v2 | Times differ by day (Sunday lunch runs later); renaming, hiding and reordering a service must act on one thing |
 | 33 | Captured photos are saved as JPEG with the long edge at most 2000 px | Phone photos are 3–5 MB; the phone holds everything and every backup carries it |
 | 34 | The fixed units are g, kg, ml, l, each, portion, plus kitchen count words: tsp, tbsp, pinch, bunch, sprig, clove, slice, sheet, leaf, tin, pack. Metric converts within weight or volume; count words never convert. cl and dl are read and stored as ml | Chefs write "thyme 3 sprigs"; forcing grams loses meaning, and a free-text unit can't be scaled |
+| 35 | A sheet keeps the photo of chef's paper sheet it was entered from (`Sheet.photoId`, schema v3) | So the original can be checked later |
+| 36 | "Today" for the sheet is the calendar date; it rolls over at midnight | Simple and predictable; a late finish can still open yesterday's sheet from the sheet list |
+| 37 | Covering two sections: the usual section switch stays 2 taps, and "Also covering" in Where are you today? adds a second. Both share one sheet (`Sheet.sectionIds`) | MS3 without slowing the common switch |
 
 ## Open
 

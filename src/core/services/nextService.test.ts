@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { nextService, type ServiceInput } from './nextService';
+import { nextService, servicesOn, type ServiceInput } from './nextService';
 
 const EVERY_DAY = [1, 2, 3, 4, 5, 6, 7];
 
@@ -60,5 +60,26 @@ describe('nextService', () => {
   it('returns null when nothing is set up', () => {
     expect(nextService([], at(1, '10:00'))).toBeNull();
     expect(nextService([{ ...services[1]!, hidden: true }], at(1, '10:00'))).toBeNull();
+  });
+});
+
+describe('events change the day', () => {
+  const tuesday = '2026-11-24';
+
+  it('a one-off time change replaces the usual service', () => {
+    const events = [{ date: tuesday, replacesServiceId: 'd', services: [{ id: 'e1', name: 'Dinner', start: '19:00', end: '21:00' }] }];
+    expect(nextService(services, at(2, '17:00'), events)).toMatchObject({ name: 'Dinner', firstTickets: '19:00', fromEvent: true });
+    // The usual 18:00 dinner doesn't also appear.
+    expect(servicesOn(at(2, '00:00'), services, events).map((s) => s.start)).toEqual(['12:00', '19:00']);
+  });
+
+  it('an event can run alongside the usual services', () => {
+    const events = [{ date: tuesday, replacesServiceId: null, services: [{ id: 'w1', name: 'Wedding canapés', start: '15:00', end: '16:00' }] }];
+    expect(servicesOn(at(2, '00:00'), services, events).map((s) => s.name)).toEqual(['Lunch', 'Wedding canapés', 'Dinner']);
+  });
+
+  it('only affects its own date', () => {
+    const events = [{ date: tuesday, replacesServiceId: 'l', services: [] }];
+    expect(nextService(services, at(3, '10:00'), events)?.name).toBe('Lunch'); // Wednesday
   });
 });
