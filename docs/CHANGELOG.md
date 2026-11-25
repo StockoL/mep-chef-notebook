@@ -89,4 +89,4 @@ Write steps your way; the app reads the scheduling data from them.
 From entering a beer batter recipe on the phone.
 
 - Ingredient lines read a unit written without a number as one: "turmeric pinch", "pinch of salt", "a handful of parsley", "half pint lager".
-- New units (DECISIONS 34): pint (shown as pints, measured as 568 ml), dash, splash, handful, knob.
+- New units (DECISIONS 34): pint (shown as pints, measured as 568 ml), dash, splash, handful, knob, smidgen, glug, dollop. Estimates for these when scaling are planned for Phase 5 (DECISIONS 41).

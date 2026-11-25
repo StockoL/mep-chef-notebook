@@ -86,6 +86,7 @@ Done when: the parser scores at least 80% of fixture cases fully correct (report
 - `src/core/units/` and `src/core/scaling/`: convert, scale by yield, by portions/headcount, by anchor ingredient; sensible rounding
 - Components scale by yield or anchor; dishes by portions
 - Scaled view never overwrites the stored variation
+- Rough amounts (pinch, dash, splash, glug, dollop, smidgen) show a ≈ spoon or ml estimate when scaled (DECISIONS 41); an ingredient can hold the chef's own weight for a knob or handful
 
 Done when: scaling tests cover all three methods and rounding; anchor scaling works in 2 taps from a component.
 

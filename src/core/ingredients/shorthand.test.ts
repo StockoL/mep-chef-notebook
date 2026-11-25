@@ -104,6 +104,9 @@ describe('amounts written without a number (beer batter)', () => {
     expect(read('knob butter')).toEqual(['butter', 1, 'knob']);
     expect(read('splash vinegar')).toEqual(['vinegar', 1, 'splash']);
     expect(read('worcester sauce dash')).toEqual(['worcester sauce', 1, 'dash']);
+    expect(read('smidgen of cayenne')).toEqual(['cayenne', 1, 'smidgen']);
+    expect(read('olive oil glug')).toEqual(['olive oil', 1, 'glug']);
+    expect(read('2 dollops creme fraiche')).toEqual(['creme fraiche', 2, 'dollop']);
   });
   it('reads half', () => {
     expect(read('half pint lager')).toEqual(['lager', 0.5, 'pint']);

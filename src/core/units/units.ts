@@ -27,6 +27,9 @@ export const UNITS = {
   splash: { dimension: 'splash', perBase: 1, plural: 'splashes' },
   handful: { dimension: 'handful', perBase: 1, plural: 'handfuls' },
   knob: { dimension: 'knob', perBase: 1, plural: 'knobs' },
+  smidgen: { dimension: 'smidgen', perBase: 1, plural: 'smidgens' },
+  glug: { dimension: 'glug', perBase: 1, plural: 'glugs' },
+  dollop: { dimension: 'dollop', perBase: 1, plural: 'dollops' },
 } as const;
 
 export type Unit = keyof typeof UNITS;

@@ -38,6 +38,9 @@ const UNIT_WORDS: [Unit, string[]][] = [
   ['splash', ['splash', 'splashes']],
   ['handful', ['handful', 'handfuls']],
   ['knob', ['knob', 'knobs']],
+  ['smidgen', ['smidgen', 'smidgens', 'smidge', 'smidges']],
+  ['glug', ['glug', 'glugs']],
+  ['dollop', ['dollop', 'dollops']],
   ['portion', ['portion', 'portions', 'ptn', 'ptns']],
   ['each', ['each', 'ea', 'x']],
 ];
@@ -49,7 +52,7 @@ const UNIT_BY_WORD = new Map(UNIT_WORDS.flatMap(([unit, words]) => words.map((wo
  * "pinch of salt", "half pint lager". Not leaf, clove, slice or sheet: those
  * are often part of the name ("bay leaf", "garlic clove").
  */
-const UNITS_WITHOUT_NUMBER = new Set<Unit>(['pint', 'tsp', 'tbsp', 'pinch', 'bunch', 'sprig', 'dash', 'splash', 'handful', 'knob']);
+const UNITS_WITHOUT_NUMBER = new Set<Unit>(['pint', 'tsp', 'tbsp', 'pinch', 'bunch', 'sprig', 'dash', 'splash', 'handful', 'knob', 'smidgen', 'glug', 'dollop']);
 const AMOUNT_WORDS: Record<string, number> = { a: 1, an: 1, one: 1, half: 0.5, 'half a': 0.5 };
 const AMOUNT = String.raw`(?:(a|an|one|half a|half)\s+)?`;
 
