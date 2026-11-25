@@ -90,3 +90,16 @@ From entering a beer batter recipe on the phone.
 
 - Ingredient lines read a unit written without a number as one: "turmeric pinch", "pinch of salt", "a handful of parsley", "half pint lager".
 - New units (DECISIONS 34): pint (shown as pints, measured as 568 ml), dash, splash, handful, knob, smidgen, glug, dollop. Estimates for these when scaling are planned for Phase 5 (DECISIONS 41).
+
+## Phase 5: Scaling and units (25 Nov 2026)
+
+Scale without arithmetic under pressure.
+
+- Component pages open with **Make…** (scale to an amount: "3 l", "40 portions") and **From what I've got** (pick an ingredient, say how much you have: "340 g butter"). While scaled, a blue banner says so ("Scaled ×1.5 · makes 3l"), the ingredients show at the new amounts beside what they were, and **As written** goes back. The choice is remembered per component; the recipe never changes.
+- Amounts round to what can be measured (DECISIONS 42): 342 g → 340 g, 1234 ml → 1.23 l, 1.4 tsp → 1½ tsp.
+- Rough measures get an estimate when scaled (DECISIONS 41): "6 pinches ≈ ¾ tsp". A component used in the recipe links to itself scaled to the amount needed.
+- Units convert inside scaling: g/kg, ml/l, pints; across weight and volume with an ingredient's density; and counts by your own weights.
+- Ingredient pages have **Weights**: what 1 ml weighs, and what one of each count it's written with weighs ("1 handful = 40 g", "one egg = 55 g").
+- Dishes: set each component's amount per portion (Amounts, order, remove), then **How many?** shows each component for that many covers or people, each opening the component scaled to it.
+- On the sheet, "Open the recipe for 2l" opens it scaled to the sheet's amount.
+- Schema v5: ingredients hold the chef's weights; older data and exports upgrade.
