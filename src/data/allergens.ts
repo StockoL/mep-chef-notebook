@@ -13,7 +13,7 @@ import { summariseAllergens, type AllergenSource, type AllergenSummary } from '.
 import { db as appDb, type MepDatabase } from './db';
 import { getPlace } from './kitchens';
 import { getDishDetails, getVariationInUse } from './library';
-import { productForLine } from './products';
+import { isConfirmed, productForLine } from './products';
 import type { Id, KitchenId, Product } from './types';
 
 /** A line that needs its product chosen ("which mayonnaise?"), with where it is. */
@@ -24,6 +24,8 @@ export interface UnconfirmedLine {
   /** The component whose recipe the line is in. */
   componentId: Id;
   componentName: string;
+  /** Its product, when there is one but its label isn't checked yet. */
+  productId: Id | null;
 }
 
 export interface Allergens extends AllergenSummary {
@@ -64,8 +66,11 @@ async function walk(
       continue;
     }
     const product = productForLine(line, products, productKitchen);
-    sources.push({ ingredient: ingredient.name, via, contains: product?.contains ?? [], mayContain: product?.mayContain ?? [], unconfirmed: !product });
-    if (!product) toConfirm.push({ lineId: line.id, ingredientId: ingredient.id, ingredientName: ingredient.name, componentId, componentName: component.name });
+    const confirmed = product !== null && isConfirmed(product);
+    sources.push({ ingredient: ingredient.name, via, contains: product?.contains ?? [], mayContain: product?.mayContain ?? [], unconfirmed: !confirmed });
+    if (!confirmed) {
+      toConfirm.push({ lineId: line.id, ingredientId: ingredient.id, ingredientName: ingredient.name, componentId, componentName: component.name, productId: product?.id ?? null });
+    }
   }
   seen.delete(componentId);
 }

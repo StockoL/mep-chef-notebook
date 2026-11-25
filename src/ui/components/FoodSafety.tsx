@@ -118,13 +118,24 @@ export function AllergenSummaryView({ allergens, kitchenId }: { allergens: Aller
           <ul class="row-list" role="list">
             {toConfirm.map((line) => (
               <li key={line.lineId}>
-                <button class="list-row" type="button" onClick={() => setFixing(line)}>
-                  <span class="list-row__main">
-                    <span class="list-row__title">Which {line.ingredientName.toLowerCase()}?</span>
-                    <span class="list-row__meta">in {line.componentName}</span>
-                  </span>
-                  <Icon name="chevron-right" />
-                </button>
+                {line.productId ? (
+                  // There's a product, but its label hasn't been checked: that's done on the ingredient.
+                  <a class="list-row" href={paths.ingredient(line.ingredientId)}>
+                    <span class="list-row__main">
+                      <span class="list-row__title">{line.ingredientName}: check the label</span>
+                      <span class="list-row__meta">in {line.componentName}</span>
+                    </span>
+                    <Icon name="chevron-right" />
+                  </a>
+                ) : (
+                  <button class="list-row" type="button" onClick={() => setFixing(line)}>
+                    <span class="list-row__main">
+                      <span class="list-row__title">Which {line.ingredientName.toLowerCase()}?</span>
+                      <span class="list-row__meta">in {line.componentName}</span>
+                    </span>
+                    <Icon name="chevron-right" />
+                  </button>
+                )}
               </li>
             ))}
           </ul>
@@ -202,7 +213,7 @@ export function ProductsSection({ ingredientId, ingredientName }: { ingredientId
               <span class="list-row__main">
                 <span class="list-row__title">{p.brand}</span>
                 <span class="list-row__meta">
-                  {[p.contains.length ? `Contains ${allergenList(p.contains)}` : 'No allergens recorded', p.mayContain.length ? `may contain ${allergenList(p.mayContain)}` : null, p.checkedOn ? `checked ${formatCalendarDate(p.checkedOn)}` : 'label not checked']
+                  {[p.contains.length ? `Contains ${allergenList(p.contains)}` : p.checkedOn ? 'No allergens on the label' : null, p.mayContain.length ? `may contain ${allergenList(p.mayContain)}` : null, p.checkedOn ? `checked ${formatCalendarDate(p.checkedOn)}` : 'Label not checked: not confirmed']
                     .filter(Boolean)
                     .join(' · ')}
                 </span>
@@ -277,7 +288,11 @@ function ProductEditor({ product, onDone }: { product: Product; onDone: () => vo
             Checked today
           </button>
         </div>
-        <p class="field__hint">{product.checkedOn ? `Label checked ${formatCalendarDate(product.checkedOn)}.` : 'Not checked against the label yet.'}</p>
+        <p class="field__hint">
+          {product.checkedOn
+            ? `Label checked ${formatCalendarDate(product.checkedOn)}.`
+            : 'Not checked against the label yet: recipes using it show “not confirmed”. Enter its allergens, or tap “Checked today” if the label has none.'}
+        </p>
         <input
           ref={photo}
           class="visually-hidden"

@@ -44,6 +44,7 @@ From `src/data/types.ts`:
 - Money is whole pence.
 - Fields ending in `Id` point at another row by id. Editable-list fields point at a `listValues` row.
 - `kitchenId: "none"` means "No kitchen". `kitchenId: null` means "not tied to any kitchen" (the chef's own).
+- Allergens (an ingredient's `allergens`, a product's `contains` and `mayContain`) are the 14 ids (`"mustard"`) or an id with a legal sub-type (`"tree-nuts:hazelnut"`, `"cereals-gluten:oats"`).
 - A step (`steps`) is a method line as written (`text`) with the step reader's `parts`: one object per piece of work, each with its own mode, minutes, equipment and flags (schema v4). The chef's corrections to the reader are in `wordListEntries`.
 - An ingredient's `unitWeights` holds the chef's own weights in grams per one of a count unit, e.g. `{ "handful": 40, "each": 55 }` (schema v5). Prep mode's records of steps started and done are in `partRuns` (schema v6), and the timings learned from them in `timings`. The last scaling choices are in `settings` (`scale.<componentId>`, `portions.<dishId>`).
 

@@ -54,7 +54,9 @@ export async function updateProduct(
   database: MepDatabase = appDb,
 ): Promise<{ components: string[]; dishes: string[] }> {
   const before = await database.products.get(id);
-  await database.products.update(id, changes);
+  // Writing down what the label says is checking it.
+  const fromLabel = changes.contains !== undefined || changes.mayContain !== undefined;
+  await database.products.update(id, fromLabel && !changes.checkedOn ? { ...changes, checkedOn: toCalendarDate(new Date()) } : changes);
   const allergensChanged =
     before && ((changes.contains && changes.contains.join() !== before.contains.join()) || (changes.mayContain && changes.mayContain.join() !== before.mayContain.join()));
   if (!before || !allergensChanged) return { components: [], dishes: [] };
@@ -92,6 +94,15 @@ export async function deleteProduct(id: Id, database: MepDatabase = appDb): Prom
 /** Chooses the product a recipe line uses (FS5: "which mayonnaise?"). */
 export async function setLineProduct(lineId: Id, productId: Id | null, database: MepDatabase = appDb) {
   await database.lines.update(lineId, { productId });
+}
+
+/**
+ * A product only counts once its label has been checked (its allergens
+ * entered, or "Checked today" for one with none): until then it's "not
+ * confirmed", never allergen-free (FS5).
+ */
+export function isConfirmed(product: Product): boolean {
+  return product.checkedOn !== null;
 }
 
 /** The product a line uses in a kitchen: chosen, or the only one there is; else null ("not confirmed"). */

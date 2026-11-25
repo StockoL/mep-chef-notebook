@@ -166,3 +166,13 @@ Follow the plan with a glance; the plan learns your times.
 - Progress is kept (schema v6): close the app and prep mode picks up where it was. The plan marks steps "✓ Done in 12 min" and "Running now"; a job's last step done ticks it on the sheet.
 - Learned times (DECISIONS 51): after three timings of a step, the plan uses your time ("your time (3 timings)"): the median, recent ones counting more, scaled by batch size. Your hands-on times come with you to any kitchen; oven and hob times stay with the kitchen. Recipes keep their written times.
 - The screen stays on in prep mode (where the phone allows it).
+
+## Phase 10: Food safety (25 Nov 2026)
+
+Answer the pass correctly; label what you make.
+
+- Allergens on every component and dish, worked out through every component it uses, each with where it comes from ("Mustard from Mayonnaise (via Rémoulade)"); may-contain kept apart. "Not complete" until every ingredient is confirmed, never read as allergen-free.
+- Ingredients: allergen chips with the legal sub-types (which cereal, which tree nut). Bought-in ingredients have **Products here**: brand, supplier, pack, price, contains and may contain from the label, a photo of it and when it was checked. A recipe uses this kitchen's only product automatically; with more, "Which mayonnaise?" is one tap from the allergens. Changing a product's allergens says which recipes it re-checked.
+- Kitchen settings → **House rules**: shelf lives by component type or for one component ("3 days"), and targets for cooling, hot holding and reheating (the legal limit is shown as a reminder).
+- **Made**: on a sheet item or a recipe, records a batch and shows a day-dot label: name, made, **use by** (its day large), allergens and your initials. No rule, no use-by. Section → **Batches and labels** lists them.
+- Cooling, hot holding and reheating steps show the kitchen's target in the method, the plan and prep mode. The step reader now flags reheating.

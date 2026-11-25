@@ -548,7 +548,7 @@ export function IngredientPage({ id = '' }: { id?: string }) {
           <p class="field__hint">What this ingredient contains. Every recipe using it gathers these.</p>
         </div>
       ) : (
-        <ProductsSection key={ingredient.id} ingredientId={ingredient.id} ingredientName={ingredient.name} />
+        <ProductsSection key={`products-${ingredient.id}`} ingredientId={ingredient.id} ingredientName={ingredient.name} />
       )}
 
       <IngredientWeights key={ingredient.id} ingredient={ingredient} />

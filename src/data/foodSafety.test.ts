@@ -6,7 +6,7 @@ import { getBatchLabel, getTargets, makeBatch, setInitials, setShelfLife, setTar
 import { createKitchen, setPlace } from './kitchens';
 import { createComponent, getComponentDetails, getVariationInUse, saveLines, updateComponent, updateIngredient } from './library';
 import { getListItems } from './lists';
-import { createProduct, deleteProduct, setLineProduct, updateProduct } from './products';
+import { createProduct, deleteProduct, markChecked, setLineProduct, updateProduct } from './products';
 import { restoreSnapshot } from './snapshot';
 import { freshDatabase } from './testing';
 
@@ -40,8 +40,9 @@ describe('allergens through components (FS1, FS5)', () => {
     expect(allergens.toConfirm.map((l) => l.ingredientName)).toEqual(['Mayonnaise']);
     expect(allergens.contains.map((c) => c.label)).toEqual(['Mustard']);
 
-    // One product in this kitchen: the line uses it without asking.
+    // One product in this kitchen: the line uses it without asking, but only once its label's checked.
     const hellmanns = await createProduct(mayo.id, kitchenId, 'Hellmann’s', db);
+    expect((await componentAllergens(remoulade, kitchenId, null, db)).complete).toBe(false);
     await updateProduct(hellmanns, { contains: ['eggs', 'mustard'], mayContain: ['milk'] }, db);
     allergens = await componentAllergens(remoulade, kitchenId, null, db);
     expect(allergens.complete).toBe(true);
@@ -53,6 +54,7 @@ describe('allergens through components (FS1, FS5)', () => {
 
     // A second product: which one? Not confirmed until chosen on the line.
     const house = await createProduct(mayo.id, kitchenId, 'House mayo', db);
+    await markChecked(house, new Date(), db);
     expect((await componentAllergens(remoulade, kitchenId, null, db)).complete).toBe(false);
     const line = (await getComponentDetails(remoulade, kitchenId, db))!.lines.find((l) => l.name === 'Mayonnaise')!;
     await setLineProduct(line.line.id, house, db);

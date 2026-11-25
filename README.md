@@ -8,7 +8,7 @@ Your data stays on your device. No account, no server.
 
 **Use it:** https://stockol.github.io/mep-chef-notebook/ (on iPhone, open it in Safari and add it to your Home Screen).
 
-Status: Phase 9 (prep mode, live timers, learned durations). See `docs/SPEC.md` and `docs/BUILD_ORDER.md`.
+Status: Phase 10 (food safety). See `docs/SPEC.md` and `docs/BUILD_ORDER.md`.
 
 ## Development
 
