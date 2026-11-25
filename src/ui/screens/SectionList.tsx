@@ -3,6 +3,7 @@ import { nameContains } from '../../core/ingredients/names';
 import { formatQuantity, UNIT_CHOICES, type Unit } from '../../core/units/units';
 import { listComponents } from '../../data/components';
 import { getPlaceDetails } from '../../data/kitchens';
+import { menuComponentsForSection } from '../../data/menus';
 import { createIngredient, listIngredients } from '../../data/library';
 import { addSectionItem, listSectionItems, moveSectionItem, removeSectionItem, updateSectionItem, type SectionItemView } from '../../data/sectionItems';
 import { restoreSnapshot } from '../../data/snapshot';
@@ -27,6 +28,9 @@ export function SectionList() {
   const [chosen, setChosen] = useState<Id | null>(null);
   const sectionId = chosen ?? sections[0]?.id ?? null;
   const items = useLiveQuery(async () => (sectionId ? listSectionItems(sectionId) : []), [sectionId]);
+  // What the menus on now give this section (MS4), less what's already on the list.
+  const fromMenus = useLiveQuery(async () => (sectionId ? menuComponentsForSection(sectionId) : []), [sectionId]);
+  const menuOnly = (fromMenus ?? []).filter((m) => !(items ?? []).some((i) => i.item.componentId === m.component.id));
   const [editingId, setEditingId] = useState<Id | null>(null);
   const [adding, setAdding] = useState(false);
   const editing = items?.find((i) => i.item.id === editingId);
@@ -52,7 +56,7 @@ export function SectionList() {
         <p class="variation-line">{sections[0]?.name}</p>
       )}
 
-      {items?.length === 0 && (
+      {items?.length === 0 && menuOnly.length === 0 && (
         <div class="empty-state flow">
           <p>What does this section look after? Add the components and ingredients you prep and top up.</p>
         </div>
@@ -75,6 +79,33 @@ export function SectionList() {
       <button class="button" type="button" data-variant="primary" onClick={() => setAdding(true)}>
         + Add to the list
       </button>
+
+      {menuOnly.length > 0 && (
+        <section class="flow" aria-labelledby="from-menus">
+          <h2 id="from-menus">From the menus on now</h2>
+          <p class="field__hint">Your section makes these on the menus. They’re on your list already; tap one to give it a par or a shelf.</p>
+          <ul class="row-list" role="list">
+            {menuOnly.map(({ component, menuNames }) => (
+              <li key={component.id}>
+                <button
+                  class="list-row"
+                  type="button"
+                  onClick={async () => {
+                    const itemId = await trackSave(addSectionItem(sectionId, { componentId: component.id }));
+                    setEditingId(itemId);
+                  }}
+                >
+                  <span class="list-row__main">
+                    <span class="list-row__title">{component.name}</span>
+                    <span class="list-row__meta">on {menuNames.join(', ')}</span>
+                  </span>
+                  <Icon name="chevron-right" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <Sheet open={!!editing} onClose={() => setEditingId(null)} title={editing?.name ?? ''}>
         {editing && <ItemEditor key={editing.item.id} view={editing} sectionId={sectionId} isFirst={items?.[0]?.item.id === editing.item.id} isLast={items?.at(-1)?.item.id === editing.item.id} onDone={() => setEditingId(null)} />}

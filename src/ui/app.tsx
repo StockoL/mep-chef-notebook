@@ -22,6 +22,8 @@ import { Settings } from './screens/Settings';
 import { SettingsList } from './screens/SettingsList';
 import { Today } from './screens/Today';
 import { WordList } from './screens/WordList';
+import { ComponentCompare, ComponentHistory } from './screens/ComponentHistory';
+import { MenuScreen, MenusList } from './screens/Menus';
 
 /**
  * The app shell (docs/UX.md → Navigation): top bar, the current screen, and a
@@ -53,6 +55,10 @@ export function App() {
               <Route path={routes.sheet} component={SheetScreen} />
               <Route path={paths.sectionList} component={SectionList} />
               <Route path={paths.library} component={Library} />
+              <Route path={paths.menus} component={MenusList} />
+              <Route path={routes.menu} component={MenuScreen} />
+              <Route path={routes.componentHistory} component={ComponentHistory} />
+              <Route path={routes.componentCompare} component={ComponentCompare} />
               <Route path={routes.component} component={ComponentPage} />
               <Route path={routes.dish} component={DishPage} />
               <Route path={routes.ingredient} component={IngredientPage} />

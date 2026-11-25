@@ -103,7 +103,7 @@ export function LinesEditor({ variationId, componentId, lines }: { variationId: 
 // ─── Tags ─────────────────────────────────────────────────────────────────
 
 /** Tags (R3): tap one to remove it; type to add, with matching tags suggested. */
-export function TagEditor({ tagIds, onChange }: { tagIds: Id[]; onChange: (ids: Id[]) => Promise<void> }) {
+export function TagEditor({ tagIds, onChange, suggested = [] }: { tagIds: Id[]; onChange: (ids: Id[]) => Promise<void>; suggested?: string[] }) {
   const all = useLiveQuery(() => listTags());
   const names = useLiveQuery(() => tagNames());
   const [typed, setTyped] = useState('');
@@ -118,6 +118,9 @@ export function TagEditor({ tagIds, onChange }: { tagIds: Id[]; onChange: (ids: 
   const suggestions = (all ?? [])
     .filter((t) => !tagIds.includes(t.id) && (!typed || t.name.toLowerCase().includes(typed.trim().toLowerCase())))
     .slice(0, 8);
+  // From where it appears (R3): menus, courses, menu types. Only suggestions.
+  const current = new Set(tagIds.map((id) => names?.get(id)?.toLowerCase()));
+  const fromMenus = suggested.filter((name) => !current.has(name.toLowerCase()) && !suggestions.some((t) => t.name.toLowerCase() === name.toLowerCase()));
 
   return (
     <div class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
@@ -157,6 +160,16 @@ export function TagEditor({ tagIds, onChange }: { tagIds: Id[]; onChange: (ids: 
           Add
         </button>
       </form>
+      {fromMenus.length > 0 && (
+        <div class="cluster" role="group" aria-label="Suggested from its menus" style={{ '--gutter': 'var(--space-2xs)' }}>
+          <span class="field__hint">Suggested:</span>
+          {fromMenus.map((name) => (
+            <button key={name} class="chip" type="button" onClick={() => add(name)}>
+              + {name}
+            </button>
+          ))}
+        </div>
+      )}
       {suggestions.length > 0 && (
         <div class="cluster" style={{ '--gutter': 'var(--space-2xs)' }}>
           {suggestions.map((t) => (

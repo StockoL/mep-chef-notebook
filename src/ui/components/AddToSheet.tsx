@@ -1,6 +1,6 @@
 import { useState } from 'preact/hooks';
 import { listServices } from '../../data/kitchens';
-import { listSectionItems } from '../../data/sectionItems';
+import { listSectionEntries } from '../../data/sectionItems';
 import { addSheetItems, readTypedItem, type SheetItemInput } from '../../data/sheets';
 import type { Id, KitchenId } from '../../data/types';
 import { formatQuantity } from '../../core/units/units';
@@ -35,10 +35,10 @@ export function AddToSheet({ open, onClose, kitchenId, sectionIds, ensureSheet }
 }
 
 function AddForm({ kitchenId, sectionIds, ensureSheet, onClose }: Omit<AddToSheetProps, 'open'>) {
-  const lists = useLiveQuery(async () => (await Promise.all(sectionIds.map((id) => listSectionItems(id)))).flat(), [sectionIds.join()]);
+  const lists = useLiveQuery(() => listSectionEntries(sectionIds), [sectionIds.join()]);
   const services = useLiveQuery(() => listServices(kitchenId), [kitchenId]);
   const [typed, setTyped] = useState('');
-  const [tray, setTray] = useState<Id[]>([]);
+  const [tray, setTray] = useState<string[]>([]);
   const [serviceId, setServiceId] = useState<Id | null>(null);
 
   async function addTyped(event: Event) {
@@ -51,13 +51,12 @@ function AddForm({ kitchenId, sectionIds, ensureSheet, onClose }: Omit<AddToShee
   }
 
   async function addTray() {
-    const chosen = (lists ?? []).filter((s) => tray.includes(s.item.id));
-    const inputs: SheetItemInput[] = chosen.map((s) => ({
-      sectionItemId: s.item.id,
-      topUpTo: s.item.par,
-      serviceId,
-      source: 'section-list',
-    }));
+    const chosen = (lists ?? []).filter((s) => tray.includes(s.key));
+    const inputs: SheetItemInput[] = chosen.map((s) =>
+      s.stored
+        ? { sectionItemId: s.stored.item.id, topUpTo: s.stored.item.par, serviceId, source: 'section-list' }
+        : { componentId: s.componentId, serviceId, source: 'section-list' },
+    );
     await addSheetItems(await ensureSheet(), inputs);
     showMessage(`Added ${chosen.length} ${chosen.length === 1 ? 'item' : 'items'} to the sheet.`);
     setTray([]);
@@ -102,18 +101,23 @@ function AddForm({ kitchenId, sectionIds, ensureSheet, onClose }: Omit<AddToShee
       )}
       <ul class="row-list" role="list">
         {lists?.map((s) => {
-          const chosen = tray.includes(s.item.id);
+          const chosen = tray.includes(s.key);
+          const par = s.stored?.item.par;
           return (
-            <li key={s.item.id}>
+            <li key={s.key}>
               <button
                 class="list-row"
                 type="button"
                 aria-pressed={chosen}
-                onClick={() => setTray(chosen ? tray.filter((id) => id !== s.item.id) : [...tray, s.item.id])}
+                onClick={() => setTray(chosen ? tray.filter((key) => key !== s.key) : [...tray, s.key])}
               >
                 <span class="list-row__main">
                   <span class="list-row__title">{s.name}</span>
-                  {s.item.par && <span class="list-row__meta">top up to {formatQuantity(s.item.par.amount, s.item.par.unit)}</span>}
+                  {(par || s.menuNames.length > 0) && (
+                    <span class="list-row__meta">
+                      {[par ? `top up to ${formatQuantity(par.amount, par.unit)}` : null, s.menuNames.length ? `on ${s.menuNames.join(', ')}` : null].filter(Boolean).join(' · ')}
+                    </span>
+                  )}
                 </span>
                 {chosen && <Icon name="tick" />}
               </button>

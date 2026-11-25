@@ -46,8 +46,8 @@ const readNumber = (text: string) => {
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-export function ScalePanel({ componentId, kitchenId, choice }: { componentId: Id; kitchenId: KitchenId; choice: ScaleChoice | null }) {
-  const scaled = useLiveQuery(() => getScaledComponent(componentId, kitchenId, choice), [componentId, kitchenId, JSON.stringify(choice)]);
+export function ScalePanel({ componentId, kitchenId, choice, variationId }: { componentId: Id; kitchenId: KitchenId; choice: ScaleChoice | null; variationId?: Id | null }) {
+  const scaled = useLiveQuery(() => getScaledComponent(componentId, kitchenId, choice, undefined, variationId), [componentId, kitchenId, JSON.stringify(choice), variationId]);
   const [sheet, setSheet] = useState<'yield' | 'anchor' | null>(null);
   if (!scaled) return null;
 

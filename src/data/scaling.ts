@@ -76,8 +76,10 @@ export async function getScaledComponent(
   kitchenId: KitchenId,
   choice: ScaleChoice | null,
   database: MepDatabase = appDb,
+  /** Another variation than the one in use (V4). */
+  variationId?: Id | null,
 ): Promise<ScaledComponent | undefined> {
-  const details = await getComponentDetails(componentId, kitchenId, database);
+  const details = await getComponentDetails(componentId, kitchenId, database, variationId);
   if (!details) return undefined;
   const baseYield = details.variation?.baseYield ?? null;
   const weights = await weightsFor(details.lines.map((l) => l.line.ingredientId).filter((id) => id !== null), database);

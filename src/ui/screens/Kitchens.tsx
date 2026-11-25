@@ -119,6 +119,7 @@ export function KitchenSettings({ id = '' }: { id?: string }) {
     { href: paths.kitchenSections(id), label: 'Sections' },
     { href: paths.kitchenServices(id), label: 'Services and shift' },
     { href: paths.events(id), label: 'Events' },
+    { href: paths.menusFor(id), label: 'Menus' },
     { href: paths.kitchenPart(id, 'equipment'), label: 'Equipment' },
     { href: paths.kitchenPart(id, 'suppliers'), label: 'Suppliers' },
     { href: paths.kitchenPart(id, 'house-rules'), label: 'House rules' },

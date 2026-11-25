@@ -5,6 +5,7 @@
  */
 
 import { db as appDb, type MepDatabase } from './db';
+import { menuComponentsForSection } from './menus';
 import type { Id, Quantity, SectionItem } from './types';
 
 export interface SectionItemView {
@@ -70,4 +71,38 @@ export async function removeSectionItem(id: Id, database: MepDatabase = appDb) {
   const item = await database.sectionItems.get(id);
   await database.sectionItems.delete(id);
   return item;
+}
+
+// ─── With the menus (MS4) ─────────────────────────────────────────────────
+
+export interface SectionListEntry {
+  /** Stable key for lists and trays. */
+  key: string;
+  name: string;
+  /** The stored item (standing items and anything given a par); null for a component only on a menu. */
+  stored: SectionItemView | null;
+  componentId: Id | null;
+  /** The menus on now that put it on this section: "À la carte". */
+  menuNames: string[];
+}
+
+/**
+ * A section's list as the chef uses it: what they've added (standing items,
+ * pars), then what the menus on now give the section, so a new menu updates
+ * the list by itself (SPEC → Menus and dishes).
+ */
+export async function listSectionEntries(sectionIds: Id[], database: MepDatabase = appDb): Promise<SectionListEntry[]> {
+  const entries: SectionListEntry[] = [];
+  const fromMenus = (await Promise.all(sectionIds.map((id) => menuComponentsForSection(id, database)))).flat();
+  for (const sectionId of sectionIds) {
+    for (const view of await listSectionItems(sectionId, database)) {
+      const menuNames = view.item.componentId ? fromMenus.filter((m) => m.component.id === view.item.componentId).flatMap((m) => m.menuNames) : [];
+      entries.push({ key: view.item.id, name: view.name, stored: view, componentId: view.item.componentId, menuNames: [...new Set(menuNames)] });
+    }
+  }
+  for (const { component, menuNames } of fromMenus) {
+    if (entries.some((e) => e.componentId === component.id)) continue;
+    entries.push({ key: `menu-${component.id}`, name: component.name, stored: null, componentId: component.id, menuNames });
+  }
+  return entries;
 }

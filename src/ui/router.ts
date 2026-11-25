@@ -21,6 +21,13 @@ export const paths = {
   library: `${BASE}library`,
   librarySearch: `${BASE}library?search=1`,
   component: (id: string) => `${BASE}library/component/${id}`,
+  /** A component showing one of its other variations (V4). */
+  componentVariation: (id: string, variationId: string) => `${BASE}library/component/${id}?v=${variationId}`,
+  componentHistory: (id: string, variationId: string) => `${BASE}library/component/${id}/history?v=${variationId}`,
+  componentCompare: (id: string, a: string, b: string) => `${BASE}library/component/${id}/compare?a=${a}&b=${b}`,
+  menus: `${BASE}menus`,
+  menusFor: (kitchenId: string) => `${BASE}menus?kitchen=${kitchenId}`,
+  menu: (id: string) => `${BASE}menu/${id}`,
   /** A component opened scaled to make this much: from a dish's portions, a sheet item or a recipe that uses it. */
   componentMaking: (id: string, amount: number, unit: string) => `${BASE}library/component/${id}?make=${Math.round(amount * 1000) / 1000}&unit=${encodeURIComponent(unit)}`,
   dish: (id: string) => `${BASE}library/dish/${id}`,
@@ -48,6 +55,9 @@ export const routes = {
   events: `${BASE}kitchen/:id/events`,
   event: `${BASE}kitchen/:id/events/:eventId`,
   component: `${BASE}library/component/:id`,
+  componentHistory: `${BASE}library/component/:id/history`,
+  componentCompare: `${BASE}library/component/:id/compare`,
+  menu: `${BASE}menu/:id`,
   dish: `${BASE}library/dish/:id`,
   ingredient: `${BASE}library/ingredient/:id`,
   kitchen: `${BASE}kitchen/:id`,

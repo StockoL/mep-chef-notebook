@@ -1,17 +1,19 @@
 import { useLocation } from 'preact-iso';
 import { useEffect, useRef, useState } from 'preact/hooks';
-import { getPlace } from '../../data/kitchens';
+import { getPlace, placeSectionIds } from '../../data/kitchens';
 import { createComponent, createDish, createIngredient, listComponentSummaries, listDishSummaries, listIngredients } from '../../data/library';
 import { getListItems, ListError } from '../../data/lists';
+import { getMenuView, listMenus } from '../../data/menus';
 import { listRecent, searchLibrary } from '../../data/search';
 import { listCollections, listTags } from '../../data/tags';
 import type { Collection } from '../../data/types';
-import { ChipChoice, Segmented } from '../components/Controls';
+import { ChipChoice, Segmented, Switch } from '../components/Controls';
 import { Sheet } from '../components/Sheet';
 import { formatWhen } from '../format';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
+import { MenuCourses, menuLabel } from './Menus';
 
 type Lens = 'dishes' | 'components' | 'ingredients' | 'techniques';
 const LENSES: { value: Lens; label: string }[] = [
@@ -159,14 +161,68 @@ function inCollection(collection: Collection, kind: 'dish' | 'component', id: st
   return collection.members.some((m) => m.kind === kind && m.id === id);
 }
 
+/**
+ * Dishes by menu and course (R7, UX → Library): the menus on now and coming
+ * up as chips at the top, then "All dishes" for everything else.
+ */
 function DishesLens() {
   const dishes = useLiveQuery(() => listDishSummaries());
+  const place = useLiveQuery(() => getPlace());
+  const menus = useLiveQuery(async () => (place ? (await listMenus(place.kitchenId)).filter((m) => m.status !== 'past') : []), [place?.kitchenId]);
+  const [chosen, setChosen] = useState<string | null>(null);
+  const [onlyMine, setOnlyMine] = useState(false);
+  const menuId = chosen ?? menus?.[0]?.id ?? 'all';
+  const mine = place ? placeSectionIds(place) : [];
+  const view = useLiveQuery(async () => (menuId !== 'all' ? getMenuView(menuId, mine) : undefined), [menuId, mine.join()]);
   const { matches, controls } = useFilters('dish');
-  if (!dishes) return null;
-  if (dishes.length === 0) return <Empty text="No dishes yet. A dish is anything served, made of components. Tap + New." />;
+  if (!dishes || !menus) return null;
+
+  const menuChips = (
+    <div class="cluster" role="group" aria-label="Menu" style={{ '--gutter': 'var(--space-2xs)' }}>
+      {menus.map((m) => (
+        <button key={m.id} class="chip" type="button" aria-pressed={menuId === m.id} onClick={() => setChosen(m.id)}>
+          {menuLabel(m)}
+        </button>
+      ))}
+      <button class="chip" type="button" aria-pressed={menuId === 'all'} onClick={() => setChosen('all')}>
+        All dishes
+      </button>
+      <a class="chip" href={paths.menus}>
+        Menus…
+      </a>
+    </div>
+  );
+
+  if (menuId !== 'all') {
+    return (
+      <>
+        {menuChips}
+        {mine.length > 0 && (
+          <Switch checked={onlyMine} onChange={setOnlyMine}>
+            Only dishes my section touches
+          </Switch>
+        )}
+        {view && <MenuCourses view={view} onlyMine={onlyMine} />}
+        {view && (
+          <a class="button" href={paths.menu(view.menu.id)}>
+            Edit {view.menu.name}
+          </a>
+        )}
+      </>
+    );
+  }
+  if (dishes.length === 0) {
+    return (
+      <>
+        {menuChips}
+        <Empty text="No dishes yet. A dish is anything served, made of components. Tap + New." />
+      </>
+    );
+  }
   const shown = dishes.filter(({ dish }) => matches(dish));
   return (
     <>
+      {menuChips}
       {controls}
       <RowList
         rows={shown.map(({ dish, componentCount }) => ({

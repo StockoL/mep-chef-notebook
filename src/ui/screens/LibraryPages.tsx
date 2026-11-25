@@ -25,6 +25,9 @@ import {
 import { createKitchen, getKitchen, listKitchens, setKitchenArchived } from '../../data/kitchens';
 import { getListItems, ListError } from '../../data/lists';
 import { listComponentNotes } from '../../data/notes';
+import { menusForComponent, menusForDish, tagSuggestions } from '../../data/menus';
+import { addDishToSheet, gatherDishAllergens } from '../../data/dishes';
+import { getDishPortions } from '../../data/scaling';
 import { getScaleChoice, setScaleChoice } from '../../data/scaling';
 import { recordView } from '../../data/search';
 import { restoreSnapshot } from '../../data/snapshot';
@@ -41,6 +44,8 @@ import {
 } from '../components/LibraryEditors';
 import { MediaView } from '../components/MediaView';
 import { MethodEditor } from '../components/MethodEditor';
+import { menuLabel } from './Menus';
+import { AttemptLog, IdeaFields, VariationActions, VariationChips } from '../components/Variations';
 import { IngredientWeights, PerPortionButton, PortionsPanel, ScalePanel } from '../components/Scaling';
 import { NoteEditor } from '../components/NoteEditor';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -61,11 +66,15 @@ const COMPONENT_TYPES = { kind: 'values', list: 'component-types', kitchenId: nu
 export function ComponentPage({ id = '' }: { id?: string }) {
   const place = useLiveQuery(() => getPlace());
   const kitchenId = place?.kitchenId;
-  const details = useLiveQuery(async () => (kitchenId ? getComponentDetails(id, kitchenId) : undefined), [id, kitchenId]);
+  const { route, query } = useLocation();
+  // Another way of making it, when the chef taps its chip (V4); otherwise the one in use here.
+  const shownId = query.v ?? null;
+  const details = useLiveQuery(async () => (kitchenId ? getComponentDetails(id, kitchenId, undefined, shownId) : undefined), [id, kitchenId, shownId]);
   const types = useLiveQuery(() => getListItems(COMPONENT_TYPES));
   const notes = useLiveQuery(() => listComponentNotes(id), [id]);
   const choice = useLiveQuery(() => getScaleChoice(id), [id]);
-  const { route, query } = useLocation();
+  const menus = useLiveQuery(() => menusForComponent(id), [id]);
+  const tagHints = useLiveQuery(() => tagSuggestions({ kind: 'component', id }), [id]);
 
   useEffect(() => void recordView({ kind: 'component', id }), [id]);
   // Opened "to make" an amount (from a dish, a sheet item or a recipe that uses it): scale to it.
@@ -92,8 +101,10 @@ export function ComponentPage({ id = '' }: { id?: string }) {
   return (
     <section class="flow" key={id}>
       <ScreenHeader title={component.name} back={BACK} />
+      {variation && kitchenId && <VariationChips componentId={id} kitchenId={kitchenId} shown={variation} />}
       {variation && <VariationLine variation={variation} />}
-      {kitchenId && choice !== undefined && <ScalePanel componentId={id} kitchenId={kitchenId} choice={choice} />}
+      {variation?.source === 'idea' && <IdeaFields key={variation.id} variation={variation} />}
+      {kitchenId && choice !== undefined && <ScalePanel componentId={id} kitchenId={kitchenId} choice={choice} variationId={variation?.id ?? null} />}
 
       <NameField value={component.name} onSave={(name) => updateComponent(id, { name })} />
       <ChipChoice
@@ -109,7 +120,7 @@ export function ComponentPage({ id = '' }: { id?: string }) {
       {variation && !choice && <LinesEditor key={`lines-${variation.id}`} variationId={variation.id} componentId={id} lines={lines} />}
       {variation && <MethodEditor key={`steps-${variation.id}`} variation={variation} steps={steps} />}
 
-      <TagEditor tagIds={component.tagIds} onChange={(tagIds) => updateComponent(id, { tagIds })} />
+      <TagEditor tagIds={component.tagIds} onChange={(tagIds) => updateComponent(id, { tagIds })} suggested={tagHints ?? []} />
       <AliasesField aliases={component.aliases} onSave={(aliases) => updateComponent(id, { aliases })} />
       <CollectionToggles member={{ kind: 'component', id }} />
 
@@ -117,22 +128,25 @@ export function ComponentPage({ id = '' }: { id?: string }) {
         groups={[
           { label: 'In dishes', items: dishes.map((d) => ({ href: paths.dish(d.id), name: d.name })) },
           { label: 'Used in components', items: usedInComponents.map((c) => ({ href: paths.component(c.id), name: c.name })) },
+          { label: 'On menus', items: (menus ?? []).map((m) => ({ href: paths.menu(m.id), name: m.status === 'on-now' ? m.name : `${m.name} (${m.status === 'past' ? 'past' : 'coming up'})` })) },
         ]}
         empty="Not on any dish yet."
       />
 
-      {notes && notes.length > 0 && (
-        <section class="flow" aria-labelledby="component-notes">
-          <h2 id="component-notes">Notes</h2>
-          {notes.map((note) => (
-            <div key={note.id} class="card">
-              <div class="card__body">
-                <NoteEditor note={note} />
-              </div>
+      <section class="flow" aria-labelledby="component-notes">
+        <h2 id="component-notes">Notes and attempts</h2>
+        {variation && kitchenId && <AttemptLog componentId={id} variationId={variation.id} kitchenId={kitchenId} />}
+        {notes?.map((note) => (
+          <div key={note.id} class="card">
+            <div class="card__body">
+              <p class="field__hint">{new Date(note.createdAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</p>
+              <NoteEditor note={note} />
             </div>
-          ))}
-        </section>
-      )}
+          </div>
+        ))}
+      </section>
+
+      {variation && kitchenId && <VariationActions componentId={id} kitchenId={kitchenId} shown={variation} />}
 
       <button class="button" type="button" data-variant="danger" onClick={remove}>
         Delete component
@@ -306,6 +320,8 @@ function YieldField({ variation }: { variation: Variation }) {
 export function DishPage({ id = '' }: { id?: string }) {
   const details = useLiveQuery(() => getDishDetails(id), [id]);
   const place = useLiveQuery(() => getPlace());
+  const dishMenus = useLiveQuery(() => menusForDish(id), [id]);
+  const dishTagHints = useLiveQuery(() => tagSuggestions({ kind: 'dish', id }), [id]);
   const [picking, setPicking] = useState(false);
   const [editingList, setEditingList] = useState(false);
   const photoInput = useRef<HTMLInputElement>(null);
@@ -422,8 +438,14 @@ export function DishPage({ id = '' }: { id?: string }) {
       </section>
 
       {components.length > 0 && place && <PortionsPanel dishId={id} kitchenId={place.kitchenId} />}
+      {components.length > 0 && place && <DishAtWork dishId={id} kitchenId={place.kitchenId} />}
 
-      <TagEditor tagIds={dish.tagIds} onChange={(tagIds) => updateDish(id, { tagIds })} />
+      <UsedIn
+        groups={[{ label: 'On menus', items: (dishMenus ?? []).map(({ menu }) => ({ href: paths.menu(menu.id), name: menuLabel(menu) })) }]}
+        empty="Not on a menu. Add it from a menu: Library → Dishes → Menus."
+      />
+
+      <TagEditor tagIds={dish.tagIds} onChange={(tagIds) => updateDish(id, { tagIds })} suggested={dishTagHints ?? []} />
       <CollectionToggles member={{ kind: 'dish', id }} />
 
       <button class="button" type="button" data-variant="danger" onClick={remove}>
@@ -546,6 +568,37 @@ function UsedIn({ groups, empty }: { groups: { label: string; items: { href: str
             </ul>
           </div>
         ))}
+    </section>
+  );
+}
+
+/**
+ * A dish at work (MS2): its allergens gathered from every component, and
+ * one tap to put its components on today's sheet (with amounts, when a
+ * number of covers is set above).
+ */
+function DishAtWork({ dishId, kitchenId }: { dishId: string; kitchenId: string }) {
+  const allergens = useLiveQuery(() => gatherDishAllergens(dishId, kitchenId), [dishId, kitchenId]);
+  const portions = useLiveQuery(() => getDishPortions(dishId), [dishId]);
+
+  async function addToSheet() {
+    const { added } = await trackSave(addDishToSheet(dishId, portions ?? null));
+    showMessage(`Put ${added} ${added === 1 ? 'component' : 'components'} on today’s sheet${portions ? ` for ${portions}` : ''}.`, { view: { label: 'View', href: paths.today } });
+  }
+
+  return (
+    <section class="flow" aria-labelledby="allergens-title">
+      <button class="button" type="button" data-variant="primary" onClick={addToSheet}>
+        Add to today’s sheet{portions ? ` for ${portions}` : ''}
+      </button>
+      <h2 id="allergens-title">Allergens</h2>
+      {allergens && (
+        <>
+          <p>{allergens.contains.length ? allergens.contains.map((a) => a.label).join(', ') : 'None recorded in its ingredients.'}</p>
+          {allergens.unconfirmed.length > 0 && <p class="field__hint">Not confirmed (bought-in): {allergens.unconfirmed.join(', ')}.</p>}
+          <p class="field__hint">Gathered from the ingredients you’ve recorded, through every component. The full allergen check comes with food safety.</p>
+        </>
+      )}
     </section>
   );
 }
