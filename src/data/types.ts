@@ -397,6 +397,8 @@ export interface Sheet extends Row {
   covers: number | null;
   /** When it was written (e.g. at the end of the previous shift). */
   writtenAt: string | null;
+  /** The photo of chef's paper sheet it was entered from (schema v3, DECISIONS 35). */
+  photoId: Id | null;
 }
 
 export type SheetItemSource = 'carried-over' | 'paper' | 'section-list' | 'dish' | 'manual';

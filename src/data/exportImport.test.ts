@@ -79,7 +79,7 @@ describe('export → import', () => {
     const files = unzipSync(await exportData(source));
     expect(Object.keys(files).sort()).toEqual(['data.json', `media/${id}.png`]);
     const data = JSON.parse(strFromU8(files['data.json']!));
-    expect(data).toMatchObject({ format: 'mep-export', formatVersion: 1, schemaVersion: 2 });
+    expect(data).toMatchObject({ format: 'mep-export', formatVersion: 1, schemaVersion: 3 });
     expect(data.tables.media[0]).toEqual(expect.objectContaining({ id, file: `media/${id}.png` }));
     expect(data.tables.media[0]).not.toHaveProperty('blob');
   });

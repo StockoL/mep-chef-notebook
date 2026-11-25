@@ -47,6 +47,12 @@ export const ROW_FIXES: Record<number, Partial<Record<TableName, RowFix>>> = {
       row.mergedIntoId ??= null;
     },
   },
+  /** Schema v3 (Phase 3): a sheet can keep the photo it was entered from. */
+  3: {
+    sheets: (row) => {
+      row.photoId ??= null;
+    },
+  },
 };
 
 /** Brings one row from `fromVersion` up to `toVersion`. */

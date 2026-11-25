@@ -30,7 +30,7 @@ describe('schema', () => {
     ];
     expect([...TABLE_NAMES].sort()).toEqual([...expected].sort());
     expect(db.tables.map((table) => table.name).sort()).toEqual([...expected].sort());
-    expect(db.verno).toBe(2);
+    expect(db.verno).toBe(3);
   });
 
   it('stores and reads back a row in every table', async () => {
@@ -98,7 +98,7 @@ describe('ensureBuiltIns', () => {
   });
 
   it('lets "none" be found by a compound index, which null could not', async () => {
-    await db.sheets.add({ kitchenId: NO_KITCHEN_ID, sectionIds: [], date: '2026-11-24', covers: null, writtenAt: null });
+    await db.sheets.add({ kitchenId: NO_KITCHEN_ID, sectionIds: [], date: '2026-11-24', covers: null, writtenAt: null, photoId: null });
     const found = await db.sheets.where('[kitchenId+date]').equals([NO_KITCHEN_ID, '2026-11-24']).toArray();
     expect(found).toHaveLength(1);
   });

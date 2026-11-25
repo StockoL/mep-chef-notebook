@@ -110,9 +110,10 @@ export type TableName = keyof typeof SCHEMA_V1;
 
 /**
  * The schema version this code writes. Goes into every export.
- * v1: Phase 0. v2: Phase 1 row changes (migrations.ts); indexes unchanged.
+ * v1: Phase 0. v2: Phase 1 row changes. v3: Phase 3, sheets keep a photo.
+ * (Row changes are in migrations.ts; indexes unchanged since v1.)
  */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 /** Every table name, in schema order. */
 export const TABLE_NAMES = Object.keys(SCHEMA_V1) as TableName[];
@@ -170,14 +171,16 @@ export class MepDatabase extends Dexie {
   constructor(name = 'mep') {
     super(name);
     this.version(1).stores(SCHEMA_V1);
-    // v2 changes no indexes, only rows: run each table's fix over what's stored.
-    this.version(2)
-      .stores({})
-      .upgrade(async (transaction) => {
-        for (const [table, fix] of Object.entries(ROW_FIXES[2] ?? {})) {
-          await transaction.table(table).toCollection().modify((row) => fix(row));
-        }
-      });
+    // Later versions change no indexes, only rows: run each table's fix over what's stored.
+    for (const version of [2, 3]) {
+      this.version(version)
+        .stores({})
+        .upgrade(async (transaction) => {
+          for (const [table, fix] of Object.entries(ROW_FIXES[version] ?? {})) {
+            await transaction.table(table).toCollection().modify((row) => fix(row));
+          }
+        });
+    }
     this.addRowHooks();
   }
 

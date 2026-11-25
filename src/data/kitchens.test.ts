@@ -80,7 +80,7 @@ describe('editable lists', () => {
     const [starters, fish] = await getListItems(ref, db);
     await setUsualSection(kitchenId, fish!.id, db);
     const noteId = await db.notes.add({ kind: 'inbox', body: 'x', mediaIds: [], kitchenId, sectionId: fish!.id, links: [] });
-    const sheetId = await db.sheets.add({ kitchenId, sectionIds: [fish!.id, starters!.id], date: '2026-11-24', covers: null, writtenAt: null });
+    const sheetId = await db.sheets.add({ kitchenId, sectionIds: [fish!.id, starters!.id], date: '2026-11-24', covers: null, writtenAt: null, photoId: null });
 
     await mergeListItem(ref, fish!.id, starters!.id, db);
 

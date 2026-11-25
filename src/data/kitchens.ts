@@ -6,6 +6,8 @@
 
 import { cleanName } from '../core/lists/lists';
 import { nextService, type NextService } from '../core/services/nextService';
+import { toCalendarDate } from '../core/time/calendar';
+import { eventInputs } from './events';
 import { db as appDb, type MepDatabase } from './db';
 import { seedKitchen } from './defaults';
 import { ListError } from './lists';
@@ -77,6 +79,13 @@ const PLACE_KEY = 'place';
 export interface Place {
   kitchenId: KitchenId;
   sectionId: Id | null;
+  /** A second section the chef is covering today; both share one sheet (MS3, DECISIONS 37). */
+  alsoSectionId?: Id | null;
+}
+
+/** The sections the chef is on: their own, plus one they're also covering. */
+export function placeSectionIds(place: Place): Id[] {
+  return [place.sectionId, place.alsoSectionId].filter((id): id is Id => !!id && id !== undefined);
 }
 
 /** The current kitchen and section; "No kitchen" if the saved one is gone or archived. */
@@ -95,7 +104,14 @@ export async function getPlace(database: MepDatabase = appDb): Promise<Place> {
 export async function setPlace(kitchenId: KitchenId, sectionId?: Id | null, database: MepDatabase = appDb) {
   const kitchen = await database.kitchens.get(kitchenId);
   const section = sectionId === undefined ? (kitchen?.usualSectionId ?? null) : sectionId;
-  await setSetting<Place>(PLACE_KEY, { kitchenId, sectionId: section }, database);
+  // Switching kitchen or section ends "also covering".
+  await setSetting<Place>(PLACE_KEY, { kitchenId, sectionId: section, alsoSectionId: null }, database);
+}
+
+/** Also covering a second section today (or stop, with null). */
+export async function setAlsoCovering(sectionId: Id | null, database: MepDatabase = appDb) {
+  const place = await getPlace(database);
+  await setSetting<Place>(PLACE_KEY, { ...place, alsoSectionId: sectionId === place.sectionId ? null : sectionId }, database);
 }
 
 /** The current kitchen and section as rows, for the top bar. */
@@ -103,7 +119,8 @@ export async function getPlaceDetails(database: MepDatabase = appDb) {
   const place = await getPlace(database);
   const kitchen = await database.kitchens.get(place.kitchenId);
   const section = place.sectionId ? await database.sections.get(place.sectionId) : undefined;
-  return { place, kitchen, section };
+  const alsoSection = place.alsoSectionId ? await database.sections.get(place.alsoSectionId) : undefined;
+  return { place, kitchen, section, alsoSection };
 }
 
 // ─── Sections, services and shifts of one kitchen ─────────────────────────
@@ -158,5 +175,6 @@ export async function getNextService(
   now: Date,
   database: MepDatabase = appDb,
 ): Promise<NextService | null> {
-  return nextService(await listServices(kitchenId, database), now);
+  const events = await eventInputs(kitchenId, toCalendarDate(now), database);
+  return nextService(await listServices(kitchenId, database), now, events);
 }
