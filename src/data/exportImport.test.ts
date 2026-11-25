@@ -100,6 +100,8 @@ describe('export → import', () => {
       ],
     });
     await source.wordListEntries.add({ word: 'toast', mode: 'passive', equipmentTypeId: 'oven-id' });
+    // Phase 5: an ingredient with a density and the chef's own weights.
+    await source.ingredients.add({ name: 'Parsley', aliases: [], kind: 'basic', allergens: [], density: null, yieldLossPercent: null, unitWeights: { handful: 40 } });
 
     await importData(await exportData(source), target);
     expect(await snapshot(target)).toEqual(await snapshot(source));

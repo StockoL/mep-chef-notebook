@@ -107,6 +107,12 @@ export const ROW_FIXES: Record<number, Partial<Record<TableName, RowFix>>> = {
       row.confirmed ??= false;
     },
   },
+  /** Schema v5 (Phase 5): ingredients can hold the chef's own weights for counts (DECISIONS 41). */
+  5: {
+    ingredients: (row) => {
+      row.unitWeights ??= {};
+    },
+  },
 };
 
 /** Brings one row from `fromVersion` up to `toVersion`. */

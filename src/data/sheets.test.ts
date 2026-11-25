@@ -80,7 +80,7 @@ describe('sheet items', () => {
 
   it('reads a typed line from chef’s paper sheet', async () => {
     const componentId = await createComponent('Beurre blanc', kitchenId, db);
-    const chives = (await db.ingredients.add({ name: 'Chives', aliases: [], kind: 'basic', allergens: [], density: null, yieldLossPercent: null }));
+    const chives = (await db.ingredients.add({ name: 'Chives', aliases: [], kind: 'basic', allergens: [], density: null, yieldLossPercent: null, unitWeights: {} }));
     const sectionItemId = await addSectionItem(fish, { ingredientId: chives }, db);
     expect(await readTypedItem('beurre blanc 2l', [fish], db)).toEqual({ componentId, quantity: { amount: 2, unit: 'l' }, source: 'paper' });
     expect(await readTypedItem('chives 2 bunches', [fish], db)).toEqual({ sectionItemId, quantity: { amount: 2, unit: 'bunch' }, source: 'paper' });

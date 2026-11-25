@@ -348,6 +348,12 @@ export interface Ingredient extends Row {
   allergens: AllergenId[];
   /** Grams per millilitre, for volume ↔ weight. */
   density: number | null;
+  /**
+   * The chef's own weights for counts and rough measures, in grams per one:
+   * { handful: 40, each: 55, knob: 15 } (DECISIONS 41). Used to scale across
+   * kinds of measure and to estimate when scaling.
+   */
+  unitWeights: Partial<Record<string, number>>;
   yieldLossPercent: number | null;
 }
 

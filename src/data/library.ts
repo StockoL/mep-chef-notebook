@@ -377,7 +377,7 @@ export async function deleteDish(id: Id, database: MepDatabase = appDb): Promise
 // ─── Ingredients ──────────────────────────────────────────────────────────
 
 function newIngredient(name: string): Omit<Ingredient, 'id' | 'createdAt' | 'updatedAt'> {
-  return { name: capitalise(cleanName(name)), aliases: [], kind: 'basic', allergens: [], density: null, yieldLossPercent: null };
+  return { name: capitalise(cleanName(name)), aliases: [], kind: 'basic', allergens: [], density: null, yieldLossPercent: null, unitWeights: {} };
 }
 
 /** Finds an ingredient by name or alias, or creates it. */
@@ -393,7 +393,7 @@ export function listIngredients(database: MepDatabase = appDb): Promise<Ingredie
 
 export async function updateIngredient(
   id: Id,
-  changes: Partial<Pick<Ingredient, 'name' | 'aliases' | 'kind' | 'allergens'>>,
+  changes: Partial<Pick<Ingredient, 'name' | 'aliases' | 'kind' | 'allergens' | 'density' | 'unitWeights'>>,
   database: MepDatabase = appDb,
 ) {
   if (changes.name !== undefined) {
