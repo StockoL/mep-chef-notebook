@@ -14,6 +14,7 @@ import { createDraftComponent } from './components';
 import { db as appDb, type MepDatabase } from './db';
 import { ListError } from './lists';
 import type { Snapshot } from './snapshot';
+import { refreshStatus, writeSteps, type StatusChange } from './steps';
 import type { Component, Dish, DishComponent, Id, Ingredient, KitchenId, Line, Quantity, Step, Variation } from './types';
 
 // ─── Variations ───────────────────────────────────────────────────────────
@@ -194,26 +195,22 @@ export async function deleteUnusedIngredients(ids: Id[], database: MepDatabase =
   }
 }
 
-/** Saves the method as plain steps, one per line (Phase 4 reads them). */
-export async function saveSteps(variationId: Id, texts: string[], database: MepDatabase = appDb): Promise<void> {
-  const cleaned = texts.map((t) => t.trim()).filter(Boolean);
-  await database.transaction('rw', [database.variations, database.versions, database.steps], async () => {
-    const variation = await database.variations.get(variationId);
-    if (!variation) throw new Error('That variation no longer exists.');
-    const versionId = await currentVersionId(variation, database);
-    const existing = await database.steps.where('versionId').equals(versionId).sortBy('order');
-    for (const [order, text] of cleaned.entries()) {
-      const previous = existing[order];
-      if (previous) {
-        // Changed wording means the reader's old readings no longer apply.
-        if (previous.text !== text) await database.steps.update(previous.id, { text, order, confirmed: false });
-        else if (previous.order !== order) await database.steps.update(previous.id, { order });
-      } else {
-        await database.steps.add(newStep(versionId, order, text));
-      }
-    }
-    await database.steps.bulkDelete(existing.slice(cleaned.length).map((s) => s.id));
-  });
+/**
+ * Saves the method, one step per line (P1). New and changed lines are read by
+ * the step reader; draft or ready is worked out again. Returns the change.
+ */
+export async function saveSteps(variationId: Id, texts: string[], database: MepDatabase = appDb): Promise<StatusChange | null> {
+  await database.transaction(
+    'rw',
+    [database.variations, database.versions, database.steps, database.lines, database.ingredients, database.components, database.listValues, database.wordListEntries, database.settings, database.kitchens],
+    async () => {
+      const variation = await database.variations.get(variationId);
+      if (!variation) throw new Error('That variation no longer exists.');
+      const versionId = await currentVersionId(variation, database);
+      await writeSteps(variation, versionId, texts, database);
+    },
+  );
+  return refreshStatus(variationId, database);
 }
 
 export interface ComponentSummary {
@@ -481,23 +478,3 @@ function byName(a: { name: string }, b: { name: string }) {
   return a.name.localeCompare(b.name);
 }
 
-function newStep(versionId: Id, order: number, text: string): Omit<Step, 'id' | 'createdAt' | 'updatedAt'> {
-  return {
-    versionId,
-    order,
-    text,
-    mode: null,
-    minutesMin: null,
-    minutesMax: null,
-    equipmentTypeId: null,
-    equipmentSetting: null,
-    dependsOnComponentIds: [],
-    scalesWithLineId: null,
-    hold: null,
-    pausable: null,
-    pauseBlocker: null,
-    criticalPoint: null,
-    atService: false,
-    confirmed: false,
-  };
-}

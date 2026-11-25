@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "parser:score": "vitest run src/core/parser/parserScore.test.ts"
   },
   "dependencies": {
     "dexie": "^4.4.7",

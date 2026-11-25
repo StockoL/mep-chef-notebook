@@ -280,33 +280,64 @@ export interface Line extends Row {
   order: number;
 }
 
+/** How long something keeps once made, and where: "holds 3 days" → fridge, "hold warm max 2 hrs" → warm. */
 export interface Hold {
   minutes: number;
-  note: string;
+  /** "fridge", "freezer" or "warm". */
+  where: string;
 }
 
-/** One method step, with what the step reader got from it (SPEC → Step data). */
+/**
+ * One method step: a line as the chef wrote it, and the parts the step reader
+ * found in it (SPEC → Step data; DECISIONS 38). "Cook down 20 min, blend, pass"
+ * is one Step with three parts; the planner schedules parts.
+ */
 export interface Step extends Row {
   versionId: Id;
   order: number;
+  /** The line exactly as written. */
   text: string;
+  parts: StepPart[];
+  /** The chef has checked the readings (SPEC → Confirming). */
+  confirmed: boolean;
+}
+
+/** One piece of work within a step. null = not read yet: an empty chip. */
+export interface StepPart {
+  /** The words of the line this part came from. */
+  text: string;
+  /** The word that set the mode and equipment; a correction teaches the word list this. */
+  verb: string | null;
   mode: StepMode | null;
   minutesMin: number | null;
   /** null with a min = "at least min". */
   minutesMax: number | null;
   /** ListValue in 'equipment-types'. */
   equipmentTypeId: Id | null;
+  /** "220°C", "160°C fan", "low". */
   equipmentSetting: string | null;
-  /** Components this step needs first. */
+  /** Needs a look this often ("skim every hour" → 60). */
+  checkEveryMinutes: number | null;
+  /** Components this part needs first. */
   dependsOnComponentIds: Id[];
-  /** The Line whose quantity this step's time scales with. */
+  /** The Line whose quantity this part's time scales with. */
   scalesWithLineId: Id | null;
+  /** Follows another component's method ("then as brown stock"). */
+  templateComponentId: Id | null;
   hold: Hold | null;
-  pausable: boolean | null;
+  pausable: boolean;
+  /** Why it can't be paused for a ticket: "cooling", "emulsion", "hot-hold". */
   pauseBlocker: string | null;
+  /** "cooling" or "hot-hold". */
   criticalPoint: string | null;
+  /** Done at service ("to order"), left out of prep. */
   atService: boolean;
-  confirmed: boolean;
+  /** Its time runs on from the step before ("roast 15 more"). */
+  relativeTime: boolean;
+  /** Must follow the step before at once ("while hot"). */
+  noGap: boolean;
+  /** Starts the day before. */
+  previousDay: boolean;
 }
 
 export interface Ingredient extends Row {
@@ -361,10 +392,7 @@ export interface TechniqueKitchenNote extends Row {
 }
 
 /** A template step: the parts of a Step that make sense before a recipe exists. */
-export type TemplateStep = Pick<
-  Step,
-  'text' | 'mode' | 'minutesMin' | 'minutesMax' | 'equipmentTypeId' | 'equipmentSetting'
->;
+export type TemplateStep = Pick<Step, 'text' | 'parts'>;
 
 export interface MethodTemplate extends Row {
   techniqueId: Id;

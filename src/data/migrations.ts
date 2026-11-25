@@ -53,6 +53,60 @@ export const ROW_FIXES: Record<number, Partial<Record<TableName, RowFix>>> = {
       row.photoId ??= null;
     },
   },
+  /**
+   * Schema v4 (Phase 4): a step holds the parts the step reader found
+   * (DECISIONS 38). Readings stored on the step itself become its one part;
+   * a step with no readings gets none, and is read at start-up
+   * (steps.ts → readUnreadSteps).
+   */
+  4: {
+    steps: (row) => {
+      if (Array.isArray(row.parts)) return;
+      const hadReadings = row.mode != null || row.minutesMin != null || row.equipmentTypeId != null;
+      row.parts = hadReadings
+        ? [
+            {
+              text: row.text ?? '',
+              verb: null,
+              mode: row.mode ?? null,
+              minutesMin: row.minutesMin ?? null,
+              minutesMax: row.minutesMax ?? null,
+              equipmentTypeId: row.equipmentTypeId ?? null,
+              equipmentSetting: row.equipmentSetting ?? null,
+              checkEveryMinutes: null,
+              dependsOnComponentIds: row.dependsOnComponentIds ?? [],
+              scalesWithLineId: row.scalesWithLineId ?? null,
+              templateComponentId: null,
+              hold: null,
+              pausable: row.pausable ?? true,
+              pauseBlocker: row.pauseBlocker ?? null,
+              criticalPoint: row.criticalPoint ?? null,
+              atService: row.atService ?? false,
+              relativeTime: false,
+              noGap: false,
+              previousDay: false,
+            },
+          ]
+        : [];
+      for (const field of [
+        'mode',
+        'minutesMin',
+        'minutesMax',
+        'equipmentTypeId',
+        'equipmentSetting',
+        'dependsOnComponentIds',
+        'scalesWithLineId',
+        'hold',
+        'pausable',
+        'pauseBlocker',
+        'criticalPoint',
+        'atService',
+      ]) {
+        delete row[field];
+      }
+      row.confirmed ??= false;
+    },
+  },
 };
 
 /** Brings one row from `fromVersion` up to `toVersion`. */

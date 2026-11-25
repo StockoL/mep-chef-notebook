@@ -26,7 +26,7 @@ const CHEF_LISTS: Partial<Record<ListName, string[]>> = {
 const KITCHEN_LISTS: Partial<Record<ListName, string[]>> = {
   'menu-types': ['À la carte', 'Sunday lunch', 'Breakfast', 'Set', 'Event'],
   courses: ['Nibbles', 'To begin', 'Mains', 'Sides', 'To end'],
-  'equipment-types': ['Oven', 'Combi', 'Hob', 'Grill', 'Water bath', 'Blast chiller', 'Fridge', 'Blender', 'Mixer'],
+  'equipment-types': ['Oven', 'Combi', 'Hob', 'Grill', 'Water bath', 'Blast chiller', 'Fridge', 'Blender', 'Mixer', 'Bench'],
 };
 
 const SECTIONS = ['Starters and garnish', 'Fish', 'Meat', 'Veg', 'Pastry', 'Breakfast'];
@@ -70,4 +70,39 @@ export async function seedKitchen(database: MepDatabase, kitchenId: Id): Promise
       values.map((value, order) => ({ list, kitchenId, value, order, hidden: false, mergedIntoId: null })),
     );
   }
+}
+
+const BENCH_ADDED = 'equipment-bench-added';
+
+/**
+ * Phase 4 added "Bench" to the equipment list, for work done by hand (the
+ * step reader's default for chopping, passing, resting). Kitchens made before
+ * then get it once; if the chef later removes it, it stays removed.
+ */
+export async function addBenchOnce(database: MepDatabase): Promise<void> {
+  await database.transaction('rw', database.settings, database.listValues, database.kitchens, async () => {
+    if (await database.settings.get(BENCH_ADDED)) return;
+    const values = await database.listValues.where('list').equals('equipment-types').toArray();
+    for (const kitchenId of new Set(values.map((v) => v.kitchenId))) {
+      const own = values.filter((v) => v.kitchenId === kitchenId);
+      if (own.some((v) => v.value.toLowerCase() === 'bench')) continue;
+      const order = own.reduce((max, v) => Math.max(max, v.order + 1), 0);
+      await database.listValues.add({ list: 'equipment-types', kitchenId, value: 'Bench', order, hidden: false, mergedIntoId: null });
+    }
+    await database.settings.put({ key: BENCH_ADDED, value: true });
+  });
+}
+
+/**
+ * The built-in "No kitchen" gets an equipment list too, so steps of the
+ * chef's own recipes can be read and confirmed before any kitchen is set up.
+ * Only if it has none at all.
+ */
+export async function seedNoKitchenEquipment(database: MepDatabase, noKitchenId: Id): Promise<void> {
+  const existing = await database.listValues.where('list').equals('equipment-types').filter((v) => v.kitchenId === noKitchenId).count();
+  if (existing > 0) return;
+  const values = KITCHEN_LISTS['equipment-types'] ?? [];
+  await database.listValues.bulkAdd(
+    values.map((value, order) => ({ list: 'equipment-types' as const, kitchenId: noKitchenId, value, order, hidden: false, mergedIntoId: null })),
+  );
 }

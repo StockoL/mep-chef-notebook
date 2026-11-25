@@ -85,8 +85,16 @@ export async function mergeListItem(ref: ListRef, fromId: Id, intoId: Id, databa
   const references = referencesFor(ref, database);
   const tables = [tableFor(ref, database), ...references.map((r) => r.table)];
   await database.transaction('rw', tables, async () => {
-    for (const { table, field, isArray } of references) {
+    for (const { table, field, isArray, inArray } of references) {
       await table.toCollection().modify((row: Record<string, unknown>) => {
+        if (inArray) {
+          // A field inside each item of an array: steps → parts → equipmentTypeId.
+          const items = row[inArray];
+          if (Array.isArray(items)) {
+            row[inArray] = items.map((item: Record<string, unknown>) => (item[field] === fromId ? { ...item, [field]: intoId } : item));
+          }
+          return;
+        }
         const value = row[field];
         if (isArray && Array.isArray(value) && value.includes(fromId)) {
           row[field] = [...new Set(value.map((v) => (v === fromId ? intoId : v)))];
@@ -133,6 +141,8 @@ interface Reference {
   table: Table;
   field: string;
   isArray?: boolean;
+  /** The field is inside each item of this array field. */
+  inArray?: string;
 }
 
 /** Every field in the data that can point at an item of this list. */
@@ -166,7 +176,7 @@ function referencesFor(ref: ListRef, d: MepDatabase): Reference[] {
     'menu-types': [{ table: d.menus, field: 'typeId' }],
     'equipment-types': [
       { table: d.equipment, field: 'typeId' },
-      { table: d.steps, field: 'equipmentTypeId' },
+      { table: d.steps, field: 'equipmentTypeId', inArray: 'parts' },
       { table: d.wordListEntries, field: 'equipmentTypeId' },
     ],
     tags: [

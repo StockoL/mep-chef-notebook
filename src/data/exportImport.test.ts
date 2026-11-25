@@ -1,7 +1,7 @@
 import 'fake-indexeddb/auto';
 import { strToU8, unzipSync, zipSync, strFromU8 } from 'fflate';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { ensureBuiltIns, MepDatabase, TABLE_NAMES } from './db';
+import { ensureBuiltIns, MepDatabase, SCHEMA_VERSION, TABLE_NAMES } from './db';
 import { exportData } from './exportData';
 import { exportFileName } from './exportFormat';
 import { newId } from './ids';
@@ -69,6 +69,37 @@ describe('export → import', () => {
       mergedIntoId: null,
     });
     await source.settings.put({ key: 'theme', value: 'dark' });
+    // Phase 4: a step with the reader's parts, and the chef's word list.
+    await source.steps.add({
+      versionId: 'v1',
+      order: 0,
+      text: 'Cook down 20 min, blend',
+      confirmed: true,
+      parts: [
+        {
+          text: 'Cook down 20 min',
+          verb: 'cook down',
+          mode: 'check-in',
+          minutesMin: 20,
+          minutesMax: 20,
+          equipmentTypeId: 'hob-id',
+          equipmentSetting: 'low',
+          checkEveryMinutes: 5,
+          dependsOnComponentIds: ['c1'],
+          scalesWithLineId: 'l1',
+          templateComponentId: null,
+          hold: { minutes: 4320, where: 'fridge' },
+          pausable: true,
+          pauseBlocker: null,
+          criticalPoint: null,
+          atService: false,
+          relativeTime: false,
+          noGap: true,
+          previousDay: false,
+        },
+      ],
+    });
+    await source.wordListEntries.add({ word: 'toast', mode: 'passive', equipmentTypeId: 'oven-id' });
 
     await importData(await exportData(source), target);
     expect(await snapshot(target)).toEqual(await snapshot(source));
@@ -79,7 +110,7 @@ describe('export → import', () => {
     const files = unzipSync(await exportData(source));
     expect(Object.keys(files).sort()).toEqual(['data.json', `media/${id}.png`]);
     const data = JSON.parse(strFromU8(files['data.json']!));
-    expect(data).toMatchObject({ format: 'mep-export', formatVersion: 1, schemaVersion: 3 });
+    expect(data).toMatchObject({ format: 'mep-export', formatVersion: 1, schemaVersion: SCHEMA_VERSION });
     expect(data.tables.media[0]).toEqual(expect.objectContaining({ id, file: `media/${id}.png` }));
     expect(data.tables.media[0]).not.toHaveProperty('blob');
   });
