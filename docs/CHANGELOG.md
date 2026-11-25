@@ -57,3 +57,17 @@ Components and dishes are easier to find in the app than in the notebook.
 - Units gain kitchen count words: tsp, tbsp, pinch, bunch, sprig, clove, slice, sheet, leaf, tin, pack (DECISIONS 34).
 - Every text box saves after a pause, when you leave it, when the app goes to the background, and when the screen closes (`useAutosave`).
 - Layout checked at the largest text size again: rows, chips, buttons and segmented controls wrap.
+
+## Phase 3: Shift sheet (25 Nov 2026)
+
+Run a real shift from the app's sheet.
+
+- Today's sheet on the Today tab: progress ("3 of 8 done"), a big tick per item (ticked items settle to the bottom, with Undo), draft markers, covers, and each item's amount ("2l" or "top up to 500ml") and service. Tap an item to change it, open its recipe, or take it off.
+- Adding: type it as you'd write it ("beurre blanc 2l": matched to your components and section list), or tap items on your section list into a tray and add them all at once (a par becomes "top up to par").
+- Chef's paper sheet: photograph it (kept with the sheet, DECISIONS 35), then type each line with the photo pinned below the top bar.
+- Write the next shift's sheet: on the next day you have a shift, with unfinished items carried over (once). Offered in "needs you" from 90 minutes before your shift ends. Other days' sheets are under ••• → Sheets.
+- Share a sheet as text (WhatsApp, Messages), grouped by service; where sharing isn't available it's copied, or shown to copy by hand.
+- Section list (Section tab): what your section looks after, with pars and where it's kept.
+- Covering two sections: "Also covering" in Where are you today?; both share one sheet, and the top bar shows "Fish + Starters" (DECISIONS 37).
+- Events (kitchen settings → Events): weddings and functions with covers, notes and their own service times, replacing a usual service or alongside. A one-off time change takes 2 taps from Today: tap the next-service line, change the time.
+- Schema v3: sheets keep a photo; older data and exports upgrade. "Today" rolls over at midnight (DECISIONS 36).
