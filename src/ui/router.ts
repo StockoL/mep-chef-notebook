@@ -34,6 +34,7 @@ export const paths = {
   ingredient: (id: string) => `${BASE}library/ingredient/${id}`,
   technique: (id: string) => `${BASE}library/technique/${id}`,
   plan: `${BASE}plan`,
+  prep: `${BASE}plan/prep`,
   section: `${BASE}section`,
   waste: `${BASE}section/waste`,
   goal: `${BASE}section/goal`,

@@ -1,0 +1,76 @@
+/* Prep mode (UX → Prep mode): read at arm's length from a shelf. One task
+   large, a big countdown, a big button; everything else quieter. */
+.prep__status {
+  margin: 0;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-muted);
+}
+
+.prep__status[data-behind='true'] {
+  color: var(--color-status-warning-text);
+}
+
+.prep-current {
+  display: grid;
+  gap: var(--space-xs);
+  padding: var(--space-m) var(--space-s);
+  border: 2px solid var(--color-border-strong);
+  border-inline-start: 8px solid var(--color-action);
+  border-radius: var(--radius-surface);
+  background-color: var(--color-surface-raised);
+}
+
+.prep-current[data-mode='check-in'] {
+  border-inline-start-color: var(--color-status-info-border);
+}
+
+.prep-current[data-mode='passive'] {
+  border-inline-start-style: dashed;
+}
+
+.prep-current__job {
+  margin: 0;
+  font-size: var(--step-1);
+  font-weight: var(--weight-semibold);
+}
+
+.prep-current__task {
+  margin: 0;
+  font-size: min(var(--step-3), 11vw);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+/* The countdown: the biggest thing on the screen, steady digits. */
+.prep-countdown {
+  margin: 0;
+  font-size: min(var(--step-5), 22vw);
+  font-weight: var(--weight-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.prep-countdown[data-over='true'] {
+  color: var(--color-status-danger-text);
+}
+
+.prep-countdown[data-small='true'] {
+  font-size: var(--step-1);
+}
+
+.prep-current__action {
+  min-block-size: calc(var(--tap) * 1.6);
+  font-size: var(--step-1);
+}
+
+.prep-running {
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.plan-status {
+  justify-self: start;
+  font-size: var(--step--1);
+  font-weight: var(--weight-semibold);
+  color: var(--color-status-success-text);
+}

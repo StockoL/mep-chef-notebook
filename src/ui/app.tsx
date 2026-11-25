@@ -25,6 +25,7 @@ import { WordList } from './screens/WordList';
 import { ComponentCompare, ComponentHistory } from './screens/ComponentHistory';
 import { MenuScreen, MenusList } from './screens/Menus';
 import { TechniquePage } from './screens/TechniquePage';
+import { Prep } from './screens/Prep';
 
 /**
  * The app shell (docs/UX.md → Navigation): top bar, the current screen, and a
@@ -65,6 +66,7 @@ export function App() {
               <Route path={routes.ingredient} component={IngredientPage} />
               <Route path={routes.technique} component={TechniquePage} />
               <Route path={paths.plan} component={Plan} />
+              <Route path={paths.prep} component={Prep} />
               <Route path={paths.section} component={Section} />
               <Route path={paths.waste} component={WasteLog} />
               <Route path={paths.goal} component={Goal} />

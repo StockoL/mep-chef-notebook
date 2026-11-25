@@ -2,7 +2,9 @@ import { useEffect, useState } from 'preact/hooks';
 import { minutesToTime } from '../../core/time/calendar';
 import type { PlacedPart, ServiceWindow } from '../../core/scheduler/scheduler';
 import { getPlace } from '../../data/kitchens';
-import { getPlanView, type PlanView } from '../../data/plan';
+import type { PlanView } from '../../data/plan';
+import { getPrepView, runKey } from '../../data/prep';
+import type { PartRun } from '../../data/types';
 import { setItemDone } from '../../data/sheets';
 import { equipmentNames } from '../../data/steps';
 import { showMessage } from '../components/UndoBar';
@@ -22,7 +24,8 @@ const MODE_LABELS = { active: 'Hands on', 'check-in': 'Keep an eye', passive: 'L
 export function Plan() {
   const now = useMinute();
   const place = useLiveQuery(() => getPlace());
-  const view = useLiveQuery(async () => (place ? getPlanView(place.kitchenId, now) : undefined), [place?.kitchenId, now.getTime()]);
+  const prep = useLiveQuery(async () => (place ? getPrepView(place.kitchenId, now) : undefined), [place?.kitchenId, now.getTime()]);
+  const view = prep?.plan;
   const names = useLiveQuery(() => equipmentNames());
   if (!view) return <h1>Plan</h1>;
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
@@ -35,6 +38,11 @@ export function Plan() {
         From {minutesToTime(view.start)}
         {view.windows.length > 0 && ` · ${view.windows.map((w) => `${w.name} ${minutesToTime(w.start)}`).join(' · ')}`}
       </p>
+      {view.plan.parts.length > 0 && (
+        <a class="button" href={paths.prep} data-variant="primary">
+          Start prep
+        </a>
+      )}
       {view.hints.map((hint) => (
         <p key={hint} class="field__hint">
           {hint}
@@ -72,7 +80,14 @@ export function Plan() {
                   <span class="plan-row__main">Free</span>
                 </li>
               ) : (
-                <PlanRow key={`${row.part.jobId}-${row.part.partKey}`} part={row.part} view={view} equipment={names} now={nowMinutes} />
+                <PlanRow
+                  key={`${row.part.jobId}-${row.part.partKey}`}
+                  part={row.part}
+                  view={view}
+                  equipment={names}
+                  now={nowMinutes}
+                  run={prep?.runs.get(runKey(row.part.jobId, row.part.partKey))}
+                />
               ),
             )}
           </ol>
@@ -136,7 +151,8 @@ async function tick(itemId: string, name: string) {
   showMessage(`${name}: done.`, () => setItemDone(itemId, false));
 }
 
-function PlanRow({ part, view, equipment, now }: { part: PlacedPart; view: PlanView; equipment: Map<string, string> | undefined; now: number }) {
+function PlanRow(props: { part: PlacedPart; view: PlanView; equipment: Map<string, string> | undefined; now: number; run: PartRun | undefined }) {
+  const { part, view, equipment, now, run } = props;
   const info = view.jobs.get(part.jobId);
   const job = view.plan.jobs.find((j) => j.jobId === part.jobId);
   const isLast = job?.end === part.end && view.plan.parts.filter((p) => p.jobId === part.jobId).at(-1)?.partKey === part.partKey;
@@ -148,9 +164,21 @@ function PlanRow({ part, view, equipment, now }: { part: PlacedPart; view: PlanV
     part.gapBefore ? 'Should follow straight on from the step before' : null,
     isLast && job && job.late > 0 ? `${job.late} min late for ${info.readyByLabel?.replace('Ready by ', '') ?? 'its time'}` : null,
   ].filter(Boolean);
+  const planPart = view.planJobs.find((j) => j.id === part.jobId)?.parts.find((p) => p.key === part.partKey);
+  const status = run?.doneAt
+    ? `✓ Done in ${Math.round((Date.parse(run.doneAt) - Date.parse(run.startedAt)) / 60_000)} min`
+    : run
+      ? 'Running now'
+      : null;
 
   return (
-    <li class="plan-row" data-mode={part.mode} data-late={isLast && job ? job.late > 0 : false} data-past={part.end <= now} data-now={part.start <= now && part.end > now}>
+    <li
+      class="plan-row"
+      data-mode={part.mode}
+      data-late={isLast && job ? job.late > 0 : false}
+      data-past={run?.doneAt ? true : !run && part.end <= now}
+      data-now={run ? !run.doneAt : part.start <= now && part.end > now}
+    >
       <span class="plan-row__time">
         {minutesToTime(part.start)}
         <span class="plan-row__end">–{minutesToTime(part.end)}</span>
@@ -161,7 +189,10 @@ function PlanRow({ part, view, equipment, now }: { part: PlacedPart; view: PlanV
           {info.view.componentId ? <a href={paths.component(info.view.componentId)}>{info.view.name}</a> : info.view.name}
           {isFirst && info.view.amount && <span class="list-row__meta"> {info.view.amount}</span>}
         </span>
-        <span class="list-row__meta">{[part.label, MODE_LABELS[part.mode], kit || null].filter(Boolean).join(' · ')}</span>
+        <span class="list-row__meta">
+          {[part.label, MODE_LABELS[part.mode], kit || null, planPart?.learnedFrom ? `your time (${planPart.learnedFrom} timings)` : null].filter(Boolean).join(' · ')}
+        </span>
+        {status && <span class="plan-status">{status}</span>}
         {isFirst && info.startedYesterday.length > 0 && <span class="list-row__meta">Started yesterday: {info.startedYesterday.join('; ')}</span>}
         {isLast && info.readyByLabel && <span class="list-row__meta">{info.readyByLabel}</span>}
         {flags.map((flag) => (
