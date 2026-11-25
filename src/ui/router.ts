@@ -11,6 +11,12 @@ export const paths = {
   today: BASE,
   inbox: `${BASE}inbox`,
   notes: `${BASE}notes`,
+  sheets: `${BASE}sheets`,
+  sheet: (id: string) => `${BASE}sheet/${id}`,
+  sheetPaper: (date: string) => `${BASE}sheet/paper?date=${date}`,
+  sectionList: `${BASE}section/list`,
+  events: (kitchenId: string) => `${BASE}kitchen/${kitchenId}/events`,
+  event: (kitchenId: string, eventId: string) => `${BASE}kitchen/${kitchenId}/events/${eventId}`,
   notesFor: (kitchenId: string) => `${BASE}notes?kitchen=${kitchenId}`,
   library: `${BASE}library`,
   librarySearch: `${BASE}library?search=1`,
@@ -34,6 +40,10 @@ export const paths = {
 /** Route patterns for preact-iso (":id" becomes a prop). */
 export const routes = {
   settingsList: `${BASE}settings/lists/:list`,
+  sheetPaper: `${BASE}sheet/paper`,
+  sheet: `${BASE}sheet/:id`,
+  events: `${BASE}kitchen/:id/events`,
+  event: `${BASE}kitchen/:id/events/:eventId`,
   component: `${BASE}library/component/:id`,
   dish: `${BASE}library/dish/:id`,
   ingredient: `${BASE}library/ingredient/:id`,
@@ -54,7 +64,7 @@ export interface Tab {
 }
 
 export const tabs: readonly Tab[] = [
-  { path: paths.today, label: 'Today', icon: 'home', children: [paths.inbox] },
+  { path: paths.today, label: 'Today', icon: 'home', children: [paths.inbox, paths.sheets, `${BASE}sheet`] },
   { path: paths.library, label: 'Library', icon: 'book' },
   { path: paths.plan, label: 'Plan', icon: 'clock' },
   { path: paths.section, label: 'Section', icon: 'list' },

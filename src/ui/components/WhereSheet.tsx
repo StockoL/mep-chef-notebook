@@ -1,5 +1,5 @@
 import { useState } from 'preact/hooks';
-import { createKitchen, getPlaceDetails, listKitchens, listSections, setPlace } from '../../data/kitchens';
+import { createKitchen, getPlaceDetails, listKitchens, listSections, setAlsoCovering, setPlace } from '../../data/kitchens';
 import { ListError } from '../../data/lists';
 import { NO_KITCHEN_ID } from '../../data/types';
 import { useLiveQuery } from '../hooks/useLiveQuery';
@@ -84,6 +84,20 @@ function WhereBody({ onClose }: { onClose: () => void }) {
           choices={sections.map((s) => ({ value: s.id, label: s.name }))}
           value={details.place.sectionId}
           onChange={chooseSection}
+          allowNone
+        />
+      )}
+
+      {kitchenId !== NO_KITCHEN_ID && details.place.sectionId && sections && sections.length > 1 && (
+        <ChipChoice
+          label="Also covering (shares one sheet)"
+          choices={sections.filter((s) => s.id !== details.place.sectionId).map((s) => ({ value: s.id, label: s.name }))}
+          value={details.place.alsoSectionId ?? null}
+          onChange={async (sectionId) => {
+            await setAlsoCovering(sectionId);
+            const section = sections.find((s) => s.id === sectionId);
+            showMessage(section ? `Also covering ${section.name} today.` : 'Just your own section now.');
+          }}
           allowNone
         />
       )}

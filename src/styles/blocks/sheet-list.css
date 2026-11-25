@@ -1,0 +1,141 @@
+/* The shift sheet: progress, rows with a big tick, covers, the pinned paper photo. */
+.sheet-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+}
+
+.sheet-head h2 {
+  margin: 0;
+}
+
+.covers-field {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  color: var(--color-text-muted);
+}
+
+.covers-field .input {
+  inline-size: 5ch;
+  text-align: center;
+}
+
+.sheet-progress {
+  display: grid;
+  gap: var(--space-3xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.sheet-progress .progress {
+  inline-size: 100%;
+}
+
+.sheet-row {
+  display: flex;
+  align-items: stretch;
+}
+
+/* The tick: a big round target on the left, thumb-sized. */
+.sheet-row__tick {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  inline-size: calc(var(--tap) + var(--space-xs));
+  min-block-size: var(--tap);
+  border: 0;
+  background: none;
+  color: transparent;
+  font-size: var(--step-1);
+  cursor: pointer;
+}
+
+.sheet-row__tick > .icon {
+  box-sizing: content-box;
+  padding: 0.2em;
+  border: 2px solid var(--color-border-strong);
+  border-radius: var(--radius-pill);
+}
+
+.sheet-row__tick[aria-pressed='true'] {
+  color: var(--color-action-text);
+}
+
+.sheet-row__tick[aria-pressed='true'] > .icon {
+  border-color: var(--color-action);
+  background-color: var(--color-action);
+}
+
+.sheet-row__main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3xs);
+  min-inline-size: 0;
+  min-block-size: var(--tap);
+  padding: var(--space-2xs) var(--space-s) var(--space-2xs) 0;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.sheet-row__name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2xs);
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.sheet-row__meta {
+  font-size: var(--step--1);
+  color: var(--color-text-muted);
+}
+
+/* Ticked: settled to the bottom (in order) and quietened. */
+.sheet-row[data-done='true'] .sheet-row__name {
+  font-weight: var(--weight-regular);
+  color: var(--color-text-muted);
+  text-decoration: line-through;
+}
+
+.sheet-photo > summary {
+  min-block-size: var(--tap);
+  display: flex;
+  align-items: center;
+  color: var(--color-action);
+  cursor: pointer;
+}
+
+/* Chef's paper sheet stays in view while typing its lines. */
+.paper-pin {
+  position: sticky;
+  inset-block-start: var(--top-bar-height, 0px);
+  z-index: var(--layer-raised);
+  display: grid;
+  gap: var(--space-2xs);
+  padding-block: var(--space-2xs);
+  background-color: var(--color-surface-sunken);
+}
+
+.paper-pin .media-view {
+  max-block-size: 40dvh;
+}
+
+/* The next-service line on Today is a button: it opens today's times. */
+.next-service__button {
+  min-block-size: var(--tap);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}

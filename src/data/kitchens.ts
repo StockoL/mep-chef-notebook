@@ -6,7 +6,7 @@
 
 import { cleanName } from '../core/lists/lists';
 import { nextService, type NextService } from '../core/services/nextService';
-import { toCalendarDate } from '../core/time/calendar';
+import { isoDayOfWeek, toCalendarDate } from '../core/time/calendar';
 import { eventInputs } from './events';
 import { db as appDb, type MepDatabase } from './db';
 import { seedKitchen } from './defaults';
@@ -177,4 +177,29 @@ export async function getNextService(
 ): Promise<NextService | null> {
   const events = await eventInputs(kitchenId, toCalendarDate(now), database);
   return nextService(await listServices(kitchenId, database), now, events);
+}
+
+/**
+ * Each service the chef works on a date, with its usual first-tickets time and
+ * any one-off change for that day (for "change today's times", K6).
+ */
+export async function getServiceTimesOn(kitchenId: KitchenId, date: Date, database: MepDatabase = appDb) {
+  const day = isoDayOfWeek(date);
+  const calendarDate = toCalendarDate(date);
+  const events = await database.events.where('[kitchenId+date]').equals([kitchenId, calendarDate]).toArray();
+  const services = (await listServices(kitchenId, database)).filter((s) => s.iWorkThis && !s.hidden);
+  return Promise.all(
+    services.map(async (service) => {
+      const window = service.windows.find((w) => w.days.includes(day as never));
+      const change = events.find((e) => e.replacesServiceId === service.id);
+      const changed = change ? await database.eventServices.where('eventId').equals(change.id).first() : undefined;
+      return {
+        service,
+        usualStart: window?.firstTickets ?? null,
+        usualEnd: window?.lastBookings ?? null,
+        changedStart: changed?.start ?? null,
+        changedBy: change?.name ?? null,
+      };
+    }),
+  );
 }

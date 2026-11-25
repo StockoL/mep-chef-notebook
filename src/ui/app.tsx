@@ -13,6 +13,9 @@ import { KitchenPart, KitchenSections, KitchenServices, Kitchens, KitchenSetting
 import { Library } from './screens/Library';
 import { ComponentPage, DishPage, IngredientPage } from './screens/LibraryPages';
 import { Notes } from './screens/Notes';
+import { EventEditor, Events } from './screens/Events';
+import { SectionList } from './screens/SectionList';
+import { PaperEntry, SheetScreen, SheetsList } from './screens/Sheets';
 import { Plan } from './screens/Plan';
 import { Goal, Section, WasteLog } from './screens/SectionScreens';
 import { Settings } from './screens/Settings';
@@ -44,6 +47,10 @@ export function App() {
               <Route path={paths.today} component={Today} />
               <Route path={paths.inbox} component={Inbox} />
               <Route path={paths.notes} component={Notes} />
+              <Route path={paths.sheets} component={SheetsList} />
+              <Route path={routes.sheetPaper} component={PaperEntry} />
+              <Route path={routes.sheet} component={SheetScreen} />
+              <Route path={paths.sectionList} component={SectionList} />
               <Route path={paths.library} component={Library} />
               <Route path={routes.component} component={ComponentPage} />
               <Route path={routes.dish} component={DishPage} />
@@ -59,6 +66,8 @@ export function App() {
               <Route path={routes.kitchenSections} component={KitchenSections} />
               <Route path={routes.kitchenServices} component={KitchenServices} />
               <Route path={routes.service} component={ServiceTimes} />
+              <Route path={routes.event} component={EventEditor} />
+              <Route path={routes.events} component={Events} />
               <Route path={routes.kitchenPart} component={KitchenPart} />
               {/* Any unknown path inside the app shows Today: no dead ends. */}
               <Route default component={Today} />

@@ -16,6 +16,7 @@ import { trackSave } from '../saveStatus';
 /** Section tab: the chef's station admin. Stock, pars and checklists arrive in Phase 11. */
 export function Section() {
   const links = [
+    { href: paths.sectionList, label: 'Section list' },
     { href: paths.waste, label: 'Waste log' },
     { href: paths.goal, label: 'Weekly goal' },
   ];
@@ -34,7 +35,7 @@ export function Section() {
           </li>
         ))}
       </ul>
-      <p class="field__hint">Stock counts, pars, checklists and orders come later.</p>
+      <p class="field__hint">Stock counts, checklists and orders come later.</p>
     </section>
   );
 }

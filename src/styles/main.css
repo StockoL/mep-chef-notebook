@@ -38,6 +38,7 @@
 @import './blocks/save-indicator.css' layer(blocks);
 @import './blocks/voice-meter.css' layer(blocks);
 @import './blocks/library.css' layer(blocks);
+@import './blocks/sheet-list.css' layer(blocks);
 
 /* 5. Exceptions to LooseLeaf's blocks: last in the blocks layer, so they win there. */
 @import './exceptions.css' layer(blocks);

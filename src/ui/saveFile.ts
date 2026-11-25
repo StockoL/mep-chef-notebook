@@ -24,3 +24,24 @@ export async function saveFile(bytes: Uint8Array, name: string, type: string): P
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
   return true;
 }
+
+/**
+ * Shares text through the share sheet (WhatsApp, Messages…), or copies it
+ * where sharing isn't available. Says which happened.
+ */
+export async function shareText(text: string): Promise<'shared' | 'copied' | 'cancelled' | 'failed'> {
+  if (navigator.share) {
+    try {
+      await navigator.share({ text });
+      return 'shared';
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return 'cancelled';
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    return 'copied';
+  } catch {
+    return 'failed'; // the caller shows the text to copy by hand
+  }
+}

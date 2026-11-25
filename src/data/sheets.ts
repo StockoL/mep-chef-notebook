@@ -17,6 +17,10 @@ import { getVariationInUse } from './library';
 import { listSectionItems } from './sectionItems';
 import type { CalendarDate, Id, KitchenId, Quantity, Sheet, SheetItem, SheetItemSource } from './types';
 
+export function getSheet(id: Id, database: MepDatabase = appDb) {
+  return database.sheets.get(id);
+}
+
 /** The sheet for these sections on this date, if there is one. */
 export async function findSheet(
   kitchenId: KitchenId,
