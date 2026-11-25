@@ -38,6 +38,48 @@ export async function getVariationInUse(
   );
 }
 
+/** Where a recipe is from (V4): a kitchen's house recipe, the chef's own, a book or another chef, or an idea. */
+export type VariationOrigin =
+  | { source: 'house'; kitchenId: Id }
+  | { source: 'mine' | 'idea'; sourceDetail?: string | null }
+  | { source: 'book'; sourceDetail: string | null };
+
+/**
+ * Says where a variation is from. A house recipe belongs to its kitchen, so
+ * its steps' equipment moves to that kitchen's list (matched by name, added
+ * there if missing); anything else belongs to the chef (kitchenId null).
+ */
+export async function setVariationOrigin(variationId: Id, origin: VariationOrigin, database: MepDatabase = appDb): Promise<void> {
+  await database.transaction('rw', [database.variations, database.steps, database.listValues], async () => {
+    const variation = await database.variations.get(variationId);
+    if (!variation) throw new Error('That variation no longer exists.');
+    const kitchenId = origin.source === 'house' ? origin.kitchenId : null;
+    const sourceDetail = origin.source === 'house' ? null : (origin.sourceDetail ?? null);
+    await database.variations.update(variationId, { source: origin.source, kitchenId, sourceDetail });
+
+    if (kitchenId && kitchenId !== variation.kitchenId && variation.currentVersionId) {
+      const values = await database.listValues.where('list').equals('equipment-types').toArray();
+      const names = new Map(values.map((v) => [v.id, v.value]));
+      const target = values.filter((v) => v.kitchenId === kitchenId && !v.mergedIntoId);
+      const idFor = async (oldId: Id | null): Promise<Id | null> => {
+        const name = oldId ? names.get(oldId) : undefined;
+        if (!name) return oldId;
+        const match = target.find((v) => v.value.toLowerCase() === name.toLowerCase());
+        if (match) return match.id;
+        const order = target.reduce((max, v) => Math.max(max, v.order + 1), 0);
+        const id = await database.listValues.add({ list: 'equipment-types', kitchenId, value: name, order, hidden: false, mergedIntoId: null });
+        target.push({ id, list: 'equipment-types', kitchenId, value: name, order, hidden: false, mergedIntoId: null, createdAt: '', updatedAt: '' });
+        return id;
+      };
+      for (const step of await database.steps.where('versionId').equals(variation.currentVersionId).toArray()) {
+        const parts = [];
+        for (const part of step.parts) parts.push({ ...part, equipmentTypeId: await idFor(part.equipmentTypeId) });
+        await database.steps.update(step.id, { parts });
+      }
+    }
+  });
+}
+
 /** The variation's current version id, creating the first version if there isn't one. */
 async function currentVersionId(variation: Variation, database: MepDatabase): Promise<Id> {
   if (variation.currentVersionId) return variation.currentVersionId;

@@ -103,3 +103,11 @@ Scale without arithmetic under pressure.
 - Dishes: set each component's amount per portion (Amounts, order, remove), then **How many?** shows each component for that many covers or people, each opening the component scaled to it.
 - On the sheet, "Open the recipe for 2l" opens it scaled to the sheet's amount.
 - Schema v5: ingredients hold the chef's weights; older data and exports upgrade.
+
+### Phase 5 follow-up: by hand, and where a recipe is from (25 Nov 2026)
+
+From entering a beer batter learned at Ellenborough Park.
+
+- Step reader: "in a bowl", "hand whisk" and "by hand" read as active work on the Bench; equipment on the kitchen's own list is read from step text; "on the day before service" no longer means the day before.
+- Correcting a step: add any equipment from the sheet ("Other: mixing bowl"), saved to the kitchen's list. Setting and timing sit under "Setting and timing" unless one is set.
+- Tap the line under a recipe's name ("House recipe · Dumbleton Hall · Draft") to say where it's from: a kitchen's house recipe (add a kitchen you've worked in; it's kept as one you've left), your own, a book or another chef, or an idea (DECISIONS 44).

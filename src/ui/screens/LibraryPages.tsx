@@ -19,8 +19,10 @@ import {
   updateComponent,
   updateDish,
   updateIngredient,
+  setVariationOrigin,
+  type VariationOrigin,
 } from '../../data/library';
-import { getKitchen } from '../../data/kitchens';
+import { createKitchen, getKitchen, listKitchens, setKitchenArchived } from '../../data/kitchens';
 import { getListItems, ListError } from '../../data/lists';
 import { listComponentNotes } from '../../data/notes';
 import { getScaleChoice, setScaleChoice } from '../../data/scaling';
@@ -42,6 +44,7 @@ import { MethodEditor } from '../components/MethodEditor';
 import { IngredientWeights, PerPortionButton, PortionsPanel, ScalePanel } from '../components/Scaling';
 import { NoteEditor } from '../components/NoteEditor';
 import { ScreenHeader } from '../components/ScreenHeader';
+import { Sheet } from '../components/Sheet';
 import { showMessage } from '../components/UndoBar';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
@@ -138,14 +141,123 @@ export function ComponentPage({ id = '' }: { id?: string }) {
   );
 }
 
-/** "House variation · Dumbleton Hall · Draft": whose version this is (V4). */
+/**
+ * "House recipe · Dumbleton Hall · Draft": whose version this is (V4). Tap
+ * it to say where the recipe is from: a kitchen's house recipe (including
+ * kitchens you've left), your own, a book or another chef, or an idea.
+ */
 function VariationLine({ variation }: { variation: Variation }) {
   const kitchen = useLiveQuery(async () => (variation.kitchenId ? getKitchen(variation.kitchenId) : undefined), [variation.kitchenId]);
-  const source = { house: 'House variation', mine: 'Your own variation', book: 'From a book or chef', idea: 'An idea' }[variation.source];
+  const [open, setOpen] = useState(false);
+  const source = { house: 'House recipe', mine: 'Your own', book: 'From', idea: 'An idea' }[variation.source];
+  const where = variation.source === 'house' ? kitchen?.name : variation.source === 'book' ? (variation.sourceDetail ?? 'a book or chef') : variation.sourceDetail;
   return (
-    <p class="variation-line">
-      {[source, kitchen?.name, variation.status === 'draft' ? 'Draft' : 'Ready'].filter(Boolean).join(' · ')}
-    </p>
+    <>
+      <button class="variation-line" type="button" onClick={() => setOpen(true)} aria-label="Where this recipe is from">
+        {[variation.source === 'book' ? `${source} ${where}` : source, variation.source === 'book' ? null : where, variation.status === 'draft' ? 'Draft' : 'Ready']
+          .filter(Boolean)
+          .join(' · ')}
+        <Icon name="chevron-right" />
+      </button>
+      <Sheet open={open} onClose={() => setOpen(false)} title="Where’s this recipe from?">
+        {open && <OriginEditor variation={variation} onDone={() => setOpen(false)} />}
+      </Sheet>
+    </>
+  );
+}
+
+function OriginEditor({ variation, onDone }: { variation: Variation; onDone: () => void }) {
+  const kitchens = useLiveQuery(() => listKitchens());
+  const [source, setSource] = useState<Variation['source']>(variation.source);
+  const [detail, setDetail] = useState(variation.sourceDetail ?? '');
+  const [newKitchen, setNewKitchen] = useState('');
+  const [error, setError] = useState('');
+  const real = (kitchens ?? []).filter((k) => !k.builtIn);
+
+  const save = (origin: VariationOrigin) => trackSave(setVariationOrigin(variation.id, origin));
+
+  async function addKitchen(event: Event) {
+    event.preventDefault();
+    try {
+      const id = await createKitchen(newKitchen);
+      await setKitchenArchived(id, true);
+      await save({ source: 'house', kitchenId: id });
+      showMessage(`${newKitchen.trim()} added to your kitchens as one you’ve left. Its recipes stay in your book.`);
+      setNewKitchen('');
+      onDone();
+    } catch (e) {
+      setError(e instanceof ListError ? e.message : 'Couldn’t add it.');
+    }
+  }
+
+  return (
+    <>
+      <ChipChoice
+        label="It’s…"
+        choices={[
+          { value: 'house', label: 'A kitchen’s house recipe' },
+          { value: 'mine', label: 'My own' },
+          { value: 'book', label: 'From a book or another chef' },
+          { value: 'idea', label: 'An idea' },
+        ]}
+        value={source}
+        onChange={(next) => {
+          if (!next) return;
+          setSource(next);
+          if (next === 'mine' || next === 'idea') void save({ source: next, sourceDetail: detail.trim() || null });
+        }}
+      />
+
+      {source === 'house' && (
+        <>
+          <ChipChoice
+            label="Which kitchen?"
+            choices={real.map((k) => ({ value: k.id, label: k.archived ? `${k.name} (left)` : k.name }))}
+            value={variation.source === 'house' ? variation.kitchenId : null}
+            onChange={async (kitchenId) => {
+              if (!kitchenId) return;
+              await save({ source: 'house', kitchenId });
+              onDone();
+            }}
+          />
+          <form class="input-group" onSubmit={addKitchen}>
+            <input
+              class="input"
+              aria-label="Another kitchen"
+              placeholder="A kitchen you’ve worked in"
+              autocomplete="off"
+              value={newKitchen}
+              onInput={(e) => setNewKitchen(e.currentTarget.value)}
+            />
+            <button class="button" type="submit" disabled={!newKitchen.trim()}>
+              Add
+            </button>
+          </form>
+          {error && <p class="field__error">{error}</p>}
+        </>
+      )}
+
+      {source !== 'house' && (
+        <div class="field">
+          <label class="label" for="origin-detail">
+            {source === 'book' ? 'Which book or chef?' : 'Note (optional)'}
+          </label>
+          <input
+            class="input"
+            id="origin-detail"
+            autocomplete="off"
+            placeholder={source === 'book' ? 'Leiths, Chef Tom…' : ''}
+            value={detail}
+            onInput={(e) => setDetail(e.currentTarget.value)}
+            onBlur={() => save(source === 'book' ? { source: 'book', sourceDetail: detail.trim() || null } : { source, sourceDetail: detail.trim() || null })}
+          />
+        </div>
+      )}
+      <p class="field__hint">A house recipe uses that kitchen’s equipment and shows first when you’re there. Keeping several versions of one recipe comes next, with variations.</p>
+      <button class="button" type="button" data-variant="primary" onClick={onDone}>
+        Done
+      </button>
+    </>
   );
 }
 

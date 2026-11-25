@@ -192,3 +192,29 @@ describe('export → import with a library', () => {
     await target.delete();
   });
 });
+
+describe('where a recipe is from', () => {
+  it('moves a recipe to the house recipe of a kitchen the chef has left, equipment and all', async () => {
+    const { setVariationOrigin } = await import('./library');
+    const { setKitchenArchived, setPlace } = await import('./kitchens');
+    const { saveSteps } = await import('./library');
+    const dumbleton = await createKitchen('Dumbleton Hall', db);
+    await setPlace(dumbleton, null, db);
+    const id = await createComponent('Beer batter', dumbleton, db);
+    const variation = (await getVariationInUse(id, dumbleton, db))!;
+    await saveSteps(variation.id, ['Whisk in a bowl 5 min'], db);
+
+    const ellenborough = await createKitchen('Ellenborough Park Hotel', db);
+    await setKitchenArchived(ellenborough, true, db);
+    await setVariationOrigin(variation.id, { source: 'house', kitchenId: ellenborough }, db);
+
+    const moved = (await getVariationInUse(id, dumbleton, db))!;
+    expect(moved).toMatchObject({ source: 'house', kitchenId: ellenborough });
+    const step = (await db.steps.where('versionId').equals(moved.currentVersionId!).first())!;
+    const equipment = await db.listValues.get(step.parts[0]!.equipmentTypeId!);
+    expect(equipment).toMatchObject({ kitchenId: ellenborough, value: 'Bench' });
+
+    await setVariationOrigin(variation.id, { source: 'book', sourceDetail: 'Leiths' }, db);
+    expect(await db.variations.get(variation.id)).toMatchObject({ source: 'book', kitchenId: null, sourceDetail: 'Leiths' });
+  });
+});

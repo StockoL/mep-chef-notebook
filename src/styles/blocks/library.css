@@ -36,6 +36,21 @@
   color: var(--color-text-muted);
 }
 
+/* As a button: tap to say where the recipe is from. */
+button.variation-line {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3xs);
+  min-block-size: var(--tap);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
 /* Ingredient lines as read from shorthand: quantity, name, and what it matched. */
 .line-rows {
   margin: 0;
