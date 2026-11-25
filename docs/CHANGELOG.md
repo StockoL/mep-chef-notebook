@@ -111,3 +111,16 @@ From entering a beer batter learned at Ellenborough Park.
 - Step reader: "in a bowl", "hand whisk" and "by hand" read as active work on the Bench; equipment on the kitchen's own list is read from step text; "on the day before service" no longer means the day before.
 - Correcting a step: add any equipment from the sheet ("Other: mixing bowl"), saved to the kitchen's list. Setting and timing sit under "Setting and timing" unless one is set.
 - Tap the line under a recipe's name ("House recipe · Dumbleton Hall · Draft") to say where it's from: a kitchen's house recipe (add a kitchen you've worked in; it's kept as one you've left), your own, a book or another chef, or an idea (DECISIONS 44).
+
+## Phase 6: Menus, variations and versions (25 Nov 2026)
+
+One component, several ways of making it; menus by course; changeover.
+
+- Variations: chips under a component's name (the one in use here first, ✓). **+ Another way**: a copy as my own (the original is untouched), from a book or another chef, or an idea. Ideas have the idea itself and "I suggested it to chef today" with chef's response. **Compare** shows two side by side, differences highlighted. **Delete this way** with Undo (never the last).
+- Versions: each editing session keeps a version (DECISIONS 45). **History** lists them with what changed ("Flour 300g → 350g · method changed") and a note; tap one to see it as it was and **Restore** (with Undo).
+- **Log an attempt**: dated notes on a component, shown under Notes and attempts.
+- Menus (Library → Dishes → Menus…, or Kitchen settings → Menus): name, type, status, dates; dishes by course with price, target GP% and which section makes each component; "Only dishes my section touches"; "12 of 30 components ready". **Copy for a new season** (coming up), **Launch this menu** (the old one moves to past). Menus of kitchens you've left are reached from their kitchen settings.
+- Library → Dishes opens on the menu on now, by course; chips switch menu or show all dishes.
+- Dish page: the menus it's on, allergens gathered from its components, **Add to today's sheet** (with amounts when covers are set), tag suggestions from its menus and courses (components too).
+- Section list: everything the menus on now give your section, alongside what you've added (DECISIONS 47); the sheet's add tray includes them.
+- The undo bar's buttons wrap at large text sizes.
