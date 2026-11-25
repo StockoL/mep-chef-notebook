@@ -179,7 +179,8 @@ export const EQUIPMENT_WORDS: [RegExp, string][] = [
   [/\b(fridge|walk ?in|chiller)\b/, 'fridge'],
   [/\b(blender|thermomix|vitamix|robot coupe)\b/, 'blender'],
   [/\b(mixer|kitchenaid|kenwood|hobart)\b/, 'mixer'],
-  [/\bby hand\b/, 'bench'],
+  // By hand: a bowl and a whisk, a board and a knife.
+  [/\b(by hand|hand whisk|(mixing )?bowl)\b/, 'bench'],
 ];
 
 /** The usual mode for a step read only from its equipment ("eggs in water bath 63c 45 min"). */
@@ -197,7 +198,7 @@ export const EQUIPMENT_MODE: Record<string, StepMode> = {
 };
 
 /** Words that mean hands stay busy: "char 15 min, turning". */
-export const ACTIVE_WORDS = /\b(stirring|turning|whisking|basting|constantly|by hand)\b/;
+export const ACTIVE_WORDS = /\b(stirring|turning|whisking|basting|constantly|by hand|hand whisk|bowl)\b/;
 
 /** Doughs and pastry rest in the fridge, not on the bench. */
 export const FRIDGE_REST_WORDS = /\b(pastry|dough|batter|paste)\b/;
@@ -208,8 +209,11 @@ export const SERVICE_CUES = /\b(to order|on order|a la minute|at service|skin si
 /** Must follow the step before at once: "scoop while hot". */
 export const NO_GAP_CUES = /\b(while (still )?(hot|warm)|straight away|immediately|chuff)\b|\bwarm\b(?! (water|milk|stock|place|plates?))/;
 
-/** Has to start the day before. */
-export const PREVIOUS_DAY_CUES = /\b((the )?day before|previous day|night before)\b/;
+/**
+ * Has to start the day before. Not "on the day before service": in a
+ * kitchen, "on the day" means the same day.
+ */
+export const PREVIOUS_DAY_CUES = /(?<!\bon (the )?)\b((the )?day before|previous day|night before)\b/;
 
 /** Clauses whose words are cues, not actions: "till just set", "before rolling". */
 export const CUE_CLAUSES = /\b(till|til|until|before|dont|don't|no|should)\b.*$/;

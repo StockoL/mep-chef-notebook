@@ -88,6 +88,11 @@ export interface ReadOptions {
   words?: readonly ChefWord[];
   /** The last part of the step before: for "15 more" and "whisk in". */
   previous?: ReadPart | null;
+  /**
+   * The kitchen's equipment list: a name written in a step ("in the Pacojet",
+   * "mixing bowl") is that equipment, whatever the verb says.
+   */
+  equipmentNames?: readonly string[];
 }
 
 /** The flags the test set and the chips use. */
@@ -129,7 +134,7 @@ export function readStep(line: string, options: ReadOptions = {}): ReadPart[] {
   text = text.replace(PREVIOUS_DAY_CUES, (match) => `<day> ${' '.repeat(Math.max(0, match.length - 6))}`);
 
   // 2–3. Split and read each piece.
-  const pieces = splitPieces(text).map((piece) => readPiece(piece, options.words ?? []));
+  const pieces = splitPieces(text).map((piece) => readPiece(piece, options.words ?? [], options.equipmentNames ?? []));
   if (pieces.length === 0) {
     return hold.value ? [holdOnlyPart(original, hold.value)] : [];
   }
@@ -294,7 +299,7 @@ interface Piece {
   fridgeRest: boolean;
 }
 
-function readPiece(raw: string, words: readonly ChefWord[]): Piece {
+function readPiece(raw: string, words: readonly ChefWord[], equipmentNames: readonly string[]): Piece {
   let text = raw;
   const dayBefore = text.includes('<day>');
   text = text.replace(/<day>/g, ' ');
@@ -328,11 +333,22 @@ function readPiece(raw: string, words: readonly ChefWord[]): Piece {
   const actionText = text.replace(CUE_CLAUSES, ' ').replace(/\s+/g, ' ').trim();
   const found = findVerb(actionText, words);
 
+  // The kitchen's own equipment first (longest name first), then the built-in words.
   let equipmentWord: string | null = null;
-  for (const [pattern, name] of EQUIPMENT_WORDS) {
-    if (pattern.test(text)) {
+  const padded = ` ${text.replace(/[^a-z0-9]+/g, ' ')} `;
+  for (const name of [...equipmentNames].sort((a, b) => b.length - a.length)) {
+    const wanted = normaliseStepText(name).replace(/[^a-z0-9]+/g, ' ').trim();
+    if (wanted && (padded.includes(` ${wanted} `) || padded.includes(` ${wanted}s `))) {
       equipmentWord = name;
       break;
+    }
+  }
+  if (!equipmentWord) {
+    for (const [pattern, name] of EQUIPMENT_WORDS) {
+      if (pattern.test(text)) {
+        equipmentWord = name;
+        break;
+      }
     }
   }
 

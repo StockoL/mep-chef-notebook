@@ -16,7 +16,8 @@ import { readTypedMinutes } from '../../core/parser/tokens';
 import { formatMinuteRange } from '../../core/time/formatMinutes';
 import { saveSteps } from '../../data/library';
 import { confirmAllSteps, confirmStep, equipmentKitchenId, learnWord, listEquipment, unconfirmSteps, unlearnWord, updateStepPart, type StatusChange } from '../../data/steps';
-import type { Id, ListValue, Step, StepPart, Variation } from '../../data/types';
+import { addListItem, ListError } from '../../data/lists';
+import type { Id, KitchenId, ListValue, Step, StepPart, Variation } from '../../data/types';
 import { useAutosave } from '../hooks/useAutosave';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { trackSave } from '../saveStatus';
@@ -41,7 +42,8 @@ export function announceStatus(change: StatusChange | null) {
 export function MethodEditor({ variation, steps }: { variation: Variation; steps: Step[] }) {
   const [writing, setWriting] = useState(steps.length === 0);
   const [open, setOpen] = useState<{ stepId: Id; part: number } | null>(null);
-  const equipment = useLiveQuery(async () => listEquipment(await equipmentKitchenId(variation)), [variation.id, variation.kitchenId]);
+  const equipmentKitchen = useLiveQuery(() => equipmentKitchenId(variation), [variation.id, variation.kitchenId]);
+  const equipment = useLiveQuery(async () => (equipmentKitchen ? listEquipment(equipmentKitchen) : []), [equipmentKitchen]);
   const missing = whatsMissing(steps.map((s) => ({ ...s, parts: s.parts.map((p) => ({ ...p, equipment: p.equipmentTypeId })) })));
   const unconfirmed = steps.filter((s) => !s.confirmed).length;
   const openStep = open ? steps.find((s) => s.id === open.stepId) : undefined;
@@ -91,7 +93,7 @@ export function MethodEditor({ variation, steps }: { variation: Variation; steps
 
       <Sheet open={!!openStep} onClose={() => setOpen(null)} title={openStep ? `Step ${steps.indexOf(openStep) + 1}` : ''}>
         {openStep && open && (
-          <PartEditor key={`${openStep.id}-${open.part}`} step={openStep} index={open.part} equipment={equipment ?? []} onPart={(part) => setOpen({ stepId: openStep.id, part })} onDone={() => setOpen(null)} />
+          <PartEditor key={`${openStep.id}-${open.part}`} step={openStep} index={open.part} equipment={equipment ?? []} kitchenId={equipmentKitchen ?? null} onPart={(part) => setOpen({ stepId: openStep.id, part })} onDone={() => setOpen(null)} />
         )}
       </Sheet>
     </section>
@@ -224,8 +226,8 @@ function ReadingChip({ value, empty, cue, onClick }: { value: string | null; emp
  * equipment also goes into the word list for the step's verb (P2), with
  * Undo; the time and setting are this recipe's own.
  */
-function PartEditor(props: { step: Step; index: number; equipment: readonly ListValue[]; onPart: (index: number) => void; onDone: () => void }) {
-  const { step, index, equipment, onPart, onDone } = props;
+function PartEditor(props: { step: Step; index: number; equipment: readonly ListValue[]; kitchenId: KitchenId | null; onPart: (index: number) => void; onDone: () => void }) {
+  const { step, index, equipment, kitchenId, onPart, onDone } = props;
   const part = step.parts[index];
   const [typedTime, setTypedTime] = useState(part && part.minutesMin !== null ? formatMinuteRange(part.minutesMin, part.minutesMax) : '');
   const [setting, setSetting] = useState(part?.equipmentSetting ?? '');
@@ -301,34 +303,48 @@ function PartEditor(props: { step: Step; index: number; equipment: readonly List
           if (name) await teach({ equipmentTypeId }, `“${name}”`);
         }}
       />
-      <div class="field">
-        <label class="label" for="part-setting">
-          Setting
-        </label>
-        <input
-          class="input"
-          id="part-setting"
-          value={setting}
-          placeholder="180°C, 160°C fan, low"
-          autocomplete="off"
-          onInput={(e) => setSetting(e.currentTarget.value)}
-          onBlur={() => setting !== (part.equipmentSetting ?? '') && save({ equipmentSetting: setting.trim() || null })}
-        />
-      </div>
+      <p class="field__hint">Bench means by hand: a bowl and a whisk, a board and a knife. Hands-on work doesn’t need any.</p>
+      <AddEquipment
+        kitchenId={kitchenId}
+        onAdded={async (equipmentTypeId, name) => {
+          await save({ equipmentTypeId });
+          await teach({ equipmentTypeId }, `“${name}”`);
+        }}
+      />
 
-      <div class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
-        <p class="label">Timing</p>
-        <ChipToggles
-          label="Timing"
-          choices={[
-            { value: 'service', label: 'Done to order' },
-            { value: 'noGap', label: 'Straight after the step before' },
-            { value: 'previousDay', label: 'Starts the day before' },
-          ]}
-          values={flags}
-          onChange={(values) => save({ atService: values.includes('service'), noGap: values.includes('noGap'), previousDay: values.includes('previousDay') })}
-        />
-      </div>
+      {/* Settings and timing flags matter for some steps only: tucked away unless one is set. */}
+      <details class="part-more" open={Boolean(part.equipmentSetting) || flags.length > 0}>
+        <summary>Setting and timing</summary>
+        <div class="flow">
+          <div class="field">
+            <label class="label" for="part-setting">
+              Setting
+            </label>
+            <input
+              class="input"
+              id="part-setting"
+              value={setting}
+              placeholder="180°C, 160°C fan, low"
+              autocomplete="off"
+              onInput={(e) => setSetting(e.currentTarget.value)}
+              onBlur={() => setting !== (part.equipmentSetting ?? '') && save({ equipmentSetting: setting.trim() || null })}
+            />
+          </div>
+          <div class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
+            <p class="label">Timing</p>
+            <ChipToggles
+              label="Timing"
+              choices={[
+                { value: 'service', label: 'Done to order' },
+                { value: 'noGap', label: 'Straight after the step before' },
+                { value: 'previousDay', label: 'Starts the day before' },
+              ]}
+              values={flags}
+              onChange={(values) => save({ atService: values.includes('service'), noGap: values.includes('noGap'), previousDay: values.includes('previousDay') })}
+            />
+          </div>
+        </div>
+      </details>
 
       {step.confirmed ? (
         <button class="button" type="button" data-variant="primary" onClick={onDone}>
@@ -350,6 +366,40 @@ function PartEditor(props: { step: Step; index: number; equipment: readonly List
         </button>
       )}
     </>
+  );
+}
+
+/** "Something else": adds to the kitchen's equipment list and chooses it. */
+function AddEquipment({ kitchenId, onAdded }: { kitchenId: KitchenId | null; onAdded: (id: Id, name: string) => Promise<void> }) {
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+  if (!kitchenId) return null;
+  async function add(event: Event) {
+    event.preventDefault();
+    try {
+      const id = await trackSave(addListItem({ kind: 'values', list: 'equipment-types', kitchenId: kitchenId! }, name));
+      await onAdded(id, name.trim());
+      setName('');
+      setError('');
+    } catch (e) {
+      setError(e instanceof ListError ? e.message : 'Couldn’t add it.');
+    }
+  }
+  return (
+    <form class="input-group" onSubmit={add}>
+      <input
+        class="input"
+        aria-label="Other equipment"
+        placeholder="Other: Pacojet, dehydrator…"
+        autocomplete="off"
+        value={name}
+        onInput={(e) => setName(e.currentTarget.value)}
+      />
+      <button class="button" type="submit" disabled={!name.trim()}>
+        Add
+      </button>
+      {error && <p class="field__error">{error}</p>}
+    </form>
   );
 }
 

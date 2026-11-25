@@ -131,3 +131,18 @@ describe('typed corrections', () => {
     expect(readTypedMinutes('soon')).toBeNull();
   });
 });
+
+describe('by hand, and the kitchen’s own equipment', () => {
+  it('reads a bowl or a hand whisk as active work by hand', () => {
+    expect(one('Whisk flour, lager and turmeric in a bowl, 5 min')).toMatchObject({ mode: 'active', equipment: 'bench', minutes: { min: 5, max: 5 } });
+    expect(one('Whisk eggs with a hand whisk')).toMatchObject({ mode: 'active', equipment: 'bench' });
+  });
+  it('reads equipment on the kitchen’s list', () => {
+    expect(readStep('Spin in the Pacojet twice', { equipmentNames: ['Oven', 'Pacojet'] })[0]!.equipment).toBe('Pacojet');
+    expect(readStep('Whisk in the mixing bowl', { equipmentNames: ['Mixing bowl'] })[0]!.equipment).toBe('Mixing bowl');
+  });
+  it('“on the day before service” is the same day', () => {
+    expect(one('Make batter on the day before service').previousDay).toBe(false);
+    expect(one('Make batter the day before').previousDay).toBe(true);
+  });
+});

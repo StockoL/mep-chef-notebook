@@ -160,7 +160,7 @@ export async function writeSteps(
       previous = stored.parts.length ? asReadPart(stored.parts.at(-1)!, context.equipment) : previous;
       continue;
     }
-    const read = readStep(text, { words: context.words, previous });
+    const read = readStep(text, { words: context.words, previous, equipmentNames: context.equipment.map((v) => v.value) });
     const parts = toStepParts(read, context);
     previous = read.at(-1) ?? previous;
     // Changed wording means the old readings and confirmation no longer apply.
@@ -183,7 +183,7 @@ export async function readUnreadSteps(database: MepDatabase = appDb): Promise<nu
     const variation = version ? await database.variations.get(version.variationId) : undefined;
     const context = await loadReaderContext(variation, versionId, database);
     for (const step of steps) {
-      await database.steps.update(step.id, { parts: toStepParts(readStep(step.text, { words: context.words }), context) });
+      await database.steps.update(step.id, { parts: toStepParts(readStep(step.text, { words: context.words, equipmentNames: context.equipment.map((v) => v.value) }), context) });
     }
     if (variation) await refreshStatus(variation.id, database);
   }

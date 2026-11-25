@@ -91,3 +91,11 @@
   background-color: var(--color-status-success-surface);
   color: var(--color-status-success-text);
 }
+
+.part-more > summary {
+  min-block-size: var(--tap);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: var(--weight-semibold);
+}
