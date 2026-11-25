@@ -107,6 +107,9 @@ describe('export → import', () => {
     await source.techniqueVariants.add({ techniqueId, context: 'textured mixes', notes: 'Three passes' });
     await source.techniqueKitchenNotes.add({ techniqueId, kitchenId: NO_KITCHEN_ID, notes: 'Three-sided here' });
     await source.methodTemplates.add({ techniqueId, steps: [{ text: 'Quenelle to order', parts: [] }] });
+    // Phase 9: a prep record and the timing it left.
+    await source.partRuns.add({ kitchenId: NO_KITCHEN_ID, date: '2026-11-25', jobId: 'item-1', partKey: '0', stepKey: 'c|brunoise shallots|0', mode: 'active', equipmentTypeId: null, quantity: 2, startedAt: '2026-11-25T10:00:00.000Z', doneAt: '2026-11-25T10:28:00.000Z', interrupted: false, inServiceWindow: false });
+    await source.timings.add({ stepKey: 'c|brunoise shallots|0', equipmentId: null, kitchenId: NO_KITCHEN_ID, quantity: 2, minutes: 28, interrupted: false, inServiceWindow: false });
 
     await importData(await exportData(source), target);
     expect(await snapshot(target)).toEqual(await snapshot(source));

@@ -44,6 +44,10 @@ export interface PlanPart {
   pauseBlocker: string | null;
   /** Must start as soon as the part before ends ("while hot"). */
   noGap: boolean;
+  /** Which step this is, for learned times (DECISIONS 51). */
+  stepKey?: string;
+  /** Its time was learned from this many timings, rather than written. */
+  learnedFrom?: number;
 }
 
 /** One job to place: a sheet item, as a chain of parts. */
@@ -74,6 +78,11 @@ export interface PlanInput {
   start: number;
   jobs: readonly PlanJob[];
   windows?: readonly ServiceWindow[];
+  /**
+   * Parts already running (prep mode): they hold your hands and equipment
+   * until they end, but aren't placed again or returned.
+   */
+  busy?: readonly PlacedPart[];
 }
 
 export interface PlacedPart {
@@ -139,7 +148,8 @@ export const greedyScheduler: Scheduler = {
         { job, next: 0, readyAt: Math.max(input.start, job.notBefore ?? input.start), done: job.parts.length === 0, end: input.start, start: null },
       ]),
     );
-    const placed: PlacedPart[] = [];
+    const busy = input.busy ?? [];
+    const placed: PlacedPart[] = [...busy];
     const unplaced: { jobId: string; reason: string }[] = [];
     // A job waiting on one that isn't in the plan just doesn't wait.
     const after = (job: PlanJob) => (job.after ?? []).filter((id) => states.has(id) && id !== job.id);
@@ -219,7 +229,7 @@ export const greedyScheduler: Scheduler = {
       t = Math.min(...events);
     }
 
-    placed.sort((a, b) => a.start - b.start || a.end - b.end);
+    const result = placed.filter((p) => !busy.includes(p)).sort((a, b) => a.start - b.start || a.end - b.end);
     const jobs: PlannedJob[] = [...states.values()]
       .filter((s) => s.start !== null)
       .map((s) => ({
@@ -231,7 +241,7 @@ export const greedyScheduler: Scheduler = {
       }))
       .sort((a, b) => a.start - b.start);
 
-    return { parts: placed, jobs, free: freeTime(placed, input.start), unplaced };
+    return { parts: result, jobs, free: freeTime(result, input.start), unplaced };
   },
 };
 

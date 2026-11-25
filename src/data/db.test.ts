@@ -27,10 +27,12 @@ describe('schema', () => {
       'techniqueVariants', 'techniqueKitchenNotes', 'methodTemplates', 'notes', 'sheets',
       'sheetItems', 'timings', 'batches', 'stockCounts', 'orderDrafts', 'wasteEntries',
       'weeklyGoals', 'collections', 'listValues', 'wordListEntries', 'media', 'settings',
+      // Added in v6 (Phase 9).
+      'partRuns',
     ];
     expect([...TABLE_NAMES].sort()).toEqual([...expected].sort());
     expect(db.tables.map((table) => table.name).sort()).toEqual([...expected].sort());
-    expect(db.verno).toBe(5);
+    expect(db.verno).toBe(6);
   });
 
   it('stores and reads back a row in every table', async () => {

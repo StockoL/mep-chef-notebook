@@ -114,6 +114,14 @@ describe('the greedy scheduler', () => {
     expect(at(greedyScheduler.plan({ start: 600, jobs }), 'bb').start).toBe(940);
   });
 
+  it('plans around parts already running', () => {
+    const running = { jobId: 'x', partKey: 'brunoise', label: 'Brunoise', mode: 'active' as const, start: 590, end: 620, equipment: null, setting: null, needsCover: null, gapBefore: false };
+    const jobs: PlanJob[] = [{ id: 'a', label: 'A', readyBy: 720, parts: [part('chop', 'active', 10)] }];
+    const plan = greedyScheduler.plan({ start: 600, jobs, busy: [running] });
+    expect(at(plan, 'chop').start).toBe(620);
+    expect(plan.parts.map((p) => p.partKey)).toEqual(['chop']);
+  });
+
   it('a job with no parts or no deadline still gets placed', () => {
     const jobs: PlanJob[] = [
       { id: 'empty', label: 'Nothing', readyBy: 700, parts: [] },

@@ -14,7 +14,10 @@
  * start of today's shift.
  */
 
+import { normalizeName } from '../core/ingredients/names';
+import { yieldFactor } from '../core/scaling/scaling';
 import { scheduler, type Plan, type PlanJob, type PlanPart, type ServiceWindow } from '../core/scheduler/scheduler';
+import { learnedMinutes, type Learned } from '../core/timings/learn';
 import { servicesOn } from '../core/services/nextService';
 import { minutesOfDay, timeToMinutes, toCalendarDate, isoDayOfWeek } from '../core/time/calendar';
 import { db as appDb, type MepDatabase } from './db';
@@ -22,7 +25,7 @@ import { eventInputs } from './events';
 import { getVariationInUse } from './library';
 import { listServices, listShifts } from './kitchens';
 import { findSheet, getSheetView, type SheetItemView } from './sheets';
-import type { CalendarDate, Id, KitchenId, StepPart } from './types';
+import type { CalendarDate, Id, KitchenId, StepPart, Timing } from './types';
 
 /** When a service has no last-bookings time, its window is taken as this long. */
 const DEFAULT_SERVICE_MINUTES = 120;
@@ -35,6 +38,8 @@ export interface PlanJobInfo {
   readyByLabel: string | null;
   /** Steps that should already have been started the day before. */
   startedYesterday: string[];
+  /** Batch size as a multiple of the recipe (sheet amount ÷ what it makes), if known. */
+  batch: number | null;
 }
 
 export interface PlanToDo {
@@ -48,6 +53,8 @@ export interface PlanView {
   start: number;
   windows: ServiceWindow[];
   plan: Plan;
+  /** What the plan was worked out from: prep mode re-plans from these. */
+  planJobs: PlanJob[];
   jobs: Map<string, PlanJobInfo>;
   /** Beside the plan (PS2). */
   todos: PlanToDo[];
@@ -98,6 +105,7 @@ export async function getPlanView(kitchenId: KitchenId, now: Date, database: Mep
 
   const jobs: PlanJob[] = [];
   const info = new Map<string, PlanJobInfo>();
+  const learn = await learnedTimes(kitchenId, now, database);
   const todos: PlanToDo[] = [];
   const componentJob = new Map<Id, string>();
 
@@ -109,12 +117,12 @@ export async function getPlanView(kitchenId: KitchenId, now: Date, database: Mep
     }
     const { today, yesterday } = splitAtPreviousDay(recipe.parts);
     const by = readyBy(item.item.serviceId);
-    const planParts = today.map(toPlanPart);
+    const planParts = today.map((entry, i) => toPlanPart(entry, i, learn, recipe.batch));
     // Held warm for a limited time ("hold warm max 2 hrs"): not made so early it would be held longer.
     const total = planParts.reduce((sum, p) => sum + p.minutes, 0);
     const notBefore = recipe.warmHoldMinutes !== null && by.at !== null ? by.at - recipe.warmHoldMinutes - total : undefined;
     jobs.push({ id: item.item.id, label: item.name, parts: planParts, readyBy: by.at, after: recipe.needs, notBefore });
-    info.set(item.item.id, { view: item, forDay: 'today', readyByLabel: by.label, startedYesterday: yesterday.map((p) => p.text) });
+    info.set(item.item.id, { view: item, forDay: 'today', readyByLabel: by.label, startedYesterday: yesterday.map((e) => e.part.text), batch: recipe.batch });
     if (item.componentId) componentJob.set(item.componentId, item.item.id);
   }
 
@@ -127,13 +135,13 @@ export async function getPlanView(kitchenId: KitchenId, now: Date, database: Mep
     if ('reason' in recipe) continue;
     const { yesterday } = splitAtPreviousDay(recipe.parts);
     if (yesterday.length === 0) continue;
-    const last = yesterday.at(-1)!;
+    const last = yesterday.at(-1)!.part;
     // It only has to be started by the end of the shift: the last part (the cure, the overnight set) runs on.
     const end = shiftEnd ?? 23 * 60;
     const lastMinutes = last.mode === 'passive' ? (last.minutesMax ?? last.minutesMin ?? 0) : 0;
     const id = `tomorrow-${item.item.id}`;
-    jobs.push({ id, label: item.name, parts: yesterday.map(toPlanPart), readyBy: end + lastMinutes });
-    info.set(id, { view: item, forDay: 'tomorrow', readyByLabel: 'For tomorrow: started before you go', startedYesterday: [] });
+    jobs.push({ id, label: item.name, parts: yesterday.map((entry, i) => toPlanPart(entry, i, learn, recipe.batch)), readyBy: end + lastMinutes });
+    info.set(id, { view: item, forDay: 'tomorrow', readyByLabel: 'For tomorrow: started before you go', startedYesterday: [], batch: recipe.batch });
   }
 
   // "Needs the stock": wait for the job making it, if it's on the sheet.
@@ -146,6 +154,7 @@ export async function getPlanView(kitchenId: KitchenId, now: Date, database: Mep
     start,
     windows,
     plan: scheduler.plan({ start, jobs, windows }),
+    planJobs: jobs,
     jobs: info,
     todos,
     done: items.filter((i) => i.item.done),
@@ -154,40 +163,77 @@ export async function getPlanView(kitchenId: KitchenId, now: Date, database: Mep
   };
 }
 
+/** A part of a recipe with the key its learned time is kept under. */
+interface KeyedPart {
+  part: StepPart;
+  stepKey: string;
+}
+
+/**
+ * Which step this is, for learning its time (DECISIONS 51): the same
+ * recipe and the same wording. Rewording a step starts its learning again.
+ */
+export function stepKeyFor(componentId: Id, stepText: string, partIndex: number): string {
+  return `${componentId}|${normalizeName(stepText)}|${partIndex}`;
+}
+
 /** A sheet item's recipe parts, if its recipe is ready; otherwise why it's a to-do. */
 async function readyParts(
   item: SheetItemView,
   kitchenId: KitchenId,
   database: MepDatabase,
-): Promise<{ parts: StepPart[]; needs: Id[]; warmHoldMinutes: number | null } | { reason: string }> {
-  if (!item.componentId) return { reason: 'No recipe: tick it off by hand' };
-  const variation = await getVariationInUse(item.componentId, kitchenId, database);
+): Promise<{ parts: KeyedPart[]; needs: Id[]; warmHoldMinutes: number | null; batch: number | null } | { reason: string }> {
+  const componentId = item.componentId;
+  if (!componentId) return { reason: 'No recipe: tick it off by hand' };
+  const variation = await getVariationInUse(componentId, kitchenId, database);
   if (!variation?.currentVersionId || variation.status !== 'ready') return { reason: 'Draft: not in the plan until its method is confirmed' };
   const steps = await database.steps.where('versionId').equals(variation.currentVersionId).sortBy('order');
-  const all = steps.flatMap((s) => s.parts);
+  const all = steps.flatMap((s) => s.parts.map((part, i) => ({ part, stepKey: stepKeyFor(componentId, s.text, i) })));
   // Done at service ("to order") and holds aren't prep; a warm hold limits how early it's made.
-  const parts = all.filter((p) => !p.atService && !(p.mode === null && p.hold));
-  const warm = all.find((p) => p.hold?.where === 'warm')?.hold;
-  return { parts, needs: [...new Set(parts.flatMap((p) => p.dependsOnComponentIds))], warmHoldMinutes: warm?.minutes ?? null };
+  const parts = all.filter(({ part: p }) => !p.atService && !(p.mode === null && p.hold));
+  const warm = all.find(({ part: p }) => p.hold?.where === 'warm')?.part.hold;
+  const amount = item.item.quantity;
+  const batch = amount && variation.baseYield ? yieldFactor(variation.baseYield, amount) : null;
+  return { parts, needs: [...new Set(parts.flatMap((e) => e.part.dependsOnComponentIds))], warmHoldMinutes: warm?.minutes ?? null, batch };
 }
 
 /** Parts up to the last day-before part happen the day before; the rest today. */
-function splitAtPreviousDay(parts: StepPart[]): { yesterday: StepPart[]; today: StepPart[] } {
-  const last = parts.map((p) => p.previousDay).lastIndexOf(true);
+function splitAtPreviousDay(parts: KeyedPart[]): { yesterday: KeyedPart[]; today: KeyedPart[] } {
+  const last = parts.map((e) => e.part.previousDay).lastIndexOf(true);
   return { yesterday: parts.slice(0, last + 1), today: parts.slice(last + 1) };
 }
 
-function toPlanPart(part: StepPart, index: number): PlanPart {
+type Learn = (stepKey: string, mode: StepPart['mode'], batch: number | null) => Learned | null;
+
+/**
+ * Learned times (SM3): your hands-on times go with you to every kitchen;
+ * times for things left in equipment stay with this kitchen.
+ */
+async function learnedTimes(kitchenId: KitchenId, now: Date, database: MepDatabase): Promise<Learn> {
+  const timings = await database.timings.toArray();
+  const byKey = new Map<string, Timing[]>();
+  for (const t of timings) byKey.set(t.stepKey, [...(byKey.get(t.stepKey) ?? []), t]);
+  return (stepKey, mode, batch) => {
+    const mine = (byKey.get(stepKey) ?? []).filter((t) => mode === 'active' || t.kitchenId === kitchenId);
+    const recorded = mine.map((t) => ({ minutes: t.minutes, quantity: t.quantity, at: Date.parse(t.createdAt), interrupted: t.interrupted, inServiceWindow: t.inServiceWindow }));
+    return learnedMinutes(recorded, now.getTime(), batch ?? 1);
+  };
+}
+
+function toPlanPart({ part, stepKey }: KeyedPart, index: number, learn: Learn, batch: number | null): PlanPart {
+  const learned = learn(stepKey, part.mode, batch);
   return {
     key: `${index}`,
     label: part.text,
     mode: part.mode ?? 'active',
-    // Plans on the upper end (SPEC → Tokens: Duration).
-    minutes: part.minutesMax ?? part.minutesMin ?? 0,
+    // A learned time if there is one; otherwise the written one, on the upper end (SPEC → Tokens: Duration).
+    minutes: learned?.minutes ?? part.minutesMax ?? part.minutesMin ?? 0,
     equipment: part.equipmentTypeId,
     setting: part.equipmentSetting,
     pausable: part.pausable,
     pauseBlocker: part.pauseBlocker,
     noGap: part.noGap,
+    stepKey,
+    learnedFrom: learned?.count,
   };
 }

@@ -452,6 +452,31 @@ export interface SheetItem extends Row {
   source: SheetItemSource;
 }
 
+/**
+ * A step part started in prep mode today (SM1, schema v6): when it started,
+ * when it was done, and whether it was interrupted. Lets prep mode pick up
+ * where it was after the app is closed, and feeds learned times.
+ */
+export interface PartRun extends Row {
+  kitchenId: KitchenId;
+  date: CalendarDate;
+  /** The plan's job: a sheet item's id (or "tomorrow-<id>" for a day-before step). */
+  jobId: string;
+  /** The part within the job. */
+  partKey: string;
+  /** Same recipe, same wording (DECISIONS 51): what learned times are keyed by. */
+  stepKey: string | null;
+  mode: StepMode;
+  equipmentTypeId: Id | null;
+  /** Batch size as a multiple of the recipe, if known. */
+  quantity: number | null;
+  startedAt: string;
+  doneAt: string | null;
+  interrupted: boolean;
+  /** Started during a service window: its time is kept apart. */
+  inServiceWindow: boolean;
+}
+
 /** One recorded duration, for learning how long steps take (SM3). */
 export interface Timing extends Row {
   /** Which step this was: stable across versions, defined in Phase 9. */
