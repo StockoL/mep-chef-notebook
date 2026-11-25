@@ -37,6 +37,7 @@
 | 31 | Ship first, learn later: the app is built for use on shift as soon as possible; learning the stack comes afterwards, from the phase log. Tests, versioned migrations and the export round trip stay, because they protect the chef's only copy | Louis needs the app now; the safeguards cost little and a lost notebook can't be undone |
 | 32 | A service is one row (name, order, hidden, "I work this") holding a list of time windows, each for given days. SPEC's flat service fields became `windows` in schema v2 | Times differ by day (Sunday lunch runs later); renaming, hiding and reordering a service must act on one thing |
 | 33 | Captured photos are saved as JPEG with the long edge at most 2000 px | Phone photos are 3–5 MB; the phone holds everything and every backup carries it |
+| 34 | The fixed units are g, kg, ml, l, each, portion, plus kitchen count words: tsp, tbsp, pinch, bunch, sprig, clove, slice, sheet, leaf, tin, pack. Metric converts within weight or volume; count words never convert. cl and dl are read and stored as ml | Chefs write "thyme 3 sprigs"; forcing grams loses meaning, and a free-text unit can't be scaled |
 
 ## Open
 
