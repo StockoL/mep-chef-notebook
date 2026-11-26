@@ -16,11 +16,13 @@
   touch-action: manipulation;
 }
 
+/* Chosen is neutral, not the action colour (FEEL_PASS 3, UX principle 2):
+   orange is kept for the one thing to do on a screen. */
 .chip[aria-pressed='true'],
 .chip[data-filled='true'] {
-  border-color: var(--color-action);
-  background-color: var(--color-action);
-  color: var(--color-action-text);
+  border-color: var(--color-text);
+  background-color: var(--color-text);
+  color: var(--color-text-inverse);
 }
 
 /* Chips in a reel (one row that scrolls sideways): closer together, never wrapping. */

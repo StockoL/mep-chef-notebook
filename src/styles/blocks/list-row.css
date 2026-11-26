@@ -43,7 +43,7 @@
 }
 
 .list-row[aria-pressed='true'] > .icon {
-  color: var(--color-action);
+  color: var(--color-text);
 }
 
 .list-row__main {

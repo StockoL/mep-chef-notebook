@@ -5,6 +5,12 @@
   min-block-size: var(--tap);
 }
 
+/* The chosen segment is neutral, like a chosen chip (FEEL_PASS 3). */
+.choice-group[data-variant='segmented'] > input:checked + label {
+  background-color: var(--color-text);
+  color: var(--color-text-inverse);
+}
+
 /* Switches and checkbox labels: the whole label is the target. */
 .choice {
   min-block-size: var(--tap);

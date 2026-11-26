@@ -130,7 +130,7 @@ function TidyNames() {
           {found.length === 1 ? 'One name ends' : `${found.length} names end`} with where it’s from, like “{example.name}”. Mep can show that under the name instead: “{example.tidied}”, from{' '}
           {example.kitchenName}.
         </p>
-        <button class="button" type="button" data-variant="primary" onClick={tidy}>
+        <button class="button" type="button" onClick={tidy}>
           Tidy {found.length === 1 ? 'it' : `all ${found.length}`}
         </button>
       </div>

@@ -94,7 +94,7 @@ button.variation-line {
 
 .line-rows__kind {
   font-size: var(--step--1);
-  color: var(--color-action);
+  color: var(--color-text-muted);
 }
 
 /* "More about this recipe": the folded-away part of a recipe or dish page. */

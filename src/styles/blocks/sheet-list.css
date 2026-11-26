@@ -60,12 +60,13 @@
 }
 
 .sheet-row__tick[aria-pressed='true'] {
-  color: var(--color-action-text);
+  color: var(--color-text-inverse);
 }
 
+/* Ticked is neutral: done, not something to do (FEEL_PASS 3). */
 .sheet-row__tick[aria-pressed='true'] > .icon {
-  border-color: var(--color-action);
-  background-color: var(--color-action);
+  border-color: var(--color-text);
+  background-color: var(--color-text);
 }
 
 .sheet-row__main {

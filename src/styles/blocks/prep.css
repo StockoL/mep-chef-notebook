@@ -15,7 +15,7 @@
   gap: var(--space-xs);
   padding: var(--space-m) var(--space-s);
   border: 2px solid var(--color-border-strong);
-  border-inline-start: 8px solid var(--color-action);
+  border-inline-start: 8px solid var(--color-text); /* neutral: the Done button is the screen's one orange thing */
   border-radius: var(--radius-surface);
   background-color: var(--color-surface-raised);
 }
