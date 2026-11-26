@@ -2,6 +2,7 @@ import { strFromU8, unzipSync } from 'fflate';
 import { ensureBuiltIns, SCHEMA_VERSION, TABLE_NAMES, db as appDb, type MepDatabase, type TableName } from './db';
 import { DATA_FILE, EXPORT_FORMAT, EXPORT_FORMAT_VERSION, type ExportedMedia } from './exportFormat';
 import { upgradeRow } from './migrations';
+import { fillMissingDishKitchens } from './dishOrigin';
 import { readUnreadSteps } from './steps';
 
 /** A problem with the file itself. The message is written for the chef. */
@@ -27,6 +28,8 @@ export async function importData(zipBytes: Uint8Array, database: MepDatabase = a
   });
 
   await ensureBuiltIns(database);
+  // An export from before dishes had a kitchen (v8): work it out now.
+  await fillMissingDishKitchens(database);
   // An export from before the step reader: read its methods now.
   await readUnreadSteps(database);
 }

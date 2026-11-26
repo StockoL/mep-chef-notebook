@@ -41,7 +41,7 @@ afterEach(async () => {
 });
 
 async function dish(name: string, components: string[]) {
-  const dishId = await createDish(name, db);
+  const dishId = await createDish(name, null, db);
   const ids: string[] = [];
   for (const c of components) {
     const id = await createComponent(c, kitchenId, db);
@@ -139,7 +139,7 @@ describe('dishes at work (MS2, R3)', () => {
     const garnish = await createComponent('Tartare', kitchenId, db);
     await saveLines((await getVariationInUse(garnish, kitchenId, db))!.id, parseShorthand('mayonnaise 100g, beurre blanc 50ml'), db);
 
-    const dishId = await createDish('Cod', db);
+    const dishId = await createDish('Cod', null, db);
     await addComponentToDish(dishId, garnish, db);
     const allergens = await dishAllergens(dishId, kitchenId, db);
     expect(allergens.contains.map((c) => [c.label, c.from])).toEqual([['Milk', ['Butter (via Tartare → Beurre blanc)']]]);

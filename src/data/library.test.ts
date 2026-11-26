@@ -100,7 +100,7 @@ describe('components', () => {
 
   it('deletes with everything that belongs to it, and Undo puts it all back', async () => {
     const { id } = await component('Gel', 'beetroot 500g');
-    const dishId = await createDish('Beetroot, goat’s cheese', db);
+    const dishId = await createDish('Beetroot, goat’s cheese', null, db);
     await addComponentToDish(dishId, id, db);
     const snapshot = await deleteComponent(id, db);
     expect(await db.components.count()).toBe(0);
@@ -123,7 +123,7 @@ describe('ingredient lookup (I1)', () => {
   it('lists every component and dish that uses an ingredient, through components', async () => {
     await component('Chicken stock', 'chicken bones 2kg');
     const jus = await component('Chicken jus', 'chicken stock 2l');
-    const dishId = await createDish('Roast chicken', db);
+    const dishId = await createDish('Roast chicken', null, db);
     await addComponentToDish(dishId, jus.id, db);
     const bones = (await db.ingredients.where('name').equals('Chicken bones').first())!;
     const details = await getIngredientDetails(bones.id, db);
@@ -146,7 +146,7 @@ describe('search, recent, tags and collections', () => {
   it('finds by name, alias and notes, grouped by kind', async () => {
     const { id } = await component('Beetroot gel', 'beetroot 500g');
     await db.components.update(id, { aliases: ['red gel'] });
-    await createDish('Beetroot tartare', db);
+    await createDish('Beetroot tartare', null, db);
     const results = await searchLibrary('beet', db);
     expect(results.components.map((c) => c.name)).toEqual(['Beetroot gel']);
     expect(results.dishes.map((d) => d.name)).toEqual(['Beetroot tartare']);
@@ -155,7 +155,7 @@ describe('search, recent, tags and collections', () => {
   });
 
   it('remembers recently opened items, newest first, without repeats', async () => {
-    const a = await createDish('A', db);
+    const a = await createDish('A', null, db);
     const b = await createComponent('B', NO_KITCHEN_ID, db);
     await recordView({ kind: 'dish', id: a }, db);
     await recordView({ kind: 'component', id: b }, db);
@@ -171,7 +171,7 @@ describe('search, recent, tags and collections', () => {
 
   it('adds to and removes from a collection', async () => {
     const collectionId = await createCollection('Christmas ideas', db);
-    const dishId = await createDish('Turkey', db);
+    const dishId = await createDish('Turkey', null, db);
     await toggleInCollection(collectionId, { kind: 'dish', id: dishId }, db);
     expect((await db.collections.get(collectionId))?.members).toEqual([{ kind: 'dish', id: dishId }]);
     await toggleInCollection(collectionId, { kind: 'dish', id: dishId }, db);
@@ -183,7 +183,7 @@ describe('export → import with a library', () => {
   it('round-trips components, lines, steps, dishes and ingredients', async () => {
     const { id, variationId } = await component('Chicken stock', 'bones 2kg, mirepoix');
     await saveSteps(variationId, ['Roast bones'], db);
-    const dishId = await createDish('Roast chicken', db);
+    const dishId = await createDish('Roast chicken', null, db);
     await addComponentToDish(dishId, id, db);
     const target = await freshDatabase();
     await importData(await exportData(db), target);

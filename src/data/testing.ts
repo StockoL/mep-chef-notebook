@@ -33,7 +33,7 @@ export async function loadSeed(database: MepDatabase): Promise<string> {
       const ref = { kind: 'values' as const, list: 'courses' as const, kitchenId };
       const courseId = (await getListItems(ref, database)).find((c) => c.name === course.name)?.id ?? (await addListItem(ref, course.name, database));
       for (const dish of course.dishes) {
-        const dishId = await createDish(dish.name, database);
+        const dishId = await createDish(dish.name, kitchenId, database);
         for (const name of dish.components) {
           const key = name.toLowerCase();
           if (!components.has(key)) components.set(key, await createComponent(name.charAt(0).toUpperCase() + name.slice(1), kitchenId, database));

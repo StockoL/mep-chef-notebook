@@ -16,7 +16,7 @@ import { ListError } from './lists';
 import type { Snapshot } from './snapshot';
 import { refreshStatus, writeSteps, type StatusChange } from './steps';
 import { versionForEditing } from './versions';
-import type { Component, Dish, DishComponent, Id, Ingredient, KitchenId, Line, Quantity, Step, Variation } from './types';
+import { NO_KITCHEN_ID, type Component, type Dish, type DishComponent, type Id, type Ingredient, type KitchenId, type Line, type Quantity, type Step, type Variation } from './types';
 
 // ─── Variations ───────────────────────────────────────────────────────────
 
@@ -322,10 +322,12 @@ export async function deleteComponent(id: Id, database: MepDatabase = appDb): Pr
 
 // ─── Dishes ───────────────────────────────────────────────────────────────
 
-export async function createDish(name: string, database: MepDatabase = appDb): Promise<Id> {
+/** A new dish, from the kitchen it's written in (null or "No kitchen": the chef's own). */
+export async function createDish(name: string, kitchenId: KitchenId | null, database: MepDatabase = appDb): Promise<Id> {
   const cleaned = cleanName(name);
   if (!cleaned) throw new ListError('Give the dish a name.');
-  return database.dishes.add({ name: cleaned, description: '', platingPhotoId: null, platingSpec: '', tagIds: [] });
+  const kitchen = kitchenId && kitchenId !== NO_KITCHEN_ID ? kitchenId : null;
+  return database.dishes.add({ name: cleaned, kitchenId: kitchen, description: '', platingPhotoId: null, platingSpec: '', tagIds: [] });
 }
 
 export interface DishDetails {

@@ -226,6 +226,12 @@ export interface MenuSectionAssignment extends Row {
 
 export interface Dish extends Row {
   name: string;
+  /**
+   * Where the dish is from (schema v8, DECISIONS 54): a kitchen, or null for
+   * the chef's own. Shown under the name, so names can stay as the menu
+   * writes them ("Steak").
+   */
+  kitchenId: KitchenId | null;
   description: string;
   /** Media row. */
   platingPhotoId: Id | null;

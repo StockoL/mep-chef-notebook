@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie';
 import { addBenchOnce, seedChefLists, seedNoKitchenEquipment, seedTechniquesOnce } from './defaults';
 import { newId, nowTimestamp } from './ids';
+import { inferDishKitchens } from './dishKitchens';
 import { ROW_FIXES } from './migrations';
 import {
   NO_KITCHEN_ID,
@@ -108,6 +109,9 @@ export const SCHEMA_V1 = {
   settings: 'key',
 } as const;
 
+/** v8: dishes are indexed by kitchen too (the library's "where it's from" filter). */
+export const DISHES_V8 = 'id, name, kitchenId, *tagIds';
+
 /** Tables added after v1, by the version that added them. */
 export const TABLES_ADDED = {
   /** v6 (Phase 9): prep mode's record of what's been started and done. */
@@ -122,10 +126,10 @@ export type TableName = keyof typeof SCHEMA_V1 | keyof typeof TABLES_ADDED;
  * The schema version this code writes. Goes into every export.
  * v1: Phase 0. v2: Phase 1 row changes. v3: Phase 3, sheets keep a photo.
  * v4: steps hold parts. v5: ingredient weights. v6: the partRuns table.
- * v7: the checklistRuns table.
+ * v7: the checklistRuns table. v8: dishes have a kitchen (indexed).
  * (Row changes are in migrations.ts.)
  */
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 
 /** Every table name, in schema order. */
 export const TABLE_NAMES = [...Object.keys(SCHEMA_V1), ...Object.keys(TABLES_ADDED)] as TableName[];
@@ -199,6 +203,25 @@ export class MepDatabase extends Dexie {
     this.version(6).stores({ partRuns: TABLES_ADDED.partRuns });
     // Schema v7 (Phase 11): checklist ticks per day.
     this.version(7).stores({ checklistRuns: TABLES_ADDED.checklistRuns });
+    // Schema v8: a dish knows its kitchen, worked out once from its menus and recipes.
+    this.version(8)
+      .stores({ dishes: DISHES_V8 })
+      .upgrade(async (transaction) => {
+        const read = (name: string) => transaction.table(name).toArray();
+        const kitchens = inferDishKitchens({
+          dishes: await read('dishes'),
+          menus: await read('menus'),
+          menuDishes: await read('menuDishes'),
+          dishComponents: await read('dishComponents'),
+          variations: await read('variations'),
+        });
+        await transaction
+          .table('dishes')
+          .toCollection()
+          .modify((row: Dish) => {
+            if (row.kitchenId === undefined) row.kitchenId = kitchens.get(row.id) ?? null;
+          });
+      });
     this.addRowHooks();
   }
 

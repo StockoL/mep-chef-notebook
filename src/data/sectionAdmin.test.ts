@@ -15,6 +15,7 @@ import { getOrCreateSheet, getSheetView, writeNextSheetWithSummary } from './she
 import { draftOrders, getCountView, setCount } from './stock';
 import { freshDatabase, loadSeed } from './testing';
 import { logWaste } from './waste';
+import { getMoneyView } from './money';
 
 let db: MepDatabase;
 let kitchenId: string;
@@ -56,7 +57,7 @@ describe('costing (A1)', () => {
     // Cod: one portion (£3 a portion), plus 50 ml beurre blanc (18p).
     const cod = await recipe('Cod portions', 'cod 10', { amount: 10, unit: 'portion' });
     await price('Cod', { amount: 10, unit: 'each' }, 3000);
-    const dish = await createDish('Cornish cod', db);
+    const dish = await createDish('Cornish cod', null, db);
     await addComponentToDish(dish, cod, db);
     await addComponentToDish(dish, bb, db);
     const links = await db.dishComponents.where('dishId').equals(dish).sortBy('order');
@@ -80,7 +81,7 @@ describe('costing (A1)', () => {
   it('a price change moves the GP at once', async () => {
     const id = await recipe('Chips', 'potatoes 1kg', { amount: 4, unit: 'portion' });
     const product = await price('Potatoes', { amount: 25, unit: 'kg' }, 1000);
-    const dish = await createDish('French fries', db);
+    const dish = await createDish('French fries', null, db);
     await addComponentToDish(dish, id, db);
     await setQuantityPerPortion((await db.dishComponents.where('dishId').equals(dish).first())!.id, { amount: 1, unit: 'portion' }, db);
     const menu = await createMenu(kitchenId, 'À la carte', {}, db);
@@ -157,7 +158,7 @@ describe('also used elsewhere (A9)', () => {
     const trout = await recipe('Cured trout', 'chalk stream trout 2', { amount: 20, unit: 'portion' });
     const smoked = await recipe('Smoked trout', 'chalk stream trout 1', { amount: 10, unit: 'portion' });
     const breakfast = await createMenu(kitchenId, 'Breakfast', {}, db);
-    const royale = await createDish('Eggs royale', db);
+    const royale = await createDish('Eggs royale', null, db);
     await addComponentToDish(royale, smoked, db);
     await addDishToMenu(breakfast, royale, null, db);
     expect(await alsoUsedElsewhere(trout, kitchenId, db)).toEqual([{ name: 'Chalk stream trout', uses: ['Breakfast: eggs royale'] }]);
@@ -168,7 +169,7 @@ describe('reports (A5, A8, G1)', () => {
   it('an allergen matrix marked as a working copy', async () => {
     const bb = await recipe('Beurre blanc', 'butter 250g', { amount: 500, unit: 'ml' });
     await updateIngredient((await ingredient('Butter')).id, { allergens: ['milk'] }, db);
-    const dish = await createDish('Cornish cod', db);
+    const dish = await createDish('Cornish cod', null, db);
     await addComponentToDish(dish, bb, db);
     const menu = await createMenu(kitchenId, 'À la carte', {}, db);
     await addDishToMenu(menu, dish, null, db);
@@ -190,5 +191,24 @@ describe('reports (A5, A8, G1)', () => {
     expect(report.waste).toMatchObject({ entries: 1, pence: 400, byReason: [{ reason: 'Over-prep', pence: 400, entries: 1 }] });
     const suggestions = await goalSuggestions(kitchenId, new Date(2026, 10, 25), db);
     expect(suggestions[0]).toEqual({ text: 'Halve the beurre blanc waste', from: '£4.00 of it wasted last week' });
+  });
+});
+
+describe('the Money screen (DECISIONS 54)', () => {
+  it('GP by menu, recipe costs and what still needs a price', async () => {
+    const bb = await recipe('Beurre blanc', 'butter 250g, white wine 100ml', { amount: 500, unit: 'ml' });
+    await price('Butter', { amount: 2, unit: 'kg' }, 800);
+    const dish = await createDish('Cornish cod', kitchenId, db);
+    await addComponentToDish(dish, bb, db);
+    await setQuantityPerPortion((await db.dishComponents.where('dishId').equals(dish).first())!.id, { amount: 50, unit: 'ml' }, db);
+    const menu = await createMenu(kitchenId, 'À la carte', {}, db);
+    await updateMenuDish(await addDishToMenu(menu, dish, null, db), { price: 2400, targetGpPercent: 70 }, db);
+    await recipe('Not on a menu', 'saffron 1g', { amount: 1, unit: 'each' });
+
+    const view = await getMoneyView(kitchenId, new Date(2026, 10, 25), db);
+    expect(view.menus).toEqual([expect.objectContaining({ menu: { id: menu, name: 'À la carte' } })]);
+    expect(view.menus[0]!.dishes[0]).toMatchObject({ dishName: 'Cornish cod', belowTarget: false });
+    expect(view.recipes.map((r) => [r.name, r.cost.batch])).toEqual([['Beurre blanc', 100]]);
+    expect(view.unpriced).toEqual([expect.objectContaining({ name: 'White wine', usedIn: ['Beurre blanc'] })]);
   });
 });

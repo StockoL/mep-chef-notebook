@@ -84,7 +84,7 @@ describe('scaling a dish by portions', () => {
   it('works out each component for the covers, and says which have no amount per portion', async () => {
     const sauce = await recipe('Red wine sauce', 'red wine 750ml', { amount: 1, unit: 'l' });
     const puree = await recipe('Celeriac purée', 'celeriac 1kg');
-    const dish = await createDish('Sirloin', db);
+    const dish = await createDish('Sirloin', null, db);
     await addComponentToDish(dish, sauce, db);
     await addComponentToDish(dish, puree, db);
     const links = (await getDishDetails(dish, db))!.components;

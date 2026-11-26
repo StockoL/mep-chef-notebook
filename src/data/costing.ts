@@ -100,6 +100,7 @@ export interface MenuDishGp {
   menuDishId: Id;
   dishId: Id;
   dishName: string;
+  menuId: Id;
   menuName: string;
   price: number | null;
   cost: DishCost;
@@ -123,6 +124,7 @@ export async function menuGps(kitchenId: KitchenId, menuId?: Id, database: MepDa
         menuDishId: place.id,
         dishId: dish.id,
         dishName: dish.name,
+        menuId: menu.id,
         menuName: menu.name,
         price: place.price,
         cost,
