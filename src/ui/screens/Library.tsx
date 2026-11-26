@@ -281,127 +281,140 @@ function inCollection(collection: Collection, kind: 'dish' | 'component', id: st
 }
 
 /**
- * Dishes by menu and course (R7, UX → Library; FEEL_PASS 6). The menu is a
- * heading ("À la carte · on now ▾") that opens a picker: the menus on now
- * and coming up, or all dishes. Opens on the menu last looked at, else the
- * à la carte, else the first menu on now.
+ * Dishes (R7, UX → Library; DECISIONS 58). One control says what's shown,
+ * as a heading ("À la carte · every day ▾") that opens "Show": each
+ * kitchen's menus and all its dishes (yours first, then kitchens you've
+ * worked in), your own dishes, and everything. No separate "where it's
+ * from" filter here: the choice of what to show already says it. Opens on
+ * a current menu served today, unless you chose something else last.
  */
+type Showing = { kind: 'menu'; id: string } | { kind: 'kitchen'; id: string } | { kind: 'mine' } | { kind: 'everything' };
+
+const readShowing = (value: string | undefined): Showing | null => {
+  if (!value) return null;
+  if (value === 'everything' || value === 'all') return { kind: 'everything' };
+  if (value === 'mine') return { kind: 'mine' };
+  if (value.startsWith('kitchen:')) return { kind: 'kitchen', id: value.slice(8) };
+  return { kind: 'menu', id: value };
+};
+const writeShowing = (showing: Showing): string =>
+  showing.kind === 'menu' ? showing.id : showing.kind === 'kitchen' ? `kitchen:${showing.id}` : showing.kind;
+
 function DishesLens() {
   const dishes = useLiveQuery(() => listDishSummaries());
   const place = useLiveQuery(() => getPlace());
-  const menus = useLiveQuery(async () => (place ? (await listMenus(place.kitchenId)).filter((m) => m.status !== 'past') : []), [place?.kitchenId]);
-  // Other kitchens' menus too, including ones you've left: you may be writing up a menu from your last job.
-  const otherMenus = useLiveQuery(async () => {
+  // Every kitchen with something in the book, the one you're in first; each with its current and coming-up menus.
+  const kitchens = useLiveQuery(async () => {
     if (!place) return [];
+    const all = (await listKitchens()).filter((k) => !k.builtIn);
+    all.sort((a, b) => Number(b.id === place.kitchenId) - Number(a.id === place.kitchenId) || Number(a.archived) - Number(b.archived) || a.name.localeCompare(b.name));
     const out = [];
-    for (const kitchen of (await listKitchens()).filter((k) => !k.builtIn && k.id !== place.kitchenId)) {
-      for (const menu of (await listMenus(kitchen.id)).filter((m) => m.status !== 'past')) out.push({ menu, kitchen });
-    }
+    for (const kitchen of all) out.push({ kitchen, menus: (await listMenus(kitchen.id)).filter((m) => m.status !== 'past') });
     return out;
   }, [place?.kitchenId]);
   const types = useLiveQuery(async () => (place ? getListItems({ kind: 'values', list: 'menu-types', kitchenId: place.kitchenId }) : []), [place?.kitchenId]);
-  const lastMenu = useLiveQuery(() => getSetting<string>(MENU_KEY));
-  const [chosen, setChosen] = useState<string | null>(null);
+  const last = useLiveQuery(() => getSetting<string>(MENU_KEY));
+  const [chosen, setChosen] = useState<Showing | null>(null);
   const [picking, setPicking] = useState(false);
   const [sectionId, setSectionId] = useState<string | null>(null);
   const serviceNames = useServiceNames(place?.kitchenId);
-  // Opens on a menu served today (DECISIONS 57): the one last looked at if it is, else the à la carte, else the first.
-  const fallbackMenu = () => {
+
+  const allMenus = (kitchens ?? []).flatMap((k) => k.menus);
+  const here = (kitchens ?? []).find((k) => k.kitchen.id === place?.kitchenId)?.menus ?? [];
+  // Opens on a current menu served today (DECISIONS 57): the last choice if it still makes sense, else the à la carte, else the first.
+  const fallback = (): Showing => {
     const today = isoDayOfWeek(new Date());
-    const current = (menus ?? []).filter((m) => m.status === 'on-now');
+    const current = here.filter((m) => m.status === 'on-now');
     const servedToday = current.filter((m) => servedAt(m, today));
     const isCarte = (m: Menu) => /carte/i.test(types?.find((t) => t.id === m.typeId)?.name ?? m.name);
-    const last = menus?.find((m) => m.id === lastMenu);
-    const lastOk = (last && (last.status !== 'on-now' || servedAt(last, today))) || otherMenus?.some((o) => o.menu.id === lastMenu);
-    return (lastMenu && lastOk ? lastMenu : null) ?? servedToday.find(isCarte)?.id ?? servedToday[0]?.id ?? current.find(isCarte)?.id ?? current[0]?.id ?? menus?.[0]?.id ?? 'all';
+    const remembered = readShowing(last ?? undefined);
+    if (remembered && remembered.kind !== 'menu') return remembered;
+    const lastMenu = remembered ? allMenus.find((m) => m.id === remembered.id) : undefined;
+    if (lastMenu && (lastMenu.kitchenId !== place?.kitchenId || lastMenu.status !== 'on-now' || servedAt(lastMenu, today))) return { kind: 'menu', id: lastMenu.id };
+    const menu = servedToday.find(isCarte) ?? servedToday[0] ?? current.find(isCarte) ?? current[0] ?? here[0];
+    return menu ? { kind: 'menu', id: menu.id } : place && place.kitchenId !== 'none' ? { kind: 'kitchen', id: place.kitchenId } : { kind: 'everything' };
   };
-  const origin = useOrigin();
-  // The menu shown always belongs to the kitchen the filter is on: filtering
-  // to Ellenborough Park shows Ellenborough's menu (or its dishes if it has
-  // none on), never a Dumbleton menu.
-  const allMenus = [...(menus ?? []), ...(otherMenus ?? []).map((o) => o.menu)];
-  const requested = chosen ?? fallbackMenu();
-  const wanted = origin?.value ?? null;
-  const requestedKitchen = allMenus.find((m) => m.id === requested)?.kitchenId;
-  let menuId = requested;
-  if (wanted && requested !== 'all' && requestedKitchen !== wanted) {
-    const ofKitchen = allMenus.filter((m) => m.kitchenId === wanted);
-    menuId = (ofKitchen.find((m) => m.status === 'on-now') ?? ofKitchen[0])?.id ?? 'all';
-  }
-  const view = useLiveQuery(async () => (menuId !== 'all' ? getMenuView(menuId, []) : undefined), [menuId]);
-  const filters = useFilters('dish', origin, view ? { kitchenId: view.menu.kitchenId, value: sectionId, onChange: setSectionId } : undefined);
-  if (!dishes || !menus || !otherMenus) return null;
+  const showing = chosen ?? fallback();
+  const menuId = showing.kind === 'menu' ? showing.id : null;
+  const view = useLiveQuery(async () => (menuId ? getMenuView(menuId, []) : undefined), [menuId]);
+  const filters = useFilters('dish', undefined, view ? { kitchenId: view.menu.kitchenId, value: sectionId, onChange: setSectionId } : undefined);
+  if (!dishes || !kitchens) return null;
 
-  function choose(id: string) {
-    setChosen(id);
+  function choose(next: Showing) {
+    setChosen(next);
     setSectionId(null);
     setPicking(false);
-    void setSetting(MENU_KEY, id);
-    // Picking another kitchen's menu moves the filter with it.
-    const kitchenId = allMenus.find((m) => m.id === id)?.kitchenId;
-    if (origin?.value && kitchenId && kitchenId !== origin.value) origin.choose(kitchenId);
+    void setSetting(MENU_KEY, writeShowing(next));
   }
+  const is = (s: Showing) => writeShowing(s) === writeShowing(showing);
+  const kitchenName = new Map(kitchens.map((k) => [k.kitchen.id, k.kitchen.name]));
+  const menu = menuId ? allMenus.find((m) => m.id === menuId) : undefined;
+  const menuOtherKitchen = menu && menu.kitchenId !== place?.kitchenId;
 
-  const other = otherMenus.find((o) => o.menu.id === menuId);
-  const current = menus.find((m) => m.id === menuId) ?? other?.menu;
+  const title =
+    showing.kind === 'menu' && menu
+      ? `${menu.name} · ${menuOtherKitchen ? kitchenName.get(menu.kitchenId) : menu.status === 'on-now' ? servedLabel(menu, serviceNames).toLowerCase() : 'coming up'}`
+      : showing.kind === 'kitchen'
+        ? `All ${kitchenName.get(showing.id) ?? ''} dishes`
+        : showing.kind === 'mine'
+          ? 'My own dishes'
+          : 'Everything';
   const heading = (
     <div class="library-menu-head">
       <button class="library-menu" type="button" onClick={() => setPicking(true)} aria-haspopup="dialog">
-        {current ? `${current.name} · ${other ? other.kitchen.name : current.status === 'on-now' ? servedLabel(current, serviceNames).toLowerCase() : 'coming up'}` : 'All dishes'} <Icon name="chevron-down" size="s" />
+        {title} <Icon name="chevron-down" size="s" />
       </button>
       {filters.button}
     </div>
   );
+
+  const option = (key: string, target: Showing, label: string, meta?: string) => (
+    <li key={key}>
+      <button class="list-row" type="button" aria-pressed={is(target)} onClick={() => choose(target)}>
+        <span class="list-row__main">
+          <span class="list-row__title">{label}</span>
+          {meta && <span class="list-row__meta">{meta}</span>}
+        </span>
+      </button>
+    </li>
+  );
   const picker = (
-    <Sheet open={picking} onClose={() => setPicking(false)} title="Which menu?">
+    <Sheet open={picking} onClose={() => setPicking(false)} title="Show">
       {picking && (
-        <ul class="row-list" role="list">
-          <li>
-            <a class="list-row" href={paths.menus}>
-              <span class="list-row__main">
-                <span class="list-row__title">All menus</span>
-                <span class="list-row__meta">Current, coming up and past; add, copy or launch one</span>
-              </span>
-              <Icon name="chevron-right" />
-            </a>
-          </li>
-          {menus.map((m) => (
-            <li key={m.id}>
-              <button class="list-row" type="button" aria-pressed={m.id === menuId} onClick={() => choose(m.id)}>
+        <>
+          {kitchens
+            .filter(({ kitchen, menus }) => menus.length > 0 || dishes.some(({ dish }) => dish.kitchenId === kitchen.id))
+            .map(({ kitchen, menus }) => (
+              <section key={kitchen.id} class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
+                <h3 class="section-label">
+                  {kitchen.name}
+                  {kitchen.archived ? ' (left)' : ''}
+                </h3>
+                <ul class="row-list" role="list">
+                  {menus.map((m) => option(m.id, { kind: 'menu', id: m.id }, m.name, [servedLabel(m, kitchen.id === place?.kitchenId ? serviceNames : new Map()), m.status === 'on-now' ? null : 'coming up'].filter(Boolean).join(' · ')))}
+                  {option(`k-${kitchen.id}`, { kind: 'kitchen', id: kitchen.id }, `All ${kitchen.name} dishes`, 'On a menu or not')}
+                </ul>
+              </section>
+            ))}
+          <ul class="row-list" role="list">
+            {dishes.some(({ dish }) => dish.kitchenId === null) && option('mine', { kind: 'mine' }, 'My own dishes', 'Not from a kitchen')}
+            {option('everything', { kind: 'everything' }, 'Everything', 'Every dish in your book, from every kitchen')}
+            <li>
+              <a class="list-row" href={paths.menus}>
                 <span class="list-row__main">
-                  <span class="list-row__title">{m.name}</span>
-                  <span class="list-row__meta">{[servedLabel(m, serviceNames), m.status === 'on-now' ? null : 'coming up'].filter(Boolean).join(' · ')}</span>
+                  <span class="list-row__title">Menus</span>
+                  <span class="list-row__meta">Add, copy or launch a menu; past menus</span>
                 </span>
-              </button>
+                <Icon name="chevron-right" />
+              </a>
             </li>
-          ))}
-          {otherMenus.map(({ menu, kitchen }) => (
-            <li key={menu.id}>
-              <button class="list-row" type="button" aria-pressed={menu.id === menuId} onClick={() => choose(menu.id)}>
-                <span class="list-row__main">
-                  <span class="list-row__title">{menu.name}</span>
-                  <span class="list-row__meta">
-                    {kitchen.name}
-                    {kitchen.archived ? ' (left)' : ''}
-                    {menu.status === 'on-now' ? '' : ' · coming up'}
-                  </span>
-                </span>
-              </button>
-            </li>
-          ))}
-          <li>
-            <button class="list-row" type="button" aria-pressed={menuId === 'all'} onClick={() => choose('all')}>
-              <span class="list-row__main">
-                <span class="list-row__title">All dishes</span>
-              </span>
-            </button>
-          </li>
-        </ul>
+          </ul>
+        </>
       )}
     </Sheet>
   );
 
-  if (menuId !== 'all') {
+  if (menuId) {
     return (
       <>
         {heading}
@@ -434,18 +447,26 @@ function DishesLens() {
       </>
     );
   }
-  const shown = dishes.filter(({ dish }) => filters.matches(dish) && (!origin || origin.matchesDish(dish)));
+  const inScope = (dish: Dish) =>
+    showing.kind === 'everything' || (showing.kind === 'mine' ? dish.kitchenId === null : showing.kind === 'kitchen' && dish.kitchenId === showing.id);
+  const shown = dishes.filter(({ dish }) => inScope(dish) && filters.matches(dish));
   return (
     <>
       {heading}
       {picker}
       {filters.sheet}
-      {shown.length === 0 && <Empty text="Nothing matches. Change the filter." />}
+      {shown.length === 0 && <Empty text="Nothing here yet." />}
       <RowList
         rows={shown.map(({ dish, componentCount }) => ({
           href: paths.dish(dish.id),
           title: dish.name,
-          meta: [origin?.dishWhere(dish), dish.description || (componentCount === 1 ? '1 component' : `${componentCount} components`)].filter(Boolean).join(' · '),
+          // Under Everything, say where each is from: two dishes can share a name.
+          meta: [
+            showing.kind === 'everything' ? (dish.kitchenId ? kitchenName.get(dish.kitchenId) : 'Mine') : null,
+            dish.description || (componentCount === 1 ? '1 component' : `${componentCount} components`),
+          ]
+            .filter(Boolean)
+            .join(' · '),
         }))}
       />
     </>
