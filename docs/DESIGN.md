@@ -6,6 +6,15 @@ How Mep looks and how its interface code is organised. UX.md says what the scree
 
 Warm, quiet and Apple-like: warm stone neutrals, one burnt-orange action colour, white cards on a sunken background, large type for anything read at arm's length. Colour carries meaning, never decoration: orange means "you can act on this", amber means "over time or not confirmed", red means "can't be undone or unsafe".
 
+Colour rules (feel pass, 26 Nov 2026):
+
+- At most one filled orange button per screen: the main action. Everything else is the outlined `.button`, a ghost button or plain text.
+- Chosen chips, segments and ticks are neutral: `--color-text` fill with `--color-text-inverse` text. Unchosen: surface with a border.
+- Small links may stay orange: back links, Edit and Done at the top right, links inside text.
+- Status colours (success, warning, danger) only for status, never decoration. Prompts like "set your service times" are rows in "Needs you", not orange text.
+- Section labels, not headings, inside a page: `.section-label` (blocks/section-label.css), on the real `h2` so screen readers still get the structure: small, semibold, uppercase, muted. One `h1` per page.
+- Empty states are a line of quiet text and one action, not a dashed box.
+
 ## Tokens
 
 The theme is made with the LooseLeaf configurator and lives in `design/`:
@@ -110,7 +119,7 @@ src/ui/
 ## Motion, sound and haptics
 
 - Motion comes from LooseLeaf's motion layer: press (buttons shrink slightly while pressed), the done checkmark drawing itself, sheets sliding in with `@starting-style`.
-- Mep-specific motion: ticked sheet items settle to the bottom; prep mode's "done" card lifts away and the next slides up; scaled numbers change in place. All under the motion switches.
+- Mep-specific motion: switching between reading and editing fades in (`.mode-swap`); a tick fills rather than snapping; the capture bar folds away while scrolling down. All scaled by `--motion-scale`, so reduced motion makes them instant. Not done yet: a ticked item moving to the bottom of the sheet still jumps.
 - Haptics: Safari on iPhone doesn't support the vibration API, so the app can't buzz on iPhone. Use `navigator.vibrate` only where it exists (Android), never as the only feedback. On iPhone the feedback is visual, plus LooseLeaf's opt-in sounds (off by default; useful in prep mode for the countdown passing zero).
 
 ## Icons

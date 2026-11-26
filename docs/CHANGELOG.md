@@ -200,3 +200,18 @@ From first real use: too much on one page.
 - Dishes have a kitchen (schema v8), shown under the name and changeable there; older dishes take theirs from their menus or recipes.
 - Library: filter dishes and components by where they're from (each kitchen, Mine, All). Search results say where each is from, so two dishes called "Steak" can be told apart.
 - Names like "Cornish sea bass (Dumbleton, 2026)": the library offers to tidy them once, recording the kitchen instead, with undo.
+
+## Feel pass (26 Nov 2026)
+
+Calm to use on a shift. No new features (docs/FEEL_PASS.md).
+
+- Allergens are never "none" when nothing is recorded: "Allergens not known yet: no ingredients recorded", and a dish with one empty component isn't complete.
+- Read by default, edit on request: recipes, dishes, menus and techniques open to read, with Edit and Done at the top right (DECISIONS 55). Recipes read like the wireframe: one scale line, ingredients with amounts on the right, numbered steps with quiet chips. The method box shows its readings directly underneath.
+- One orange thing per screen; chosen chips, segments and ticks are black.
+- Quiet structure: one title per page, small section labels, helper text that shows until you've used the field once, empty states as plain text.
+- Today shows the shift: the day, the next service, one "Needs you" line, the next job with Start, and the sheet.
+- Library: opens on the menu last looked at; lenses as one control; the menu as a heading with a picker; filters behind one Filter button; Recent while searching; "Draft" as a small marker.
+- The capture bar only shows where things get captured, and tucks away while scrolling down (DECISIONS 56).
+- Small fixes: the backup reminder and appearance controls fit at phone width; the storage test marker is under Developer; a new menu is made in a sheet.
+- `seed/proposed-split.json`: a proposed split of the seed into components and ingredients, for Louis to correct.
+

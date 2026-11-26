@@ -14,23 +14,39 @@ The person using this is mid-shift: wet hands, one hand free at most, glancing a
 8. Never block on missing data. A draft is always allowed; it just isn't scheduled.
 9. Offline is normal, not an error state. Don't show connection warnings for core features.
 
+## Principles (the feel pass, 26 Nov 2026)
+
+1. Read by default, edit on request. Pages open in a reading view. Editing is one tap away (Edit, top right) and never the first thing you see, except for something just created or a recipe with nothing written yet.
+2. One orange thing per screen. The filled action colour is for the single main action on a screen. Chosen chips and segments are black, not orange.
+3. Quiet structure. One large title per page. Sections get small labels, not headings. Content is the loudest thing on the screen.
+4. Teach once. Helper text shows until the chef has used that field (or seen that screen) once, then goes.
+5. Chrome earns its place. Bars stay only on screens where they're used.
+6. Say what isn't known. Missing data reads as "not known yet", never as a reassuring answer.
+
+## Reading and editing
+
+- Recipes (components), dishes, menus and techniques open to read. Edit (top right) switches the page into edit mode in place, with `?edit=1` in the address, so the phone's Back leaves edit mode; Done (top right) returns to reading (DECISIONS 55).
+- The reading view has no text boxes, unit pickers or helper text. A missing piece (a step with no time, nothing written yet) is a link that opens edit mode.
+- Something just created opens in edit mode. So does a recipe with no ingredients and no method.
+- Settings, kitchen settings and the ingredient page are setup screens and stay as forms.
+
 ## Key screens
 
 ### Today (home)
 
-Opens on today's shift sheet, never on something half-finished: the day, then today's sheet first (covers, progress, tick-off rows, + Add). Below it, quietly: the next service, "needs you" items only when something does (notes to sort, backup due, near the end of the shift "write the next shift's sheet"), the weekly goal as one line, and other days' sheets. Later: a slim "next" bar (next job, Start).
-A capture bar sits above the tab bar on every main screen: tap it and a sheet slides up with the keyboard ready; photo and voice are one tap each from the bar. Waste is logged from the Section tab (DECISIONS 48).
+The shift, not a checklist. From the top: the date and kitchen (small), the day (title); the next service ("Lunch from 12:00 · in 1h 20", tap to change today's times); one "Needs you" line only when something does (notes to sort, backup due, service times not set, this week's goal, last week's check-in, the next shift's sheet near the end of a shift, add to Home Screen), which opens the list; this week's goal as one quiet line; the next job from the plan with Start; today's sheet (progress, tick-off rows, + Add as the one orange button, From chef's sheet); other days' sheets.
+The capture bar sits above the tab bar on Today, Plan, Section and the inbox: tap it and a sheet slides up with the keyboard ready; photo and voice are one tap each from the bar. It tucks away while scrolling down (DECISIONS 56). Waste is logged from the Section tab (DECISIONS 48).
 Common path for a note: tap the bar → type → done.
 
 ### Component
 
-Header: name, type, tags; variation chips underneath (house first); status of the variation in use (draft or ready, with "what's missing").
-Scale control at the top (yield or anchor ingredient).
-Lines, then steps with chips. Editing is inline.
+Reading: name; type, dishes and tags as one small line; whose recipe it is and its status ("House recipe · Dumbleton Hall · Draft: step 3: no time", the missing item a link into edit mode); variation chips when there are two or more; one scale control ("Makes 1kg · as written", tap for the scaling sheet); ingredients as rows (name left, amount right); the method as numbered steps with their chips and technique links; "More about this recipe" folded at the bottom (made a batch, used in, notes and attempts, allergens, versions).
+Edit: name, origin, another way, makes, the ingredients box and the method box, each with what Mep read straight underneath; type, tags, aliases, collections, delete.
 
 ### Dish
 
-Plating photo and spec, components (each opens its recipe), allergens gathered from all of them, the menus it's on, and "add to today's sheet". Scales by portions.
+Reading: plating photo and spec, components (each opens its recipe, scaled to the dish's covers when set), allergens gathered from all of them, "add to today's sheet" (the one orange button), and the menus it's on as a small line.
+Edit: name, kitchen, description, add a component, amounts/order/remove, how many, plating photo and spec, tags, collections, delete.
 
 ### Ingredient
 
@@ -50,10 +66,10 @@ One current task, large; countdown (into negative); one big "done" button. Next 
 
 Four tabs, plus three things that are always there. A navigation map is on the design canvas.
 
-- Always there: the top bar (the kitchen's name, search, and ••• for everything else, including switching kitchen), the capture bar on every main screen. The app doesn't ask which section you're on (DECISIONS 48).
+- Always there: the top bar (the kitchen's name, search, and ••• for everything else, including switching kitchen). The capture bar is on Today, Plan, Section and the inbox only (DECISIONS 56). The app doesn't ask which section you're on (DECISIONS 48).
 - Today: today's sheet, the next job, "needs you". Opens add-to-sheet, prep mode, tomorrow's sheet and the inbox.
 - Library: a cookbook with four ways in, behind one segmented control, plus one search box and + to add:
-    - Dishes: by menu and course; switch menu (on now, coming up, past) at the top. A dish opens its components; a component opens its recipe.
+    - Dishes: by menu and course. The menu is a heading ("À la carte · on now ▾") that opens a picker; the library opens on the menu last looked at, else the à la carte, else the first on now. Filters (where it's from, section, tags, collections) are behind one Filter button that shows how many are on. A dish opens its page; a component opens its recipe.
     - Components: grouped by type (the kitchen's own list), expandable in place; each says which dishes use it. Filters: my section, drafts, tags, collections.
     - Ingredients: A–Z; each opens its ingredient page.
     - Techniques: grouped by category. Filled = has your notes; outlined = name only.
