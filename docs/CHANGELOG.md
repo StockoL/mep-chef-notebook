@@ -217,3 +217,4 @@ Calm to use on a shift. No new features (docs/FEEL_PASS.md).
 - Dishes: the menus a dish is on are links, and "Add to a menu" puts it on one from the dish page (menu, then course; 3 taps, with Undo).
 - Menus are easy to find again: ••• → Menus (with what's on now), "All menus" at the top of the Library's menu picker, and "Open À la carte" under a menu's dishes.
 - Working on another kitchen's menus (e.g. one you've left): a dish opened from a menu goes Back to that menu, a recipe opened from a dish goes Back to the dish; "Add to a menu" offers the dish's own kitchen's menus; the Library's menu picker and the Menus screen include other kitchens' menus.
+- Library → Dishes: the "where it's from" filter now chooses the menu shown (filter to Ellenborough Park and you see Ellenborough's menu, or its dishes if it has none on); picking another kitchen's menu moves the filter with it.

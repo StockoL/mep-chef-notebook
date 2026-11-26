@@ -167,10 +167,13 @@ function Recent() {
  * a section (on a menu), tags and collections. The button shows how many
  * are on.
  */
-function useFilters(kind: 'dish' | 'component', section?: { kitchenId: string; value: string | null; onChange: (id: string | null) => void }) {
+function useFilters(
+  kind: 'dish' | 'component',
+  origin: ReturnType<typeof useOrigin>,
+  section?: { kitchenId: string; value: string | null; onChange: (id: string | null) => void },
+) {
   const tags = useLiveQuery(() => listTags());
   const collections = useLiveQuery(() => listCollections());
-  const origin = useOrigin();
   const [tagId, setTagId] = useState<string | null>(null);
   const [collectionId, setCollectionId] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -243,6 +246,7 @@ function useOrigin() {
 
   return {
     value,
+    choose,
     matchesDish: (dish: Dish) => value === null || dishOrigin(dish) === value,
     matchesComponent: (id: string) => value === null || Boolean(origins.get(id)?.has(value)),
     /** Where it's from, for its row, when showing everything (always, with `always`). */
@@ -304,9 +308,21 @@ function DishesLens() {
     const known = menus?.some((m) => m.id === lastMenu) || otherMenus?.some((o) => o.menu.id === lastMenu);
     return (lastMenu && known ? lastMenu : null) ?? carte?.id ?? onNow[0]?.id ?? menus?.[0]?.id ?? 'all';
   };
-  const menuId = chosen ?? fallbackMenu();
+  const origin = useOrigin();
+  // The menu shown always belongs to the kitchen the filter is on: filtering
+  // to Ellenborough Park shows Ellenborough's menu (or its dishes if it has
+  // none on), never a Dumbleton menu.
+  const allMenus = [...(menus ?? []), ...(otherMenus ?? []).map((o) => o.menu)];
+  const requested = chosen ?? fallbackMenu();
+  const wanted = origin?.value ?? null;
+  const requestedKitchen = allMenus.find((m) => m.id === requested)?.kitchenId;
+  let menuId = requested;
+  if (wanted && requested !== 'all' && requestedKitchen !== wanted) {
+    const ofKitchen = allMenus.filter((m) => m.kitchenId === wanted);
+    menuId = (ofKitchen.find((m) => m.status === 'on-now') ?? ofKitchen[0])?.id ?? 'all';
+  }
   const view = useLiveQuery(async () => (menuId !== 'all' ? getMenuView(menuId, []) : undefined), [menuId]);
-  const filters = useFilters('dish', view ? { kitchenId: view.menu.kitchenId, value: sectionId, onChange: setSectionId } : undefined);
+  const filters = useFilters('dish', origin, view ? { kitchenId: view.menu.kitchenId, value: sectionId, onChange: setSectionId } : undefined);
   if (!dishes || !menus || !otherMenus) return null;
 
   function choose(id: string) {
@@ -314,6 +330,9 @@ function DishesLens() {
     setSectionId(null);
     setPicking(false);
     void setSetting(MENU_KEY, id);
+    // Picking another kitchen's menu moves the filter with it.
+    const kitchenId = allMenus.find((m) => m.id === id)?.kitchenId;
+    if (origin?.value && kitchenId && kitchenId !== origin.value) origin.choose(kitchenId);
   }
 
   const other = otherMenus.find((o) => o.menu.id === menuId);
@@ -407,7 +426,6 @@ function DishesLens() {
       </>
     );
   }
-  const origin = filters.origin;
   const shown = dishes.filter(({ dish }) => filters.matches(dish) && (!origin || origin.matchesDish(dish)));
   return (
     <>
@@ -432,8 +450,8 @@ function ComponentsLens() {
   const kitchenId = place?.kitchenId;
   const summaries = useLiveQuery(async () => (kitchenId ? listComponentSummaries(kitchenId) : undefined), [kitchenId]);
   const types = useLiveQuery(() => getListItems({ kind: 'values', list: 'component-types', kitchenId: null }));
-  const filters = useFilters('component');
-  const origin = filters.origin;
+  const origin = useOrigin();
+  const filters = useFilters('component', origin);
   if (!summaries || !types || !origin) return null;
   if (summaries.length === 0) return <Empty text="No components yet. A component is a recipe for one part: a stock, a sauce, a garnish. Tap + New." />;
 
