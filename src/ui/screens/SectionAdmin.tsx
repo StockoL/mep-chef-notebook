@@ -129,10 +129,6 @@ export function Count() {
       {!current && rows.length > 0 && (
         <section class="flow" aria-labelledby="count-done">
           <h2 id="count-done">Counted</h2>
-          <p>
-            Stock worth {formatPence(view.value.pence)}
-            {view.value.uncosted.length ? ` (not costed: ${view.value.uncosted.join(', ')})` : ''}.
-          </p>
           <h3 class="used-in__label">Below par ({below.length})</h3>
           <ul class="row-list" role="list">
             {below.map((r) => (

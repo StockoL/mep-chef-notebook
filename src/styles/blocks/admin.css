@@ -149,3 +149,10 @@
     font-size: 11pt;
   }
 }
+
+/* Money: the GP figure at the end of a dish row. */
+.money-gp {
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

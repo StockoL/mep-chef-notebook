@@ -96,3 +96,21 @@ button.variation-line {
   font-size: var(--step--1);
   color: var(--color-action);
 }
+
+/* "More about this recipe": the folded-away part of a recipe or dish page. */
+.more-about {
+  border-block-start: 1px solid var(--color-border);
+  padding-block-start: var(--space-xs);
+}
+
+.more-about__summary {
+  display: flex;
+  align-items: center;
+  min-block-size: var(--tap);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+.more-about__body {
+  padding-block-start: var(--space-s);
+}

@@ -3,10 +3,7 @@ import { isoWeek } from '../../core/time/calendar';
 import { getCheckInDue, getGoal, listGoals, setGoalText, setReflection } from '../../data/goals';
 import { getListItems } from '../../data/lists';
 import { listWaste } from '../../data/waste';
-import { itemCost } from '../../data/costing';
 import { goalSuggestions } from '../../data/report';
-import { formatPence } from '../../core/costing/costing';
-import type { WasteEntry } from '../../data/types';
 import { listBatches } from '../../data/foodSafety';
 import { getPlace } from '../../data/kitchens';
 import { BatchLabelView } from '../components/FoodSafety';
@@ -21,16 +18,28 @@ import { Icon } from '../icons';
 import { paths } from '../router';
 import { trackSave } from '../saveStatus';
 
-/** Section tab: the chef's station admin. Stock, pars and checklists arrive in Phase 11. */
+interface HubLink {
+  href: string;
+  label: string;
+  meta?: string;
+}
+
+/**
+ * Section tab, in two groups (DECISIONS 54): what's used on shift, then the
+ * admin done once a day or a week. Money has its own screen.
+ */
 export function Section() {
   const [logging, setLogging] = useState(false);
-  const links = [
-    { href: paths.count, label: 'Count', meta: 'Against pars, with stock value' },
-    { href: paths.orders, label: 'Draft orders', meta: 'What’s below par, by supplier' },
+  const onShift: HubLink[] = [
+    { href: paths.sectionList, label: 'Section lists', meta: 'Standing items and pars' },
     { href: paths.checklists, label: 'Opening and closing checks' },
-    { href: paths.sectionList, label: 'Section lists' },
-    { href: paths.waste, label: 'Waste log' },
     { href: paths.labels, label: 'Batches and labels' },
+    { href: paths.waste, label: 'Waste log' },
+  ];
+  const admin: HubLink[] = [
+    { href: paths.count, label: 'Count', meta: 'Against pars' },
+    { href: paths.orders, label: 'Draft orders', meta: 'What’s below par, by supplier' },
+    { href: paths.money, label: 'Money', meta: 'GP, prices, recipe costs, stock and waste' },
     { href: paths.goal, label: 'Weekly goal' },
     { href: paths.report, label: 'Weekly report', meta: 'One page, to print or save as PDF' },
   ];
@@ -42,13 +51,26 @@ export function Section() {
         <Icon name="bin" /> Log waste
       </button>
       <WasteSheet open={logging} onClose={() => setLogging(false)} />
+      <HubLinks title="On shift" links={onShift} />
+      <HubLinks title="Admin" links={admin} />
+    </section>
+  );
+}
+
+function HubLinks({ title, links }: { title: string; links: HubLink[] }) {
+  const id = `hub-${title.toLowerCase().replace(/\W+/g, '-')}`;
+  return (
+    <section class="flow" aria-labelledby={id} style={{ '--flow-space': 'var(--space-2xs)' }}>
+      <h2 id={id} class="used-in__label">
+        {title}
+      </h2>
       <ul class="row-list" role="list">
         {links.map((link) => (
           <li key={link.href}>
             <a class="list-row" href={link.href}>
               <span class="list-row__main">
                 <span class="list-row__title">{link.label}</span>
-                {'meta' in link && link.meta && <span class="list-row__meta">{link.meta}</span>}
+                {link.meta && <span class="list-row__meta">{link.meta}</span>}
               </span>
               <Icon name="chevron-right" />
             </a>
@@ -90,7 +112,6 @@ export function WasteLog() {
                 </span>
                 <span class="list-row__meta">
                   {[formatCalendarDate(entry.date), reasonName(entry.reasonId)].filter(Boolean).join(' · ')}
-                  <WasteCost entry={entry} />
                 </span>
               </span>
               <Icon name="chevron-right" />
@@ -219,15 +240,6 @@ export function Labels() {
       </Sheet>
     </section>
   );
-}
-
-/** What a waste entry cost, from today's prices (A4). Nothing when it can't be costed. */
-function WasteCost({ entry }: { entry: WasteEntry }) {
-  const cost = useLiveQuery(
-    async () => (entry.quantity ? itemCost({ componentId: entry.componentId, ingredientId: entry.ingredientId }, entry.quantity, entry.kitchenId) : null),
-    [entry.id, entry.updatedAt],
-  );
-  return cost ? <> · {formatPence(cost)}</> : null;
 }
 
 /** Goals the last week's patterns suggest (G1): the chef chooses, or writes their own. */

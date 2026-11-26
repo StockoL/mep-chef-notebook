@@ -43,7 +43,8 @@ export function VariationChips({ componentId, kitchenId, shown }: { componentId:
   return (
     <div class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
       <div class="cluster" role="group" aria-label="Ways of making it" style={{ '--gutter': 'var(--space-2xs)' }}>
-        {variations.map(({ variation, label, inUse }) => (
+        {/* With one way of making it, the line under the chips already says whose it is. */}
+        {variations.length > 1 && variations.map(({ variation, label, inUse }) => (
           <a
             key={variation.id}
             class="chip"

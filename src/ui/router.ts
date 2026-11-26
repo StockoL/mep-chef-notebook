@@ -42,6 +42,7 @@ export const paths = {
   orders: `${BASE}section/orders`,
   checklists: `${BASE}section/checklists`,
   report: `${BASE}section/report`,
+  money: `${BASE}section/money`,
   matrix: (menuId: string) => `${BASE}menu/${menuId}/allergens`,
   goal: `${BASE}section/goal`,
   settings: `${BASE}settings`,

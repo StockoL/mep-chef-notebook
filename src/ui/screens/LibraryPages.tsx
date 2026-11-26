@@ -1,5 +1,7 @@
 import { useLocation } from 'preact-iso';
+import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { setDishKitchen } from '../../data/dishOrigin';
 import { formatAmount } from '../../core/scaling/rounding';
 import { UNIT_CHOICES, type Unit } from '../../core/units/units';
 import { getPlace } from '../../data/kitchens';
@@ -19,6 +21,7 @@ import {
   updateDish,
   updateIngredient,
   setVariationOrigin,
+  type DishDetails,
   type VariationOrigin,
 } from '../../data/library';
 import { createKitchen, getKitchen, listKitchens, setKitchenArchived } from '../../data/kitchens';
@@ -46,7 +49,6 @@ import {
 import { MediaView } from '../components/MediaView';
 import { MethodEditor } from '../components/MethodEditor';
 import { techniquesForIngredient } from '../../data/techniques';
-import { ComponentCostView, DishCostView } from '../components/Costs';
 import { menuLabel } from './Menus';
 import { AttemptLog, IdeaFields, VariationActions, VariationChips } from '../components/Variations';
 import { IngredientWeights, PerPortionButton, PortionsPanel, ScalePanel } from '../components/Scaling';
@@ -109,55 +111,58 @@ export function ComponentPage({ id = '' }: { id?: string }) {
       {variation?.source === 'idea' && <IdeaFields key={variation.id} variation={variation} />}
       {kitchenId && choice !== undefined && <ScalePanel componentId={id} kitchenId={kitchenId} choice={choice} variationId={variation?.id ?? null} />}
 
-      <NameField value={component.name} onSave={(name) => updateComponent(id, { name })} />
-      <ChipChoice
-        label="Type"
-        choices={(types ?? []).filter((t) => !t.hidden || t.id === component.typeId).map((t) => ({ value: t.id, label: t.name }))}
-        value={component.typeId}
-        onChange={(typeId) => trackSave(updateComponent(id, { typeId }))}
-        allowNone
-      />
       {variation && <YieldField key={variation.id} variation={variation} />}
 
       {/* While scaled, the scaled list stands in for the editor: the recipe is only edited as written. */}
       {variation && !choice && <LinesEditor key={`lines-${variation.id}`} variationId={variation.id} componentId={id} lines={lines} />}
       {variation && <MethodEditor key={`steps-${variation.id}`} variation={variation} steps={steps} componentName={component.name} />}
-
-      <TagEditor tagIds={component.tagIds} onChange={(tagIds) => updateComponent(id, { tagIds })} suggested={tagHints ?? []} />
-      <AliasesField aliases={component.aliases} onSave={(aliases) => updateComponent(id, { aliases })} />
-      <CollectionToggles member={{ kind: 'component', id }} />
-
-      <UsedIn
-        groups={[
-          { label: 'In dishes', items: dishes.map((d) => ({ href: paths.dish(d.id), name: d.name })) },
-          { label: 'Used in components', items: usedInComponents.map((c) => ({ href: paths.component(c.id), name: c.name })) },
-          { label: 'On menus', items: (menus ?? []).map((m) => ({ href: paths.menu(m.id), name: m.status === 'on-now' ? m.name : `${m.name} (${m.status === 'past' ? 'past' : 'coming up'})` })) },
-        ]}
-        empty="Not on any dish yet."
-      />
-
-      <section class="flow" aria-labelledby="component-notes">
-        <h2 id="component-notes">Notes and attempts</h2>
-        {variation && kitchenId && <AttemptLog componentId={id} variationId={variation.id} kitchenId={kitchenId} />}
-        {notes?.map((note) => (
-          <div key={note.id} class="card">
-            <div class="card__body">
-              <p class="field__hint">{new Date(note.createdAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</p>
-              <NoteEditor note={note} />
-            </div>
-          </div>
-        ))}
-      </section>
-
-      {variation && kitchenId && <ComponentAllergens componentId={id} kitchenId={kitchenId} variationId={variation.id} />}
-      {kitchenId && <ComponentCostView componentId={id} kitchenId={kitchenId} />}
       <MadeButton componentId={id} label="Made a batch: label it" />
 
-      {variation && kitchenId && <VariationActions componentId={id} kitchenId={kitchenId} shown={variation} />}
+      {/* Everything else about the recipe, folded away (DECISIONS 54): the page opens on what you cook from. */}
+      <MoreAbout storageKey="more.component" title="More about this recipe">
+        <NameField value={component.name} onSave={(name) => updateComponent(id, { name })} />
+        <ChipChoice
+          label="Type"
+          choices={(types ?? []).filter((t) => !t.hidden || t.id === component.typeId).map((t) => ({ value: t.id, label: t.name }))}
+          value={component.typeId}
+          onChange={(typeId) => trackSave(updateComponent(id, { typeId }))}
+          allowNone
+        />
 
-      <button class="button" type="button" data-variant="danger" onClick={remove}>
-        Delete component
-      </button>
+        <TagEditor tagIds={component.tagIds} onChange={(tagIds) => updateComponent(id, { tagIds })} suggested={tagHints ?? []} />
+        <AliasesField aliases={component.aliases} onSave={(aliases) => updateComponent(id, { aliases })} />
+        <CollectionToggles member={{ kind: 'component', id }} />
+
+        <UsedIn
+          groups={[
+            { label: 'In dishes', items: dishes.map((d) => ({ href: paths.dish(d.id), name: d.name })) },
+            { label: 'Used in components', items: usedInComponents.map((c) => ({ href: paths.component(c.id), name: c.name })) },
+            { label: 'On menus', items: (menus ?? []).map((m) => ({ href: paths.menu(m.id), name: m.status === 'on-now' ? m.name : `${m.name} (${m.status === 'past' ? 'past' : 'coming up'})` })) },
+          ]}
+          empty="Not on any dish yet."
+        />
+
+        <section class="flow" aria-labelledby="component-notes">
+          <h2 id="component-notes">Notes and attempts</h2>
+          {variation && kitchenId && <AttemptLog componentId={id} variationId={variation.id} kitchenId={kitchenId} />}
+          {notes?.map((note) => (
+            <div key={note.id} class="card">
+              <div class="card__body">
+                <p class="field__hint">{new Date(note.createdAt).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                <NoteEditor note={note} />
+              </div>
+            </div>
+          ))}
+        </section>
+
+        {variation && kitchenId && <ComponentAllergens componentId={id} kitchenId={kitchenId} variationId={variation.id} />}
+
+        {variation && kitchenId && <VariationActions componentId={id} kitchenId={kitchenId} shown={variation} />}
+
+        <button class="button" type="button" data-variant="danger" onClick={remove}>
+          Delete component
+        </button>
+      </MoreAbout>
     </section>
   );
 }
@@ -355,14 +360,19 @@ export function DishPage({ id = '' }: { id?: string }) {
   return (
     <section class="flow" key={id}>
       <ScreenHeader title={dish.name} back={BACK} />
-      <NameField value={dish.name} onSave={(name) => updateDish(id, { name })} />
-      <TextAreaField
-        id="dish-description"
-        label="Description"
-        value={dish.description}
-        placeholder="As it reads on the menu"
-        onSave={(description) => updateDish(id, { description })}
+      <DishOriginLine dishId={id} kitchenId={dish.kitchenId} />
+
+      <DishComponents
+        dishId={id}
+        dishName={dish.name}
+        components={components}
+        onAdd={() => setPicking(true)}
+        editing={editingList}
+        onToggleEditing={() => setEditingList(!editingList)}
       />
+
+      {components.length > 0 && place && <DishAtWork dishId={id} kitchenId={place.kitchenId} />}
+      {components.length > 0 && place && <PortionsPanel dishId={id} kitchenId={place.kitchenId} />}
 
       <section class="flow" aria-labelledby="plating">
         <h2 id="plating">Plating</h2>
@@ -387,22 +397,78 @@ export function DishPage({ id = '' }: { id?: string }) {
         />
       </section>
 
+      <MoreAbout storageKey="more.dish" title="More about this dish">
+        <NameField value={dish.name} onSave={(name) => updateDish(id, { name })} />
+        <TextAreaField
+          id="dish-description"
+          label="Description"
+          value={dish.description}
+          placeholder="As it reads on the menu"
+          onSave={(description) => updateDish(id, { description })}
+        />
+
+        <UsedIn
+          groups={[{ label: 'On menus', items: (dishMenus ?? []).map(({ menu }) => ({ href: paths.menu(menu.id), name: menuLabel(menu) })) }]}
+          empty="Not on a menu. Add it from a menu: Library → Dishes → Menus."
+        />
+
+        <TagEditor tagIds={dish.tagIds} onChange={(tagIds) => updateDish(id, { tagIds })} suggested={dishTagHints ?? []} />
+        <CollectionToggles member={{ kind: 'dish', id }} />
+
+        <button class="button" type="button" data-variant="danger" onClick={remove}>
+          Delete dish
+        </button>
+      </MoreAbout>
+
+      {place && (
+        <ComponentPicker
+          open={picking}
+          onClose={() => setPicking(false)}
+          kitchenId={place.kitchenId}
+          exclude={components.map((c) => c.component.id)}
+          onPick={async (componentId, name) => {
+            await trackSave(addComponentToDish(id, componentId));
+            showMessage(`Added ${name} to ${dish.name}.`);
+          }}
+        />
+      )}
+    </section>
+  );
+}
+
+/** A dish's components: tap one to open it; "Amounts, order, remove" to edit the list. */
+function DishComponents({
+  dishId,
+  dishName,
+  components,
+  onAdd,
+  editing,
+  onToggleEditing,
+}: {
+  dishId: string;
+  dishName: string;
+  components: DishDetails['components'];
+  onAdd: () => void;
+  editing: boolean;
+  onToggleEditing: () => void;
+}) {
+  return (
       <section class="flow" aria-labelledby="dish-components">
         <h2 id="dish-components">Components</h2>
         {components.length === 0 && <p class="field__hint">Add each part of the dish: the purée, the sauce, the garnish.</p>}
         <ul class="row-list" role="list">
           {components.map(({ link, component }, index) => (
             <li key={link.id}>
-              {editingList ? (
+              {editing ? (
                 <div class="list-row" data-static>
                   <span class="list-row__main">
                     <span class="list-row__title">{component.name}</span>
                     <PerPortionButton link={link} name={component.name} />
                   </span>
-                  <button class="button" type="button" data-variant="ghost" aria-label={`Move ${component.name} up`} disabled={index === 0} onClick={() => trackSave(moveDishComponent(id, link.id, -1))}>
+                  <button class="button" type="button" data-variant="ghost" aria-label={`Move ${component.name} up`} disabled={index === 0} onClick={() => trackSave(moveDishComponent(dishId, link.id, -1))}>
                     ↑
                   </button>
-                  <button class="button" type="button" data-variant="ghost" aria-label={`Move ${component.name} down`} disabled={index === components.length - 1} onClick={() => trackSave(moveDishComponent(id, link.id, 1))}>
+                  <button class="button" type="button" data-variant="ghost" aria-label={`Move ${component.name} down`} disabled={index === components.length - 1} onClick={() => trackSave(moveDishComponent(dishId, link.id, 1))}>
                     ↓
                   </button>
                   <button
@@ -412,7 +478,7 @@ export function DishPage({ id = '' }: { id?: string }) {
                     aria-label={`Take ${component.name} off this dish`}
                     onClick={async () => {
                       const removed = await removeComponentFromDish(link.id);
-                      if (removed) showMessage(`Took ${component.name} off ${dish.name}.`, () => restoreSnapshot({ dishComponents: [removed] }));
+                      if (removed) showMessage(`Took ${component.name} off ${dishName}.`, () => restoreSnapshot({ dishComponents: [removed] }));
                     }}
                   >
                     <Icon name="bin" />
@@ -433,46 +499,16 @@ export function DishPage({ id = '' }: { id?: string }) {
           ))}
         </ul>
         <div class="cluster">
-          <button class="button" type="button" data-variant="primary" onClick={() => setPicking(true)}>
+          <button class="button" type="button" data-variant="primary" onClick={onAdd}>
             Add a component
           </button>
           {components.length > 0 && (
-            <button class="button" type="button" onClick={() => setEditingList(!editingList)} aria-pressed={editingList}>
-              {editingList ? 'Done' : 'Amounts, order, remove'}
+            <button class="button" type="button" onClick={onToggleEditing} aria-pressed={editing}>
+              {editing ? 'Done' : 'Amounts, order, remove'}
             </button>
           )}
         </div>
       </section>
-
-      {components.length > 0 && place && <PortionsPanel dishId={id} kitchenId={place.kitchenId} />}
-      {components.length > 0 && place && <DishAtWork dishId={id} kitchenId={place.kitchenId} />}
-      {components.length > 0 && place && <DishCostView dishId={id} kitchenId={place.kitchenId} />}
-
-      <UsedIn
-        groups={[{ label: 'On menus', items: (dishMenus ?? []).map(({ menu }) => ({ href: paths.menu(menu.id), name: menuLabel(menu) })) }]}
-        empty="Not on a menu. Add it from a menu: Library → Dishes → Menus."
-      />
-
-      <TagEditor tagIds={dish.tagIds} onChange={(tagIds) => updateDish(id, { tagIds })} suggested={dishTagHints ?? []} />
-      <CollectionToggles member={{ kind: 'dish', id }} />
-
-      <button class="button" type="button" data-variant="danger" onClick={remove}>
-        Delete dish
-      </button>
-
-      {place && (
-        <ComponentPicker
-          open={picking}
-          onClose={() => setPicking(false)}
-          kitchenId={place.kitchenId}
-          exclude={components.map((c) => c.component.id)}
-          onPick={async (componentId, name) => {
-            await trackSave(addComponentToDish(id, componentId));
-            showMessage(`Added ${name} to ${dish.name}.`);
-          }}
-        />
-      )}
-    </section>
   );
 }
 
@@ -564,6 +600,71 @@ export function IngredientPage({ id = '' }: { id?: string }) {
 }
 
 // ─── Shared ───────────────────────────────────────────────────────────────
+
+/**
+ * "More about this recipe": the setup and reference parts of a page, folded
+ * away so it opens on what you cook from. Remembers whether it was left
+ * open (per kind of page, for this session).
+ */
+function MoreAbout({ storageKey, title, children }: { storageKey: string; title: string; children: ComponentChildren }) {
+  const [open, setOpen] = useState(() => sessionStorage.getItem(storageKey) === 'open');
+  return (
+    <details
+      class="more-about"
+      open={open}
+      onToggle={(e) => {
+        const next = e.currentTarget.open;
+        setOpen(next);
+        sessionStorage.setItem(storageKey, next ? 'open' : 'closed');
+      }}
+    >
+      <summary class="more-about__summary">{title}</summary>
+      {open && <div class="flow more-about__body">{children}</div>}
+    </details>
+  );
+}
+
+/**
+ * Where a dish is from (DECISIONS 54): "Dumbleton Hall · on À la carte".
+ * Tap it to change the kitchen, or make it your own.
+ */
+function DishOriginLine({ dishId, kitchenId }: { dishId: string; kitchenId: string | null }) {
+  const kitchens = useLiveQuery(() => listKitchens());
+  const dishMenus = useLiveQuery(() => menusForDish(dishId), [dishId]);
+  const [open, setOpen] = useState(false);
+  const real = (kitchens ?? []).filter((k) => !k.builtIn);
+  const kitchen = real.find((k) => k.id === kitchenId);
+  const onMenus = (dishMenus ?? []).filter(({ menu }) => menu.kitchenId === kitchenId).map(({ menu }) => menuLabel(menu));
+  const label = [kitchen ? kitchen.name : 'Your own', onMenus.length ? `on ${onMenus.join(', ')}` : null].filter(Boolean).join(' · ');
+  return (
+    <>
+      <button class="variation-line" type="button" onClick={() => setOpen(true)} aria-label="Where this dish is from">
+        {label}
+        <Icon name="chevron-right" />
+      </button>
+      <Sheet open={open} onClose={() => setOpen(false)} title="Where’s this dish from?">
+        {open && (
+          <>
+            <ChipChoice
+              label="Kitchen"
+              choices={[...real.map((k) => ({ value: k.id, label: k.archived ? `${k.name} (left)` : k.name })), { value: 'mine', label: 'My own' }]}
+              value={kitchenId ?? 'mine'}
+              onChange={async (next) => {
+                if (!next) return;
+                await trackSave(setDishKitchen(dishId, next === 'mine' ? null : next));
+                setOpen(false);
+              }}
+            />
+            <p class="field__hint">Shown under the name and used by the library’s filter, so the name can stay as the menu writes it.</p>
+            <button class="button" type="button" data-variant="primary" onClick={() => setOpen(false)}>
+              Done
+            </button>
+          </>
+        )}
+      </Sheet>
+    </>
+  );
+}
 
 /** "Used in" lists, built automatically (UX → Editing rule 8: shown, never asked for). */
 function UsedIn({ groups, empty }: { groups: { label: string; items: { href: string; name: string }[] }[]; empty: string }) {

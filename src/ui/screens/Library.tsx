@@ -1,5 +1,9 @@
 import { useLocation } from 'preact-iso';
 import { useEffect, useRef, useState } from 'preact/hooks';
+import { componentOrigins, findSuffixedNames, MINE, originChoices, tidySuffixedNames, type Origin } from '../../data/dishOrigin';
+import { restoreSnapshot } from '../../data/snapshot';
+import { showMessage } from '../components/UndoBar';
+import { trackSave } from '../saveStatus';
 import { getPlace } from '../../data/kitchens';
 import { createComponent, createDish, createIngredient, listComponentSummaries, listDishSummaries, listIngredients } from '../../data/library';
 import { getListItems, ListError } from '../../data/lists';
@@ -7,7 +11,7 @@ import { getMenuView, listMenus } from '../../data/menus';
 import { listRecent, searchLibrary } from '../../data/search';
 import { listCollections, listTags } from '../../data/tags';
 import { createTechnique, hasOwnNotes, listTechniques } from '../../data/techniques';
-import type { Collection } from '../../data/types';
+import type { Collection, Dish } from '../../data/types';
 import { ChipChoice, Segmented } from '../components/Controls';
 import { Sheet } from '../components/Sheet';
 import { formatWhen } from '../format';
@@ -24,6 +28,7 @@ const LENSES: { value: Lens; label: string }[] = [
   { value: 'techniques', label: 'Techniques' },
 ];
 const LENS_KEY = 'mep.libraryLens';
+const ORIGIN_KEY = 'mep.libraryOrigin';
 
 /**
  * The library (R7, R2, UX → Navigation → Library): one search box, recently
@@ -72,6 +77,7 @@ export function Library() {
         <SearchResults query={search} />
       ) : (
         <>
+          <TidyNames />
           <Recent />
           {/* Chips on one row that scrolls: four long labels don't fit across a phone. */}
           <div class="reel" role="region" aria-label="Show" tabIndex={0}>
@@ -103,6 +109,34 @@ export function Library() {
 }
 
 // ─── Lenses ───────────────────────────────────────────────────────────────
+
+/**
+ * A one-off offer (DECISIONS 54): names written with where they're from,
+ * "Cornish sea bass (Dumbleton, 2026)", tidied to "Cornish sea bass" with
+ * the kitchen recorded instead. Shows only while there are such names.
+ */
+function TidyNames() {
+  const found = useLiveQuery(() => findSuffixedNames());
+  if (!found?.length) return null;
+  async function tidy() {
+    const { count, snapshot } = await trackSave(tidySuffixedNames());
+    showMessage(`Tidied ${count} ${count === 1 ? 'name' : 'names'}. Where each is from now shows under its name.`, () => restoreSnapshot(snapshot));
+  }
+  const example = found[0]!;
+  return (
+    <div class="card">
+      <div class="card__body flow">
+        <p>
+          {found.length === 1 ? 'One name ends' : `${found.length} names end`} with where it’s from, like “{example.name}”. Mep can show that under the name instead: “{example.tidied}”, from{' '}
+          {example.kitchenName}.
+        </p>
+        <button class="button" type="button" data-variant="primary" onClick={tidy}>
+          Tidy {found.length === 1 ? 'it' : `all ${found.length}`}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 function Recent() {
   const recent = useLiveQuery(() => listRecent());
@@ -155,6 +189,58 @@ function useFilters(kind: 'dish' | 'component') {
   return { matches, controls };
 }
 
+/**
+ * "Where it's from" (DECISIONS 54): chips for each kitchen with something in
+ * the book, then Mine; All shows everything, with where each is from under
+ * its name. Starts on the kitchen you're in; the choice is kept for the
+ * session.
+ */
+function useOrigin() {
+  const place = useLiveQuery(() => getPlace());
+  const choices = useLiveQuery(async () => (place ? originChoices(place.kitchenId) : undefined), [place?.kitchenId]);
+  const origins = useLiveQuery(() => componentOrigins());
+  const [chosen, setChosen] = useState<string | null>(() => sessionStorage.getItem(ORIGIN_KEY));
+  if (!choices || !origins || !place) return undefined;
+
+  const stored = chosen === 'all' ? null : chosen;
+  const fallback = choices.some((c) => c.value === place.kitchenId) ? place.kitchenId : null;
+  const value: Origin | null = chosen === null ? fallback : stored && choices.some((c) => c.value === stored) ? stored : null;
+  const names = new Map(choices.map((c) => [c.value, c.label]));
+  const showWhere = value === null && choices.length > 1;
+  const choose = (next: Origin | null) => {
+    setChosen(next ?? 'all');
+    sessionStorage.setItem(ORIGIN_KEY, next ?? 'all');
+  };
+  const dishOrigin = (dish: Dish): Origin => dish.kitchenId ?? MINE;
+
+  return {
+    matchesDish: (dish: Dish) => value === null || dishOrigin(dish) === value,
+    matchesComponent: (id: string) => value === null || Boolean(origins.get(id)?.has(value)),
+    /** Where it's from, for its row, when showing everything (always, with `always`). */
+    dishWhere: (dish: Dish, always = false) => (showWhere || always ? names.get(dishOrigin(dish)) : undefined),
+    componentWhere: (id: string, always = false) =>
+      showWhere || always
+        ? [...(origins.get(id) ?? [])]
+            .map((o) => names.get(o))
+            .filter(Boolean)
+            .join(', ')
+        : undefined,
+    controls:
+      choices.length < 2 ? null : (
+        <div class="reel" role="region" aria-label="Where it’s from" tabIndex={0}>
+          {choices.map((c) => (
+            <button key={c.value} class="chip" type="button" aria-pressed={value === c.value} onClick={() => choose(c.value)}>
+              {c.label}
+            </button>
+          ))}
+          <button class="chip" type="button" aria-pressed={value === null} onClick={() => choose(null)}>
+            All
+          </button>
+        </div>
+      ),
+  };
+}
+
 function inCollection(collection: Collection, kind: 'dish' | 'component', id: string) {
   return collection.members.some((m) => m.kind === kind && m.id === id);
 }
@@ -172,7 +258,8 @@ function DishesLens() {
   const menuId = chosen ?? menus?.[0]?.id ?? 'all';
   const view = useLiveQuery(async () => (menuId !== 'all' ? getMenuView(menuId, []) : undefined), [menuId]);
   const { matches, controls } = useFilters('dish');
-  if (!dishes || !menus) return null;
+  const origin = useOrigin();
+  if (!dishes || !menus || !origin) return null;
 
   const menuChips = (
     <div class="reel" role="region" aria-label="Menu" tabIndex={0}>
@@ -212,16 +299,18 @@ function DishesLens() {
       </>
     );
   }
-  const shown = dishes.filter(({ dish }) => matches(dish));
+  const shown = dishes.filter(({ dish }) => matches(dish) && origin.matchesDish(dish));
   return (
     <>
       {menuChips}
+      {origin.controls}
       {controls}
+      {shown.length === 0 && <Empty text="Nothing from there yet." />}
       <RowList
         rows={shown.map(({ dish, componentCount }) => ({
           href: paths.dish(dish.id),
           title: dish.name,
-          meta: componentCount === 1 ? '1 component' : `${componentCount} components`,
+          meta: [origin.dishWhere(dish), componentCount === 1 ? '1 component' : `${componentCount} components`].filter(Boolean).join(' · '),
         }))}
       />
     </>
@@ -235,10 +324,11 @@ function ComponentsLens() {
   const summaries = useLiveQuery(async () => (kitchenId ? listComponentSummaries(kitchenId) : undefined), [kitchenId]);
   const types = useLiveQuery(() => getListItems({ kind: 'values', list: 'component-types', kitchenId: null }));
   const { matches, controls } = useFilters('component');
-  if (!summaries || !types) return null;
+  const origin = useOrigin();
+  if (!summaries || !types || !origin) return null;
   if (summaries.length === 0) return <Empty text="No components yet. A component is a recipe for one part: a stock, a sauce, a garnish. Tap + New." />;
 
-  const shown = summaries.filter(({ component }) => matches(component));
+  const shown = summaries.filter(({ component }) => matches(component) && origin.matchesComponent(component.id));
   const knownType = (typeId: string | null) => typeId !== null && types.some((t) => t.id === typeId);
   const groups = [
     ...types.map((t) => ({ key: t.id, name: t.name, items: shown.filter((s) => s.component.typeId === t.id) })),
@@ -247,7 +337,9 @@ function ComponentsLens() {
 
   return (
     <>
+      {origin.controls}
       {controls}
+      {groups.length === 0 && <Empty text="Nothing from there yet." />}
       {groups.map((group) => (
         <details key={group.key} class="library-group" open>
           <summary class="library-group__summary">
@@ -257,7 +349,7 @@ function ComponentsLens() {
             rows={group.items.map(({ component, dishCount, status }) => ({
               href: paths.component(component.id),
               title: component.name,
-              meta: [status === 'draft' ? 'Draft' : 'Ready', dishCount ? `in ${dishCount} ${dishCount === 1 ? 'dish' : 'dishes'}` : '']
+              meta: [origin.componentWhere(component.id), status === 'draft' ? 'Draft' : 'Ready', dishCount ? `in ${dishCount} ${dishCount === 1 ? 'dish' : 'dishes'}` : '']
                 .filter(Boolean)
                 .join(' · '),
             }))}
@@ -329,10 +421,19 @@ function TechniquesLens() {
 
 function SearchResults({ query }: { query: string }) {
   const results = useLiveQuery(() => searchLibrary(query), [query]);
-  if (!results) return null;
+  const origin = useOrigin();
+  if (!results || !origin) return null;
+  // Where each is from, so two dishes called "Steak" can be told apart.
   const groups = [
-    { label: 'Dishes', rows: results.dishes.map((d) => ({ href: paths.dish(d.id), title: d.name })) },
-    { label: 'Components', rows: results.components.map((c) => ({ href: paths.component(c.id), title: c.name, meta: c.aliases.join(', ') })) },
+    { label: 'Dishes', rows: results.dishes.map((d) => ({ href: paths.dish(d.id), title: d.name, meta: origin.dishWhere(d, true) })) },
+    {
+      label: 'Components',
+      rows: results.components.map((c) => ({
+        href: paths.component(c.id),
+        title: c.name,
+        meta: [origin.componentWhere(c.id, true), c.aliases.join(', ')].filter(Boolean).join(' · '),
+      })),
+    },
     { label: 'Ingredients', rows: results.ingredients.map((i) => ({ href: paths.ingredient(i.id), title: i.name, meta: i.aliases.join(', ') })) },
     { label: 'Techniques', rows: results.techniques.map((t) => ({ href: paths.technique(t.id), title: t.name, meta: t.aliases.join(', ') })) },
     {
@@ -392,7 +493,7 @@ function NewItemForm({ initialKind, initialName, onCreated }: NewItemProps) {
     event.preventDefault();
     try {
       if (kind === 'component') onCreated(paths.component(await createComponent(name, place!.kitchenId)));
-      if (kind === 'dish') onCreated(paths.dish(await createDish(name)));
+      if (kind === 'dish') onCreated(paths.dish(await createDish(name, place!.kitchenId)));
       if (kind === 'ingredient') onCreated(paths.ingredient(await createIngredient(name)));
       if (kind === 'technique') onCreated(paths.technique(await createTechnique(name)));
     } catch (e) {

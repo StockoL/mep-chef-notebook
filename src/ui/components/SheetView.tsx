@@ -13,7 +13,7 @@ import { ChipChoice, Segmented } from './Controls';
 import { Sheet } from './Sheet';
 import { showMessage } from './UndoBar';
 import { MadeButton } from './FoodSafety';
-import { AlsoUsedNote } from './Costs';
+import { AlsoUsedNote } from './AlsoUsed';
 
 /**
  * A shift sheet's items (SH1): progress at the top, then each item with a

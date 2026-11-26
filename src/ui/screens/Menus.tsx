@@ -2,7 +2,6 @@ import { useLocation } from 'preact-iso';
 import { useState } from 'preact/hooks';
 import { formatPrice, parsePrice } from '../../core/money/money';
 import { toCalendarDate } from '../../core/time/calendar';
-import { menuGps } from '../../data/costing';
 import { createDish, listDishSummaries } from '../../data/library';
 import { getPlace, getKitchen, listSections } from '../../data/kitchens';
 import { getListItems, ListError } from '../../data/lists';
@@ -218,7 +217,6 @@ export function SectionFilter({ kitchenId, value, onChange }: { kitchenId: Kitch
 
 /** Dishes by course: price, sections, readiness (MS1). Used on the menu screen and in the library. */
 export function MenuCourses({ view, sectionId, onOpen }: { view: MenuView; sectionId: Id | null; onOpen?: (placeId: Id) => void }) {
-  const gps = useLiveQuery(() => menuGps(view.menu.kitchenId, view.menu.id), [view.menu.id, view.menu.kitchenId]);
   const touches = (d: MenuDishView) => sectionId === null || d.components.some((c) => c.sectionId === sectionId);
   const courses = view.courses.map((c) => ({ ...c, dishes: c.dishes.filter(touches) })).filter((c) => c.dishes.length > 0);
   if (courses.length === 0) {
@@ -236,10 +234,8 @@ export function MenuCourses({ view, sectionId, onOpen }: { view: MenuView; secti
           <ul class="row-list" role="list">
             {course.dishes.map((d) => {
               const ready = d.components.filter((c) => c.ready).length;
-              const gp = gps?.find((g) => g.menuDishId === d.place.id);
               const meta = [
                 d.place.price !== null ? formatPrice(d.place.price) : null,
-                gp?.gp != null ? `${gp.gp}% GP${gp.belowTarget ? ` (below ${gp.target}%)` : ''}` : null,
                 d.sectionNames.join(', ') || null,
                 d.components.length ? `${ready}/${d.components.length} ready` : 'no components',
               ]
@@ -336,7 +332,7 @@ function AddDishToMenu({ menu, onDone }: { menu: Menu; onDone: () => void }) {
       <ChipChoice label="Course" choices={(courses ?? []).filter((c) => !c.hidden).map((c) => ({ value: c.id, label: c.name }))} value={courseId} allowNone onChange={setCourseId} />
       <input class="input" type="search" aria-label="Find a dish" placeholder="Find a dish, or type a new one" autocomplete="off" value={query} onInput={(e) => setQuery(e.currentTarget.value)} />
       {query.trim() && !matches.some(({ dish }) => dish.name.toLowerCase() === query.trim().toLowerCase()) && (
-        <button class="button" type="button" data-variant="primary" onClick={async () => add(await createDish(query), query.trim())}>
+        <button class="button" type="button" data-variant="primary" onClick={async () => add(await createDish(query, menu.kitchenId), query.trim())}>
           New dish “{query.trim()}”
         </button>
       )}
