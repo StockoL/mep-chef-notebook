@@ -127,9 +127,10 @@ export type TableName = keyof typeof SCHEMA_V1 | keyof typeof TABLES_ADDED;
  * v1: Phase 0. v2: Phase 1 row changes. v3: Phase 3, sheets keep a photo.
  * v4: steps hold parts. v5: ingredient weights. v6: the partRuns table.
  * v7: the checklistRuns table. v8: dishes have a kitchen (indexed).
+ * v9: menus say which days and services they're served.
  * (Row changes are in migrations.ts.)
  */
-export const SCHEMA_VERSION = 8;
+export const SCHEMA_VERSION = 9;
 
 /** Every table name, in schema order. */
 export const TABLE_NAMES = [...Object.keys(SCHEMA_V1), ...Object.keys(TABLES_ADDED)] as TableName[];
@@ -221,6 +222,14 @@ export class MepDatabase extends Dexie {
           .modify((row: Dish) => {
             if (row.kitchenId === undefined) row.kitchenId = kitchens.get(row.id) ?? null;
           });
+      });
+    // Schema v9: when each menu is served (row fixes in migrations.ts).
+    this.version(9)
+      .stores({})
+      .upgrade(async (transaction) => {
+        for (const [table, fix] of Object.entries(ROW_FIXES[9] ?? {})) {
+          await transaction.table(table).toCollection().modify((row) => fix(row));
+        }
       });
     this.addRowHooks();
   }

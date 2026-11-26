@@ -87,7 +87,7 @@ export function SectionList() {
 
       {menuOnly.length > 0 && (
         <section class="flow" aria-labelledby="from-menus">
-          <h2 class="section-label" id="from-menus">From the menus on now</h2>
+          <h2 class="section-label" id="from-menus">From the current menus</h2>
           <Hint name="section-from-menus">Tap one to give it a par or a shelf.</Hint>
           <ul class="row-list" role="list">
             {menuOnly.map(({ component, menuNames }) => (

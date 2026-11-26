@@ -33,7 +33,7 @@ export function getMenu(id: Id, database: MepDatabase = appDb) {
 export async function createMenu(
   kitchenId: KitchenId,
   name: string,
-  options: { typeId?: Id | null; status?: MenuStatus } = {},
+  options: { typeId?: Id | null; status?: MenuStatus; days?: number[]; serviceIds?: Id[] } = {},
   database: MepDatabase = appDb,
 ): Promise<Id> {
   const cleaned = cleanName(name);
@@ -46,12 +46,14 @@ export async function createMenu(
     starts: null,
     ends: null,
     copiedFromId: null,
+    days: options.days ?? [],
+    serviceIds: options.serviceIds ?? [],
   });
 }
 
 export async function updateMenu(
   id: Id,
-  changes: Partial<Pick<Menu, 'name' | 'typeId' | 'status' | 'starts' | 'ends'>>,
+  changes: Partial<Pick<Menu, 'name' | 'typeId' | 'status' | 'starts' | 'ends' | 'days' | 'serviceIds'>>,
   database: MepDatabase = appDb,
 ) {
   if (changes.name !== undefined) {
@@ -84,7 +86,7 @@ export async function copyMenu(id: Id, name: string, database: MepDatabase = app
     const from = await database.menus.get(id);
     if (!from) throw new Error('That menu no longer exists.');
     const cleaned = cleanName(name) || `${from.name} (new)`;
-    const copyId = await database.menus.add({ kitchenId: from.kitchenId, name: cleaned, typeId: from.typeId, status: 'coming-up', starts: null, ends: null, copiedFromId: from.id });
+    const copyId = await database.menus.add({ kitchenId: from.kitchenId, name: cleaned, typeId: from.typeId, status: 'coming-up', starts: null, ends: null, copiedFromId: from.id, days: from.days ?? [], serviceIds: from.serviceIds ?? [] });
     for (const { id: oldId, createdAt: _c, updatedAt: _u, ...menuDish } of await database.menuDishes.where('menuId').equals(id).toArray()) {
       const newId = await database.menuDishes.add({ ...menuDish, menuId: copyId });
       for (const { id: _id, createdAt: _c2, updatedAt: _u2, ...assignment } of await database.menuSectionAssignments.where('menuDishId').equals(oldId).toArray()) {

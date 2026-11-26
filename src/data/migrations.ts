@@ -113,6 +113,13 @@ export const ROW_FIXES: Record<number, Partial<Record<TableName, RowFix>>> = {
       row.unitWeights ??= {};
     },
   },
+  /** Schema v9: a menu says when it's served; empty = every day, every service (DECISIONS 57). */
+  9: {
+    menus: (row) => {
+      row.days ??= [];
+      row.serviceIds ??= [];
+    },
+  },
 };
 
 /** Brings one row from `fromVersion` up to `toVersion`. */

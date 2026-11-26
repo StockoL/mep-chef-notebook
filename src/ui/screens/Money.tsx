@@ -46,7 +46,7 @@ export function Money() {
 
       <section class="flow" aria-labelledby="money-gp">
         <h2 class="section-label" id="money-gp">GP</h2>
-        {view.menus.length === 0 && <p class="field__hint">No dishes on a menu on now. Put dishes on a menu, with prices, to see GP.</p>}
+        {view.menus.length === 0 && <p class="field__hint">No dishes on a current menu. Put dishes on a menu, with prices, to see GP.</p>}
         {below.length > 0 && <p class="plan-flag">Below target: {below.map((b) => b.dishName).join(', ')}</p>}
         {view.menus.map(({ menu, dishes }) => (
           <div key={menu.id} class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>

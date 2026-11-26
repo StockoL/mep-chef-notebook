@@ -12,14 +12,16 @@ import { getMenuView, listMenus } from '../../data/menus';
 import { listRecent, searchLibrary } from '../../data/search';
 import { listCollections, listTags } from '../../data/tags';
 import { createTechnique, hasOwnNotes, listTechniques } from '../../data/techniques';
-import type { Collection, Dish } from '../../data/types';
+import type { Collection, Dish, Menu } from '../../data/types';
 import { ChipChoice, Segmented } from '../components/Controls';
 import { Sheet } from '../components/Sheet';
 import { formatWhen } from '../format';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
-import { MenuCourses, SectionFilter } from './Menus';
+import { MenuCourses, SectionFilter, useServiceNames } from './Menus';
+import { servedAt, servedLabel } from '../../core/menus/served';
+import { isoDayOfWeek } from '../../core/time/calendar';
 import { Hint } from '../components/Hint';
 
 type Lens = 'dishes' | 'components' | 'ingredients' | 'techniques';
@@ -302,11 +304,16 @@ function DishesLens() {
   const [chosen, setChosen] = useState<string | null>(null);
   const [picking, setPicking] = useState(false);
   const [sectionId, setSectionId] = useState<string | null>(null);
+  const serviceNames = useServiceNames(place?.kitchenId);
+  // Opens on a menu served today (DECISIONS 57): the one last looked at if it is, else the à la carte, else the first.
   const fallbackMenu = () => {
-    const onNow = (menus ?? []).filter((m) => m.status === 'on-now');
-    const carte = onNow.find((m) => /carte/i.test(types?.find((t) => t.id === m.typeId)?.name ?? m.name));
-    const known = menus?.some((m) => m.id === lastMenu) || otherMenus?.some((o) => o.menu.id === lastMenu);
-    return (lastMenu && known ? lastMenu : null) ?? carte?.id ?? onNow[0]?.id ?? menus?.[0]?.id ?? 'all';
+    const today = isoDayOfWeek(new Date());
+    const current = (menus ?? []).filter((m) => m.status === 'on-now');
+    const servedToday = current.filter((m) => servedAt(m, today));
+    const isCarte = (m: Menu) => /carte/i.test(types?.find((t) => t.id === m.typeId)?.name ?? m.name);
+    const last = menus?.find((m) => m.id === lastMenu);
+    const lastOk = (last && (last.status !== 'on-now' || servedAt(last, today))) || otherMenus?.some((o) => o.menu.id === lastMenu);
+    return (lastMenu && lastOk ? lastMenu : null) ?? servedToday.find(isCarte)?.id ?? servedToday[0]?.id ?? current.find(isCarte)?.id ?? current[0]?.id ?? menus?.[0]?.id ?? 'all';
   };
   const origin = useOrigin();
   // The menu shown always belongs to the kitchen the filter is on: filtering
@@ -340,7 +347,7 @@ function DishesLens() {
   const heading = (
     <div class="library-menu-head">
       <button class="library-menu" type="button" onClick={() => setPicking(true)} aria-haspopup="dialog">
-        {current ? `${current.name} · ${other ? other.kitchen.name : current.status === 'on-now' ? 'on now' : 'coming up'}` : 'All dishes'} <Icon name="chevron-down" size="s" />
+        {current ? `${current.name} · ${other ? other.kitchen.name : current.status === 'on-now' ? servedLabel(current, serviceNames).toLowerCase() : 'coming up'}` : 'All dishes'} <Icon name="chevron-down" size="s" />
       </button>
       {filters.button}
     </div>
@@ -353,7 +360,7 @@ function DishesLens() {
             <a class="list-row" href={paths.menus}>
               <span class="list-row__main">
                 <span class="list-row__title">All menus</span>
-                <span class="list-row__meta">On now, coming up and past; add, copy or launch one</span>
+                <span class="list-row__meta">Current, coming up and past; add, copy or launch one</span>
               </span>
               <Icon name="chevron-right" />
             </a>
@@ -363,7 +370,7 @@ function DishesLens() {
               <button class="list-row" type="button" aria-pressed={m.id === menuId} onClick={() => choose(m.id)}>
                 <span class="list-row__main">
                   <span class="list-row__title">{m.name}</span>
-                  <span class="list-row__meta">{m.status === 'on-now' ? 'On now' : 'Coming up'}</span>
+                  <span class="list-row__meta">{[servedLabel(m, serviceNames), m.status === 'on-now' ? null : 'coming up'].filter(Boolean).join(' · ')}</span>
                 </span>
               </button>
             </li>
@@ -375,7 +382,8 @@ function DishesLens() {
                   <span class="list-row__title">{menu.name}</span>
                   <span class="list-row__meta">
                     {kitchen.name}
-                    {kitchen.archived ? ' (left)' : ''} · {menu.status === 'on-now' ? 'on now' : 'coming up'}
+                    {kitchen.archived ? ' (left)' : ''}
+                    {menu.status === 'on-now' ? '' : ' · coming up'}
                   </span>
                 </span>
               </button>

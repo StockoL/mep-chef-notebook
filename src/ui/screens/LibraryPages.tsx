@@ -593,7 +593,7 @@ function DishMenus({ dishId, dishName, kitchenId }: { dishId: string; dishName: 
         {open && !chosen && (
           <>
             {available.length === 0 ? (
-              <p class="field__hint">{menus.length === 0 ? 'This kitchen has no menus yet.' : 'It’s on every menu on now and coming up.'}</p>
+              <p class="field__hint">{menus.length === 0 ? 'This kitchen has no menus yet.' : 'It’s on every current and coming-up menu.'}</p>
             ) : (
               <ul class="row-list" role="list">
                 {available.map((m) => (
@@ -601,7 +601,7 @@ function DishMenus({ dishId, dishName, kitchenId }: { dishId: string; dishName: 
                     <button class="list-row" type="button" onClick={() => setMenuId(m.id)}>
                       <span class="list-row__main">
                         <span class="list-row__title">{m.name}</span>
-                        <span class="list-row__meta">{m.status === 'on-now' ? 'On now' : 'Coming up'}</span>
+                        <span class="list-row__meta">{m.status === 'on-now' ? 'Current' : 'Coming up'}</span>
                       </span>
                       <Icon name="chevron-right" />
                     </button>

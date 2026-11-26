@@ -3,7 +3,7 @@ import { useState } from 'preact/hooks';
 import { formatPrice, parsePrice } from '../../core/money/money';
 import { toCalendarDate } from '../../core/time/calendar';
 import { createDish, listDishSummaries } from '../../data/library';
-import { getPlace, getKitchen, listSections, listKitchens } from '../../data/kitchens';
+import { getPlace, getKitchen, listKitchens, listSections, listServices } from '../../data/kitchens';
 import { getListItems, ListError } from '../../data/lists';
 import {
   addDishToMenu,
@@ -24,19 +24,29 @@ import {
 } from '../../data/menus';
 import { restoreSnapshot } from '../../data/snapshot';
 import type { Id, KitchenId, Menu, MenuStatus } from '../../data/types';
-import { ChipChoice } from '../components/Controls';
+import { ChipChoice, ChipToggles } from '../components/Controls';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Sheet } from '../components/Sheet';
 import { showMessage } from '../components/UndoBar';
 import { formatCalendarDate } from '../format';
 import { useEditMode } from '../hooks/useEditMode';
+import { servedLabel } from '../../core/menus/served';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
 import { trackSave } from '../saveStatus';
 import { Hint } from '../components/Hint';
 
-const STATUS_LABELS: Record<MenuStatus, string> = { 'on-now': 'On now', 'coming-up': 'Coming up', past: 'Past' };
+/** "Current" is in use, not "being served right now": when it's served is its days and services (DECISIONS 57). */
+const STATUS_LABELS: Record<MenuStatus, string> = { 'on-now': 'Current', 'coming-up': 'Coming up', past: 'Past' };
+
+const DAY_CHOICES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((label, i) => ({ value: i + 1, label }));
+
+/** The kitchen's service names by id, for "Sundays · Lunch". */
+export function useServiceNames(kitchenId: KitchenId | undefined): Map<string, string> {
+  const services = useLiveQuery(async () => (kitchenId ? listServices(kitchenId) : []), [kitchenId]);
+  return new Map((services ?? []).map((s) => [s.id, s.name]));
+}
 
 /** "Winter · coming up": a menu's name with its status when it isn't on now. */
 export function menuLabel(menu: Menu) {
@@ -54,15 +64,19 @@ export function MenusList() {
   const kitchen = useLiveQuery(async () => (kitchenId ? getKitchen(kitchenId) : undefined), [kitchenId]);
   const menus = useLiveQuery(async () => (kitchenId ? listMenus(kitchenId) : []), [kitchenId]);
   const otherKitchens = useLiveQuery(async () => (await listKitchens()).filter((k) => !k.builtIn && k.id !== kitchenId), [kitchenId]);
+  const serviceNames = useServiceNames(kitchenId);
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
+  const [days, setDays] = useState<number[]>([]);
+  const [serviceIds, setServiceIds] = useState<string[]>([]);
+  const services = useLiveQuery(async () => (kitchenId ? listServices(kitchenId) : []), [kitchenId]);
 
   async function add(event: Event) {
     event.preventDefault();
     if (!kitchenId) return;
     try {
-      const id = await trackSave(createMenu(kitchenId, name));
+      const id = await trackSave(createMenu(kitchenId, name, { days, serviceIds }));
       // A new menu opens ready to add dishes to.
       route(`${paths.menu(id)}?edit=1`);
     } catch (e) {
@@ -86,9 +100,9 @@ export function MenusList() {
                   <a class="list-row" href={paths.menu(menu.id)}>
                     <span class="list-row__main">
                       <span class="list-row__title">{menu.name}</span>
-                      {(menu.starts || menu.ends) && (
-                        <span class="list-row__meta">{[menu.starts && `from ${formatCalendarDate(menu.starts)}`, menu.ends && `to ${formatCalendarDate(menu.ends)}`].filter(Boolean).join(' ')}</span>
-                      )}
+                      <span class="list-row__meta">
+                        {[servedLabel(menu, serviceNames), menu.starts && `from ${formatCalendarDate(menu.starts)}`, menu.ends && `to ${formatCalendarDate(menu.ends)}`].filter(Boolean).join(' · ')}
+                      </span>
                     </span>
                     <Icon name="chevron-right" />
                   </a>
@@ -135,6 +149,11 @@ export function MenusList() {
               </label>
               <input class="input" id="new-menu" aria-label="New menu" placeholder="À la carte, Sunday lunch…" autocomplete="off" autofocus value={name} onInput={(e) => setName(e.currentTarget.value)} />
             </div>
+            <ChipToggles label="Served on" choices={DAY_CHOICES} values={days} onChange={setDays} />
+            {services && services.length > 0 && (
+              <ChipToggles label="At" choices={services.filter((sv) => !sv.hidden).map((sv) => ({ value: sv.id, label: sv.name }))} values={serviceIds} onChange={setServiceIds} />
+            )}
+            <p class="field__hint">{servedLabel({ days, serviceIds }, serviceNames)}. None chosen means every day, every service.</p>
             {error && <p class="field__error">{error}</p>}
             <button class="button" type="submit" data-variant="primary" disabled={!name.trim()}>
               Create
@@ -164,6 +183,7 @@ export function MenuScreen({ id = '' }: { id?: string }) {
   const [openPlace, setOpenPlace] = useState<Id | null>(null);
   const { route } = useLocation();
   const { editing, start, done } = useEditMode();
+  const serviceNames = useServiceNames(view?.menu.kitchenId);
   if (!view) return <ScreenHeader title="" back={{ href: paths.menus, label: 'Menus' }} />;
   const { menu } = view;
   const open = view.courses.flatMap((c) => c.dishes).find((d) => d.place.id === openPlace);
@@ -183,7 +203,8 @@ export function MenuScreen({ id = '' }: { id?: string }) {
 
   const back = { href: paths.menusFor(menu.kitchenId), label: 'Menus' };
   const meta = [
-    STATUS_LABELS[menu.status],
+    servedLabel(menu, serviceNames),
+    menu.status === 'on-now' ? null : STATUS_LABELS[menu.status],
     view.typeName,
     kitchen?.name,
     `${dishCount} ${dishCount === 1 ? 'dish' : 'dishes'}`,
@@ -197,18 +218,18 @@ export function MenuScreen({ id = '' }: { id?: string }) {
     return (
       <section class="flow mode-swap" key="edit">
         <ScreenHeader title={menu.name} back={back} action={{ label: 'Done', onClick: done }} />
-        <button class="button" type="button" data-variant="primary" onClick={() => setSheet('add')}>
-          + Add a dish
-        </button>
-        <Hint name="menu-edit">Tap a dish for its course, price and who makes each part.</Hint>
-        <MenuCourses view={view} sectionId={null} onOpen={(placeId) => setOpenPlace(placeId)} />
-
         <section class="flow" aria-labelledby="menu-details">
           <h2 id="menu-details" class="section-label">
             Menu details
           </h2>
           <MenuSettings menu={menu} />
         </section>
+        <button class="button" type="button" data-variant="primary" onClick={() => setSheet('add')}>
+          + Add a dish
+        </button>
+        <Hint name="menu-edit">Tap a dish for its course, price and who makes each part.</Hint>
+        <MenuCourses view={view} sectionId={null} onOpen={(placeId) => setOpenPlace(placeId)} />
+
 
         <section class="flow" aria-labelledby="menu-changeover">
           <h2 id="menu-changeover" class="section-label">
@@ -342,6 +363,7 @@ export function MenuCourses({ view, sectionId, onOpen, from }: { view: MenuView;
 
 function MenuSettings({ menu }: { menu: Menu }) {
   const types = useLiveQuery(() => getListItems({ kind: 'values', list: 'menu-types', kitchenId: menu.kitchenId }), [menu.kitchenId]);
+  const services = useLiveQuery(() => listServices(menu.kitchenId), [menu.kitchenId]);
   const [name, setName] = useState(menu.name);
   return (
     <>
@@ -359,25 +381,39 @@ function MenuSettings({ menu }: { menu: Menu }) {
         onChange={(typeId) => trackSave(updateMenu(menu.id, { typeId }))}
       />
       <ChipChoice
-        label="Status"
+        label="In use"
         choices={(['coming-up', 'on-now', 'past'] as const).map((s) => ({ value: s, label: STATUS_LABELS[s] }))}
         value={menu.status}
         onChange={(status) => status && trackSave(updateMenu(menu.id, { status }))}
       />
-      <div class="cluster">
-        <div class="field">
-          <label class="label" for="menu-starts">
-            Starts
-          </label>
-          <input class="input" id="menu-starts" type="date" value={menu.starts ?? ''} onInput={(e) => trackSave(updateMenu(menu.id, { starts: e.currentTarget.value || null }))} />
+      <ChipToggles label="Served on" choices={DAY_CHOICES} values={menu.days} onChange={(days) => trackSave(updateMenu(menu.id, { days }))} />
+      {services && services.length > 0 && (
+        <ChipToggles
+          label="At"
+          choices={services.filter((sv) => !sv.hidden).map((sv) => ({ value: sv.id, label: sv.name }))}
+          values={menu.serviceIds}
+          onChange={(serviceIds) => trackSave(updateMenu(menu.id, { serviceIds }))}
+        />
+      )}
+      <p class="field__hint">{servedLabel(menu, new Map((services ?? []).map((sv) => [sv.id, sv.name])))}. None chosen means every day, every service.</p>
+      {/* Dates are rarely known: a new menu just takes over from the old one (Copy, then Launch). */}
+      <details class="developer">
+        <summary class="developer__summary">Dates (optional)</summary>
+        <div class="cluster">
+          <div class="field">
+            <label class="label" for="menu-starts">
+              Starts
+            </label>
+            <input class="input" id="menu-starts" type="date" value={menu.starts ?? ''} onInput={(e) => trackSave(updateMenu(menu.id, { starts: e.currentTarget.value || null }))} />
+          </div>
+          <div class="field">
+            <label class="label" for="menu-ends">
+              Ends
+            </label>
+            <input class="input" id="menu-ends" type="date" value={menu.ends ?? ''} onInput={(e) => trackSave(updateMenu(menu.id, { ends: e.currentTarget.value || null }))} />
+          </div>
         </div>
-        <div class="field">
-          <label class="label" for="menu-ends">
-            Ends
-          </label>
-          <input class="input" id="menu-ends" type="date" value={menu.ends ?? ''} onInput={(e) => trackSave(updateMenu(menu.id, { ends: e.currentTarget.value || null }))} />
-        </div>
-      </div>
+      </details>
     </>
   );
 }

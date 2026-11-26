@@ -424,7 +424,7 @@ export function WeeklyReportScreen() {
 
       <h2 class="section-label">GP</h2>
       {report.gp.length === 0 ? (
-        <p>No dishes on menus on now.</p>
+        <p>No dishes on current menus.</p>
       ) : (
         <table class="gp-table">
           <thead>

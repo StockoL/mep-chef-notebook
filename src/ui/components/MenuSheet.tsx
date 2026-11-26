@@ -1,6 +1,8 @@
 import { useState } from 'preact/hooks';
 import { getPlaceDetails } from '../../data/kitchens';
 import { listMenus } from '../../data/menus';
+import { servedAt } from '../../core/menus/served';
+import { isoDayOfWeek } from '../../core/time/calendar';
 import { countInbox } from '../../data/notes';
 import { NO_KITCHEN_ID } from '../../data/types';
 import { useLiveQuery } from '../hooks/useLiveQuery';
@@ -15,7 +17,10 @@ export function MenuSheet({ open, onClose }: { open: boolean; onClose: () => voi
   const details = useLiveQuery(() => getPlaceDetails());
   const kitchenId = details?.place.kitchenId;
   const onNow = useLiveQuery(
-    async () => (kitchenId && kitchenId !== NO_KITCHEN_ID ? (await listMenus(kitchenId)).filter((m) => m.status === 'on-now').map((m) => m.name) : []),
+    async () =>
+      kitchenId && kitchenId !== NO_KITCHEN_ID
+        ? (await listMenus(kitchenId)).filter((m) => m.status === 'on-now' && servedAt(m, isoDayOfWeek(new Date()))).map((m) => m.name)
+        : [],
     [kitchenId],
   );
   const [switching, setSwitching] = useState(false);
@@ -28,7 +33,7 @@ export function MenuSheet({ open, onClose }: { open: boolean; onClose: () => voi
     { href: paths.inbox, label: 'Inbox', meta: inboxCount ? `${inboxCount} to sort` : undefined },
     { href: paths.sheets, label: 'Sheets' },
     // The kitchen's menus: on now, coming up and past; add, copy, launch.
-    { href: paths.menus, label: 'Menus', meta: onNow?.length ? `On now: ${onNow.join(', ')}` : undefined },
+    { href: paths.menus, label: 'Menus', meta: onNow?.length ? `Today: ${onNow.join(', ')}` : undefined },
     { href: paths.notes, label: 'Kitchen notes' },
     { href: paths.waste, label: 'Waste log' },
     { href: paths.goal, label: 'Weekly goal' },

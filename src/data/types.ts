@@ -202,6 +202,13 @@ export interface Menu extends Row {
   starts: CalendarDate | null;
   ends: CalendarDate | null;
   copiedFromId: Id | null;
+  /**
+   * When it's served (schema v9, DECISIONS 57): days of the week 1–7 from
+   * Monday, and the kitchen's services. Empty means every day / every
+   * service. "Sunday lunch": days [7], its Lunch service.
+   */
+  days: number[];
+  serviceIds: Id[];
 }
 
 /** A dish's place on a menu. */
