@@ -1,0 +1,990 @@
+{
+  "_notes": [
+    "A proposal for Louis to correct after a few shifts (FEEL_PASS 9). Nothing reads this file yet: loadSeed and the seed are unchanged.",
+    "components: things the kitchen makes, with a guessed component type. ingredients: bought or used raw.",
+    "\"unsure\" lists the guesses most worth checking, e.g. whether \"cucumber\" on the mackerel is a pickle or raw, or \"hazelnut\" on the burrata is a praline or just toasted nuts.",
+    "Types are from the default component-types list, plus two proposed new ones, marked \"newType\": \"Pastry and desserts\" and \"Ices and sorbets\" (desserts have no type today).",
+    "Totals: 76 distinct components (from 129 in the seed today) and 53 distinct ingredients."
+  ],
+  "dishes": [
+    {
+      "menu": "À la carte",
+      "course": "Nibbles",
+      "dish": "Bread and butter",
+      "components": [
+        {
+          "name": "bread",
+          "type": "Doughs and batters"
+        }
+      ],
+      "ingredients": [
+        "butter"
+      ],
+      "unsure": [
+        "bread",
+        "butter"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "Nibbles",
+      "dish": "Gordal olives",
+      "components": [],
+      "ingredients": [
+        "gordal olives"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "Nibbles",
+      "dish": "Smoked almonds",
+      "components": [],
+      "ingredients": [
+        "smoked almonds"
+      ],
+      "unsure": [
+        "smoked almonds"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "Sides",
+      "dish": "Rocket, parmesan",
+      "components": [],
+      "ingredients": [
+        "rocket",
+        "parmesan"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "Sides",
+      "dish": "French fries",
+      "components": [
+        {
+          "name": "french fries",
+          "type": "Garnishes and crisps"
+        }
+      ],
+      "ingredients": []
+    },
+    {
+      "menu": "À la carte",
+      "course": "Sides",
+      "dish": "Greens, romesco sauce",
+      "components": [
+        {
+          "name": "greens",
+          "type": "Bases"
+        },
+        {
+          "name": "romesco sauce",
+          "type": "Sauces and emulsions"
+        }
+      ],
+      "ingredients": [],
+      "unsure": [
+        "greens"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "Sides",
+      "dish": "New potatoes, olive oil",
+      "components": [
+        {
+          "name": "new potatoes",
+          "type": "Bases"
+        }
+      ],
+      "ingredients": [
+        "olive oil"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "To begin",
+      "dish": "Smoked mackerel crumpet",
+      "components": [
+        {
+          "name": "smoked mackerel",
+          "type": "Pickles and cures"
+        },
+        {
+          "name": "crumpet",
+          "type": "Doughs and batters"
+        },
+        {
+          "name": "horseradish",
+          "type": "Sauces and emulsions"
+        },
+        {
+          "name": "cucumber",
+          "type": "Pickles and cures"
+        }
+      ],
+      "ingredients": [
+        "dill"
+      ],
+      "unsure": [
+        "smoked mackerel",
+        "horseradish",
+        "cucumber"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "To begin",
+      "dish": "Fire roasted beetroot",
+      "components": [
+        {
+          "name": "fire roasted beetroot",
+          "type": "Bases"
+        },
+        {
+          "name": "cashew",
+          "type": "Purées and veloutés"
+        },
+        {
+          "name": "pickled onion",
+          "type": "Pickles and cures"
+        },
+        {
+          "name": "quinoa",
+          "type": "Garnishes and crisps"
+        }
+      ],
+      "ingredients": [],
+      "unsure": [
+        "cashew",
+        "quinoa"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "To begin",
+      "dish": "Pressed chicken terrine",
+      "components": [
+        {
+          "name": "pressed chicken terrine",
+          "type": "Bases"
+        },
+        {
+          "name": "apricot",
+          "type": "Purées and veloutés"
+        },
+        {
+          "name": "walnut",
+          "type": "Garnishes and crisps"
+        },
+        {
+          "name": "preserved lemon",
+          "type": "Pickles and cures"
+        }
+      ],
+      "ingredients": [],
+      "unsure": [
+        "apricot",
+        "walnut",
+        "preserved lemon"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "To begin",
+      "dish": "Burrata",
+      "components": [
+        {
+          "name": "sage",
+          "type": "Garnishes and crisps"
+        },
+        {
+          "name": "pumpkin",
+          "type": "Purées and veloutés"
+        },
+        {
+          "name": "hazelnut",
+          "type": "Garnishes and crisps"
+        }
+      ],
+      "ingredients": [
+        "burrata",
+        "radicchio"
+      ],
+      "unsure": [
+        "sage",
+        "hazelnut"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "Mains",
+      "dish": "Cornish cod",
+      "components": [
+        {
+          "name": "charred leek",
+          "type": "Garnishes and crisps"
+        },
+        {
+          "name": "red pepper",
+          "type": "Purées and veloutés"
+        }
+      ],
+      "ingredients": [
+        "cornish cod",
+        "sea vegetables"
+      ],
+      "unsure": [
+        "red pepper"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "Mains",
+      "dish": "Brown butter gnocchi",
+      "components": [
+        {
+          "name": "brown butter gnocchi",
+          "type": "Doughs and batters"
+        }
+      ],
+      "ingredients": [
+        "Wild Room mushrooms",
+        "Old Winchester",
+        "truffle"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "Mains",
+      "dish": "Wood-roasted heritage carrot",
+      "components": [
+        {
+          "name": "wood-roasted heritage carrot",
+          "type": "Bases"
+        },
+        {
+          "name": "golden raisins",
+          "type": "Pickles and cures"
+        }
+      ],
+      "ingredients": [
+        "cumin",
+        "yoghurt"
+      ],
+      "unsure": [
+        "yoghurt",
+        "golden raisins"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "Mains",
+      "dish": "Stone bass",
+      "components": [
+        {
+          "name": "cauliflower",
+          "type": "Purées and veloutés"
+        },
+        {
+          "name": "mushroom velouté",
+          "type": "Purées and veloutés"
+        }
+      ],
+      "ingredients": [
+        "stone bass",
+        "cep"
+      ],
+      "unsure": [
+        "cauliflower",
+        "cep"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "Mains",
+      "dish": "9oz ribeye steak",
+      "components": [
+        {
+          "name": "Dumbleton butter",
+          "type": "Sauces and emulsions"
+        },
+        {
+          "name": "pickled shallot",
+          "type": "Pickles and cures"
+        },
+        {
+          "name": "french fries",
+          "type": "Garnishes and crisps"
+        }
+      ],
+      "ingredients": [
+        "ribeye"
+      ]
+    },
+    {
+      "menu": "À la carte",
+      "course": "Mains",
+      "dish": "Tamworth pork",
+      "components": [
+        {
+          "name": "prune",
+          "type": "Purées and veloutés"
+        },
+        {
+          "name": "quince",
+          "type": "Purées and veloutés"
+        },
+        {
+          "name": "mustard",
+          "type": "Sauces and emulsions"
+        }
+      ],
+      "ingredients": [
+        "Tamworth pork"
+      ],
+      "unsure": [
+        "prune",
+        "quince",
+        "mustard"
+      ]
+    },
+    {
+      "menu": "Dessert",
+      "course": "To end",
+      "dish": "Strawberry and long pepper meringue",
+      "components": [
+        {
+          "name": "meringue",
+          "type": "Pastry and desserts",
+          "newType": true
+        },
+        {
+          "name": "strawberry sorbet",
+          "type": "Ices and sorbets",
+          "newType": true
+        },
+        {
+          "name": "vanilla Chantilly",
+          "type": "Pastry and desserts",
+          "newType": true
+        }
+      ],
+      "ingredients": []
+    },
+    {
+      "menu": "Dessert",
+      "course": "To end",
+      "dish": "Olive oil brûlée",
+      "components": [
+        {
+          "name": "olive oil brûlée",
+          "type": "Pastry and desserts",
+          "newType": true
+        },
+        {
+          "name": "lemon and basil sorbet",
+          "type": "Ices and sorbets",
+          "newType": true
+        }
+      ],
+      "ingredients": []
+    },
+    {
+      "menu": "Dessert",
+      "course": "To end",
+      "dish": "Pecan pie",
+      "components": [
+        {
+          "name": "pecan pie",
+          "type": "Pastry and desserts",
+          "newType": true
+        },
+        {
+          "name": "coffee ice cream",
+          "type": "Ices and sorbets",
+          "newType": true
+        }
+      ],
+      "ingredients": []
+    },
+    {
+      "menu": "Dessert",
+      "course": "To end",
+      "dish": "Manjari chocolate crémeux",
+      "components": [
+        {
+          "name": "Manjari chocolate crémeux",
+          "type": "Pastry and desserts",
+          "newType": true
+        },
+        {
+          "name": "blackcurrant",
+          "type": "Purées and veloutés"
+        },
+        {
+          "name": "bay leaf",
+          "type": "Ices and sorbets",
+          "newType": true
+        },
+        {
+          "name": "cocoa crumb",
+          "type": "Garnishes and crisps"
+        }
+      ],
+      "ingredients": [],
+      "unsure": [
+        "blackcurrant",
+        "bay leaf"
+      ]
+    },
+    {
+      "menu": "Dessert",
+      "course": "To end",
+      "dish": "British cheese",
+      "components": [
+        {
+          "name": "crackers",
+          "type": "Doughs and batters"
+        },
+        {
+          "name": "chutney",
+          "type": "Pickles and cures"
+        }
+      ],
+      "ingredients": [
+        "British cheeses"
+      ],
+      "unsure": [
+        "crackers",
+        "chutney"
+      ]
+    },
+    {
+      "menu": "Sunday lunch",
+      "course": "Starters",
+      "dish": "Chalk stream trout",
+      "components": [
+        {
+          "name": "chalk stream trout",
+          "type": "Pickles and cures"
+        },
+        {
+          "name": "almond",
+          "type": "Garnishes and crisps"
+        },
+        {
+          "name": "lovage",
+          "type": "Sauces and emulsions"
+        },
+        {
+          "name": "cucumber",
+          "type": "Pickles and cures"
+        }
+      ],
+      "ingredients": [
+        "lime"
+      ],
+      "unsure": [
+        "chalk stream trout",
+        "almond",
+        "lovage",
+        "cucumber"
+      ]
+    },
+    {
+      "menu": "Sunday lunch",
+      "course": "Starters",
+      "dish": "Merryfield duck",
+      "components": [
+        {
+          "name": "beetroot",
+          "type": "Bases"
+        },
+        {
+          "name": "walnut",
+          "type": "Garnishes and crisps"
+        }
+      ],
+      "ingredients": [
+        "Merryfield duck",
+        "lemon"
+      ],
+      "unsure": [
+        "beetroot",
+        "walnut"
+      ]
+    },
+    {
+      "menu": "Sunday lunch",
+      "course": "Starters",
+      "dish": "Woodfield asparagus",
+      "components": [
+        {
+          "name": "black garlic",
+          "type": "Purées and veloutés"
+        },
+        {
+          "name": "cheddar custard",
+          "type": "Sauces and emulsions"
+        }
+      ],
+      "ingredients": [
+        "asparagus",
+        "Cacklebean egg"
+      ],
+      "unsure": [
+        "black garlic"
+      ]
+    },
+    {
+      "menu": "Sunday lunch",
+      "course": "Main course",
+      "dish": "Roasted beef sirloin",
+      "components": [
+        {
+          "name": "roast potatoes",
+          "type": "Bases"
+        },
+        {
+          "name": "local vegetables",
+          "type": "Bases"
+        },
+        {
+          "name": "Yorkshire pudding",
+          "type": "Doughs and batters"
+        }
+      ],
+      "ingredients": [
+        "beef sirloin"
+      ],
+      "unsure": [
+        "local vegetables"
+      ]
+    },
+    {
+      "menu": "Sunday lunch",
+      "course": "Main course",
+      "dish": "Cornish sea bass",
+      "components": [
+        {
+          "name": "cauliflower",
+          "type": "Purées and veloutés"
+        },
+        {
+          "name": "shrimp noisette",
+          "type": "Sauces and emulsions"
+        }
+      ],
+      "ingredients": [
+        "sea bass",
+        "sea vegetables"
+      ],
+      "unsure": [
+        "cauliflower"
+      ]
+    },
+    {
+      "menu": "Sunday lunch",
+      "course": "Main course",
+      "dish": "Brown butter gnocchi",
+      "components": [
+        {
+          "name": "brown butter gnocchi",
+          "type": "Doughs and batters"
+        },
+        {
+          "name": "courgette",
+          "type": "Bases"
+        },
+        {
+          "name": "red pepper",
+          "type": "Purées and veloutés"
+        }
+      ],
+      "ingredients": [
+        "basil",
+        "Graceburn"
+      ],
+      "unsure": [
+        "courgette",
+        "red pepper"
+      ]
+    },
+    {
+      "menu": "Sunday lunch",
+      "course": "To end",
+      "dish": "Olive brûlée",
+      "components": [
+        {
+          "name": "olive oil brûlée",
+          "type": "Pastry and desserts",
+          "newType": true
+        },
+        {
+          "name": "lemon and basil sorbet",
+          "type": "Ices and sorbets",
+          "newType": true
+        }
+      ],
+      "ingredients": []
+    },
+    {
+      "menu": "Sunday lunch",
+      "course": "To end",
+      "dish": "Pistachio soufflé",
+      "components": [
+        {
+          "name": "pistachio soufflé",
+          "type": "Pastry and desserts",
+          "newType": true
+        },
+        {
+          "name": "chocolate ice cream",
+          "type": "Ices and sorbets",
+          "newType": true
+        }
+      ],
+      "ingredients": []
+    },
+    {
+      "menu": "Sunday lunch",
+      "course": "To end",
+      "dish": "British cheese",
+      "components": [
+        {
+          "name": "crackers",
+          "type": "Doughs and batters"
+        },
+        {
+          "name": "quince",
+          "type": "Purées and veloutés"
+        }
+      ],
+      "ingredients": [
+        "British cheeses"
+      ],
+      "unsure": [
+        "crackers",
+        "quince"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Continental",
+      "dish": "Toasted bloomer",
+      "components": [],
+      "ingredients": [
+        "bloomer",
+        "preserves"
+      ],
+      "unsure": [
+        "bloomer",
+        "preserves"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Continental",
+      "dish": "Warm croissant",
+      "components": [],
+      "ingredients": [
+        "croissant",
+        "preserves"
+      ],
+      "unsure": [
+        "croissant",
+        "preserves"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Continental",
+      "dish": "Prune, orange and Earl Grey compote",
+      "components": [
+        {
+          "name": "prune compote",
+          "type": "Purées and veloutés"
+        }
+      ],
+      "ingredients": []
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Continental",
+      "dish": "Apricot and vanilla compote",
+      "components": [
+        {
+          "name": "apricot compote",
+          "type": "Purées and veloutés"
+        }
+      ],
+      "ingredients": []
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Continental",
+      "dish": "Fruit salad",
+      "components": [],
+      "ingredients": [
+        "pineapple",
+        "blueberries"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Continental",
+      "dish": "Bircher muesli",
+      "components": [
+        {
+          "name": "bircher muesli",
+          "type": "Bases"
+        },
+        {
+          "name": "toasted nuts",
+          "type": "Garnishes and crisps"
+        }
+      ],
+      "ingredients": [
+        "apple",
+        "yoghurt"
+      ],
+      "unsure": [
+        "yoghurt",
+        "toasted nuts"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Continental",
+      "dish": "Yoghurt bowl",
+      "components": [
+        {
+          "name": "compote",
+          "type": "Purées and veloutés"
+        }
+      ],
+      "ingredients": [
+        "yoghurt",
+        "chia seeds"
+      ],
+      "unsure": [
+        "yoghurt",
+        "compote"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Continental",
+      "dish": "Porridge",
+      "components": [
+        {
+          "name": "porridge",
+          "type": "Bases"
+        }
+      ],
+      "ingredients": [
+        "banana",
+        "pecans",
+        "Cacklebean honey"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Continental",
+      "dish": "Rustic baguettes",
+      "components": [],
+      "ingredients": [
+        "baguette",
+        "English cheeses",
+        "Cobble Lane cured meats"
+      ],
+      "unsure": [
+        "baguette"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Cooked",
+      "dish": "Dumbleton Hall English breakfast",
+      "components": [
+        {
+          "name": "full English",
+          "type": "Bases"
+        }
+      ],
+      "ingredients": [
+        "black pudding"
+      ],
+      "unsure": [
+        "full English"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Cooked",
+      "dish": "Vegetarian breakfast",
+      "components": [
+        {
+          "name": "vegetarian breakfast",
+          "type": "Bases"
+        }
+      ],
+      "ingredients": [],
+      "unsure": [
+        "vegetarian breakfast"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Cooked",
+      "dish": "Eggs royale",
+      "components": [
+        {
+          "name": "poached eggs",
+          "type": "Bases"
+        },
+        {
+          "name": "chalk stream trout",
+          "type": "Pickles and cures"
+        },
+        {
+          "name": "hollandaise",
+          "type": "Sauces and emulsions"
+        }
+      ],
+      "ingredients": [],
+      "unsure": [
+        "chalk stream trout"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Cooked",
+      "dish": "Eggs Benedict",
+      "components": [
+        {
+          "name": "poached eggs",
+          "type": "Bases"
+        },
+        {
+          "name": "hollandaise",
+          "type": "Sauces and emulsions"
+        }
+      ],
+      "ingredients": [
+        "Old Spot ham"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Cooked",
+      "dish": "Eggs Florentine",
+      "components": [
+        {
+          "name": "poached eggs",
+          "type": "Bases"
+        },
+        {
+          "name": "hollandaise",
+          "type": "Sauces and emulsions"
+        }
+      ],
+      "ingredients": [
+        "baby spinach"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Cooked",
+      "dish": "Cold smoked trout",
+      "components": [
+        {
+          "name": "cold smoked trout",
+          "type": "Pickles and cures"
+        }
+      ],
+      "ingredients": [
+        "Cacklebean eggs"
+      ],
+      "unsure": [
+        "cold smoked trout"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Cooked",
+      "dish": "Pancakes",
+      "components": [
+        {
+          "name": "pancakes",
+          "type": "Doughs and batters"
+        }
+      ],
+      "ingredients": [
+        "lemon",
+        "hazelnut chocolate spread"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Cooked",
+      "dish": "French toast",
+      "components": [
+        {
+          "name": "French toast",
+          "type": "Bases"
+        }
+      ],
+      "ingredients": [
+        "maple syrup",
+        "bacon"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Cooked",
+      "dish": "Smoked haddock",
+      "components": [
+        {
+          "name": "poached egg",
+          "type": "Bases"
+        },
+        {
+          "name": "charred lemon",
+          "type": "Garnishes and crisps"
+        },
+        {
+          "name": "confit tomatoes",
+          "type": "Garnishes and crisps"
+        }
+      ],
+      "ingredients": [
+        "smoked haddock"
+      ]
+    },
+    {
+      "menu": "Breakfast",
+      "course": "Cooked",
+      "dish": "Smashed avocado",
+      "components": [
+        {
+          "name": "sourdough",
+          "type": "Doughs and batters"
+        },
+        {
+          "name": "roasted peppers",
+          "type": "Garnishes and crisps"
+        }
+      ],
+      "ingredients": [
+        "avocado",
+        "tomato",
+        "Cacklebean eggs"
+      ],
+      "unsure": [
+        "sourdough"
+      ]
+    }
+  ]
+}
