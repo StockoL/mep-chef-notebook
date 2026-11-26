@@ -40,3 +40,21 @@
   font-size: var(--step-1);
   cursor: pointer;
 }
+
+/* Folds away where nothing is captured, and while scrolling down (FEEL_PASS 7).
+   Height, not position, so the page gets the room back. With reduced motion
+   --motion-scale is 0: it just shows and hides. */
+.capture-dock {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows calc(var(--duration-base) * var(--motion-scale)) var(--ease-standard);
+}
+
+.capture-dock[data-away='true'] {
+  grid-template-rows: 0fr;
+}
+
+.capture-dock__inner {
+  min-block-size: 0;
+  overflow: hidden;
+}
