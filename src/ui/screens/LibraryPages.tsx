@@ -140,7 +140,7 @@ export function ComponentPage({ id = '' }: { id?: string }) {
 
   if (editing) {
     return (
-      <section class="flow" key={`${id}-edit`}>
+      <section class="flow mode-swap" key={`${id}-edit`}>
         <ScreenHeader title={component.name} back={BACK} action={{ label: 'Done', onClick: done }} />
         {empty && <p class="field__hint">Nothing written yet: add the ingredients and method.</p>}
         <NameField value={component.name} onSave={(name) => updateComponent(id, { name })} />
@@ -168,7 +168,7 @@ export function ComponentPage({ id = '' }: { id?: string }) {
   }
 
   return (
-    <section class="flow" key={id}>
+    <section class="flow mode-swap" key={id}>
       <ScreenHeader title={component.name} back={BACK} action={{ label: 'Edit', onClick: start }} meta={meta || undefined} />
       {variation && <VariationLine variation={variation} steps={steps} onEdit={start} />}
       {variation && kitchenId && <VariationChips componentId={id} kitchenId={kitchenId} shown={variation} hideWhenSingle />}
@@ -438,7 +438,7 @@ export function DishPage({ id = '' }: { id?: string }) {
 
   if (editing) {
     return (
-      <section class="flow" key={`${id}-edit`}>
+      <section class="flow mode-swap" key={`${id}-edit`}>
         <ScreenHeader title={dish.name} back={BACK} action={{ label: 'Done', onClick: done }} />
         <NameField value={dish.name} onSave={(name) => updateDish(id, { name })} />
         <DishOriginLine dishId={id} kitchenId={dish.kitchenId} />
@@ -507,7 +507,7 @@ export function DishPage({ id = '' }: { id?: string }) {
   const kitchenName = (kitchens ?? []).find((k) => k.id === dish.kitchenId)?.name ?? 'Your own';
   const menuNames = (dishMenus ?? []).map(({ menu }) => menuLabel(menu));
   return (
-    <section class="flow" key={id}>
+    <section class="flow mode-swap" key={id}>
       <ScreenHeader title={dish.name} back={BACK} action={{ label: 'Edit', onClick: start }} meta={[kitchenName, dish.description || null].filter(Boolean).join(' · ')} />
       {dish.platingPhotoId && <MediaView id={dish.platingPhotoId} />}
       {dish.platingSpec && <p class="dish-spec">{dish.platingSpec}</p>}
@@ -663,7 +663,7 @@ export function IngredientPage({ id = '' }: { id?: string }) {
   }
 
   return (
-    <section class="flow" key={id}>
+    <section class="flow mode-swap" key={id}>
       <ScreenHeader title={ingredient.name} back={BACK} />
 
       <UsedIn

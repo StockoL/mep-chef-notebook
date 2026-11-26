@@ -64,3 +64,15 @@
   inline-size: 100%;
   justify-content: center;
 }
+
+/* Reading ↔ editing (FEEL_PASS 8): a quick fade in, so the swap doesn't jump.
+   Scaled by --motion-scale, so reduced motion switches instantly. */
+.mode-swap {
+  animation: mode-swap-in calc(var(--duration-quick) * var(--motion-scale)) var(--ease-standard);
+}
+
+@keyframes mode-swap-in {
+  from {
+    opacity: 0;
+  }
+}

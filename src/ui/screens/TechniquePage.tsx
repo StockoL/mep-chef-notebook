@@ -81,7 +81,7 @@ export function TechniquePage({ id = '' }: { id?: string }) {
   }
 
   return (
-    <section class="flow" key={`${id}-edit`}>
+    <section class="flow mode-swap" key={`${id}-edit`}>
       <ScreenHeader title={technique.name} back={BACK} action={{ label: 'Done', onClick: done }} />
       <NameField value={technique.name} onSave={(name) => updateTechnique(id, { name })} />
       <AliasesField aliases={technique.aliases} onSave={(aliases) => updateTechnique(id, { aliases })} />
@@ -210,7 +210,7 @@ function TechniqueReading({ details, kitchenName, categoryName, onEdit }: { deta
       </section>
     ) : null;
   return (
-    <section class="flow" key={technique.id}>
+    <section class="flow mode-swap" key={technique.id}>
       <ScreenHeader title={technique.name} back={BACK} action={{ label: 'Edit', onClick: onEdit }} meta={meta || undefined} />
       {!written && (
         <p class="field__hint">

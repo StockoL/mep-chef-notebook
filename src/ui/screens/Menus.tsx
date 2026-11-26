@@ -55,6 +55,7 @@ export function MenusList() {
   const menus = useLiveQuery(async () => (kitchenId ? listMenus(kitchenId) : []), [kitchenId]);
   const [name, setName] = useState('');
   const [error, setError] = useState('');
+  const [adding, setAdding] = useState(false);
 
   async function add(event: Event) {
     event.preventDefault();
@@ -71,7 +72,7 @@ export function MenusList() {
   return (
     <section class="flow">
       <ScreenHeader title="Menus" back={query.kitchen ? { href: paths.kitchen(query.kitchen), label: kitchen?.name ?? 'Kitchen' } : { href: paths.library, label: 'Library' }} />
-      <p class="field__hint">{kitchen ? `${kitchen.name}’s menus.` : ''} Old menus move to past and stay in your book.</p>
+      <Hint name="menus">Old menus move to past and stay in your book.</Hint>
       {(['on-now', 'coming-up', 'past'] as const).map((status) => {
         const group = (menus ?? []).filter((m) => m.status === status);
         if (group.length === 0) return null;
@@ -101,13 +102,25 @@ export function MenusList() {
           <p>No menus yet for this kitchen.</p>
         </div>
       )}
-      <form class="input-group" onSubmit={add}>
-        <input class="input" aria-label="New menu" placeholder="New menu: À la carte, Sunday lunch…" autocomplete="off" value={name} onInput={(e) => setName(e.currentTarget.value)} />
-        <button class="button" type="submit" disabled={!name.trim()}>
-          Add
-        </button>
-      </form>
-      {error && <p class="field__error">{error}</p>}
+      <button class="button" type="button" data-variant="primary" onClick={() => setAdding(true)}>
+        + New menu
+      </button>
+      <Sheet open={adding} onClose={() => setAdding(false)} title="New menu">
+        {adding && (
+          <form class="flow" onSubmit={add}>
+            <div class="field">
+              <label class="label" for="new-menu">
+                Name
+              </label>
+              <input class="input" id="new-menu" aria-label="New menu" placeholder="À la carte, Sunday lunch…" autocomplete="off" autofocus value={name} onInput={(e) => setName(e.currentTarget.value)} />
+            </div>
+            {error && <p class="field__error">{error}</p>}
+            <button class="button" type="submit" data-variant="primary" disabled={!name.trim()}>
+              Create
+            </button>
+          </form>
+        )}
+      </Sheet>
     </section>
   );
 }
@@ -161,7 +174,7 @@ export function MenuScreen({ id = '' }: { id?: string }) {
 
   if (editing) {
     return (
-      <section class="flow">
+      <section class="flow mode-swap" key="edit">
         <ScreenHeader title={menu.name} back={back} action={{ label: 'Done', onClick: done }} />
         <button class="button" type="button" data-variant="primary" onClick={() => setSheet('add')}>
           + Add a dish
@@ -209,7 +222,7 @@ export function MenuScreen({ id = '' }: { id?: string }) {
   }
 
   return (
-    <section class="flow">
+    <section class="flow mode-swap" key="read">
       <ScreenHeader title={menu.name} back={back} action={{ label: 'Edit', onClick: start }} meta={meta} />
       {view.readiness.total > 0 && (
         <p class="readiness">

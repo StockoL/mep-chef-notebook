@@ -53,6 +53,10 @@
 }
 
 .sheet-row__tick > .icon {
+  /* The tick fills rather than snapping (FEEL_PASS 8). */
+  transition:
+    background-color calc(var(--duration-quick) * var(--motion-scale)) var(--ease-standard),
+    border-color calc(var(--duration-quick) * var(--motion-scale)) var(--ease-standard);
   box-sizing: content-box;
   padding: 0.2em;
   border: 2px solid var(--color-border-strong);

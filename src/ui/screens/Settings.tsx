@@ -66,6 +66,7 @@ export function Settings() {
           <div class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
             <p class="label">Remind me to back up</p>
             {backup && (
+              <div class="fill-segments">
               <Segmented<ReminderDays>
                 label="Remind me to back up"
                 choices={REMINDER_CHOICES.map((days) => ({
@@ -75,6 +76,7 @@ export function Settings() {
                 value={backup.everyDays}
                 onChange={(days) => trackSave(setReminderDays(days))}
               />
+              </div>
             )}
           </div>
           <label class="button">
@@ -88,6 +90,7 @@ export function Settings() {
       <section class="card" aria-labelledby="appearance-title">
         <div class="card__body flow">
           <h2 class="section-label" id="appearance-title">Appearance</h2>
+          <div class="fill-segments">
           <Segmented<ThemeChoice>
             label="Dark mode"
             choices={[
@@ -98,6 +101,7 @@ export function Settings() {
             value={theme}
             onChange={chooseTheme}
           />
+          </div>
           <p class="field__hint">
             Text size follows your phone: Settings → Display &amp; Brightness → Text Size.
           </p>
@@ -162,12 +166,18 @@ function StorageCheck() {
           <dd>{persistence === undefined ? '…' : !persistence.supported ? 'Not supported' : persistence.persisted ? 'Yes' : 'No'}</dd>
           <dt>Space used</dt>
           <dd>{estimate ? formatBytes(estimate.usage) : 'Unknown'}</dd>
-          <dt>Test marker</dt>
-          <dd>{marker ? new Date(marker).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : 'Not written'}</dd>
         </dl>
-        <button class="button" type="button" onClick={() => trackSave(writeMarker())}>
-          Write test marker
-        </button>
+        {/* The Phase 0 persistence test: a developer tool, folded away (FEEL_PASS 8). */}
+        <details class="developer">
+          <summary class="developer__summary">Developer</summary>
+          <dl class="details-list">
+            <dt>Test marker</dt>
+            <dd>{marker ? new Date(marker).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' }) : 'Not written'}</dd>
+          </dl>
+          <button class="button" type="button" onClick={() => trackSave(writeMarker())}>
+            Write test marker
+          </button>
+        </details>
       </div>
     </section>
   );
