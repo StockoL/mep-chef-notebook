@@ -27,7 +27,7 @@ import {
 import { createKitchen, getKitchen, listKitchens, setKitchenArchived } from '../../data/kitchens';
 import { getListItems, ListError } from '../../data/lists';
 import { listComponentNotes } from '../../data/notes';
-import { menusForComponent, menusForDish, tagSuggestions } from '../../data/menus';
+import { addDishToMenu, getMenuView, listMenus, menusForComponent, menusForDish, removeDishFromMenu, tagSuggestions } from '../../data/menus';
 import { addDishToSheet } from '../../data/dishes';
 import { componentAllergens, dishAllergens } from '../../data/allergens';
 import { AllergenPicker, AllergenSummaryView, MadeButton, ProductsSection } from '../components/FoodSafety';
@@ -409,7 +409,6 @@ function YieldField({ variation }: { variation: Variation }) {
 export function DishPage({ id = '' }: { id?: string }) {
   const details = useLiveQuery(() => getDishDetails(id), [id]);
   const place = useLiveQuery(() => getPlace());
-  const dishMenus = useLiveQuery(() => menusForDish(id), [id]);
   const dishTagHints = useLiveQuery(() => tagSuggestions({ kind: 'dish', id }), [id]);
   const kitchens = useLiveQuery(() => listKitchens());
   const [picking, setPicking] = useState(false);
@@ -505,7 +504,6 @@ export function DishPage({ id = '' }: { id?: string }) {
   }
 
   const kitchenName = (kitchens ?? []).find((k) => k.id === dish.kitchenId)?.name ?? 'Your own';
-  const menuNames = (dishMenus ?? []).map(({ menu }) => menuLabel(menu));
   return (
     <section class="flow mode-swap" key={id}>
       <ScreenHeader title={dish.name} back={BACK} action={{ label: 'Edit', onClick: start }} meta={[kitchenName, dish.description || null].filter(Boolean).join(' · ')} />
@@ -524,8 +522,129 @@ export function DishPage({ id = '' }: { id?: string }) {
       )}
 
       {components.length > 0 && place && <DishAtWork dishId={id} kitchenId={place.kitchenId} />}
-      <p class="field__hint">{menuNames.length ? `On ${menuNames.join(', ')}` : 'Not on a menu yet.'}</p>
+      {place && <DishMenus dishId={id} dishName={dish.name} kitchenId={place.kitchenId} />}
     </section>
+  );
+}
+
+/**
+ * Which menus a dish is on, as links, and "Add to a menu": pick one of this
+ * kitchen's menus (on now or coming up), then its course. 3 taps, with Undo.
+ * Price and who makes what are set on the menu (its edit mode).
+ */
+function DishMenus({ dishId, dishName, kitchenId }: { dishId: string; dishName: string; kitchenId: string }) {
+  const onMenus = useLiveQuery(() => menusForDish(dishId), [dishId]);
+  const menus = useLiveQuery(async () => (await listMenus(kitchenId)).filter((m) => m.status !== 'past'), [kitchenId]);
+  const [open, setOpen] = useState(false);
+  const [menuId, setMenuId] = useState<string | null>(null);
+  const chosen = menus?.find((m) => m.id === menuId);
+  // The kitchen's course list is shared by all its menus: offer the ones this menu uses first.
+  const courses = useLiveQuery(async () => {
+    if (!chosen) return { used: [], others: [] };
+    const all = (await getListItems({ kind: 'values', list: 'courses', kitchenId: chosen.kitchenId })).filter((c) => !c.hidden);
+    const usedIds = new Set((await getMenuView(chosen.id, []))?.courses.map((c) => c.courseId));
+    const used = all.filter((c) => usedIds.has(c.id));
+    return used.length ? { used, others: all.filter((c) => !usedIds.has(c.id)) } : { used: all, others: [] };
+  }, [chosen?.id]);
+  const [moreCourses, setMoreCourses] = useState(false);
+  if (!onMenus || !menus) return null;
+  const already = new Set(onMenus.map(({ menu }) => menu.id));
+  const available = menus.filter((m) => !already.has(m.id));
+
+  function close() {
+    setOpen(false);
+    setMenuId(null);
+    setMoreCourses(false);
+  }
+  async function add(courseId: string | null) {
+    if (!chosen) return;
+    const placeId = await trackSave(addDishToMenu(chosen.id, dishId, courseId));
+    const name = chosen.name;
+    const menuHref = paths.menu(chosen.id);
+    close();
+    showMessage(`Added ${dishName} to ${name}.`, { undo: async () => void (await removeDishFromMenu(placeId)), view: { label: 'View', href: menuHref } });
+  }
+
+  return (
+    <>
+      <p class="field__hint">
+        {onMenus.length === 0 ? (
+          'Not on a menu yet. '
+        ) : (
+          <>
+            On{' '}
+            {onMenus.map(({ menu }, i) => (
+              <span key={menu.id}>
+                {i > 0 && ', '}
+                <a href={paths.menu(menu.id)}>{menuLabel(menu)}</a>
+              </span>
+            ))}
+            .{' '}
+          </>
+        )}
+        <button class="link-button" type="button" onClick={() => setOpen(true)}>
+          {onMenus.length === 0 ? 'Add to a menu' : 'Add to another menu'}
+        </button>
+      </p>
+      <Sheet open={open} onClose={close} title={chosen ? `Which course on ${chosen.name}?` : 'Add to a menu'}>
+        {open && !chosen && (
+          <>
+            {available.length === 0 ? (
+              <p class="field__hint">{menus.length === 0 ? 'This kitchen has no menus yet.' : 'It’s on every menu on now and coming up.'}</p>
+            ) : (
+              <ul class="row-list" role="list">
+                {available.map((m) => (
+                  <li key={m.id}>
+                    <button class="list-row" type="button" onClick={() => setMenuId(m.id)}>
+                      <span class="list-row__main">
+                        <span class="list-row__title">{m.name}</span>
+                        <span class="list-row__meta">{m.status === 'on-now' ? 'On now' : 'Coming up'}</span>
+                      </span>
+                      <Icon name="chevron-right" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <a class="button" href={paths.menusFor(kitchenId)}>
+              Menus…
+            </a>
+          </>
+        )}
+        {open && chosen && (
+          <>
+            <ul class="row-list" role="list">
+              {[...(courses?.used ?? []), ...(moreCourses ? (courses?.others ?? []) : [])].map((c) => (
+                <li key={c.id}>
+                  <button class="list-row" type="button" onClick={() => add(c.id)}>
+                    <span class="list-row__main">
+                      <span class="list-row__title">{c.name}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+              <li>
+                <button class="list-row" type="button" onClick={() => add(null)}>
+                  <span class="list-row__main">
+                    <span class="list-row__title">No course</span>
+                  </span>
+                </button>
+              </li>
+            </ul>
+            <div class="cluster">
+              {!moreCourses && (courses?.others.length ?? 0) > 0 && (
+                <button class="button" type="button" data-variant="ghost" onClick={() => setMoreCourses(true)}>
+                  Other courses
+                </button>
+              )}
+              <button class="button" type="button" data-variant="ghost" onClick={() => setMenuId(null)}>
+                Another menu
+              </button>
+            </div>
+          </>
+        )}
+      </Sheet>
+    </>
   );
 }
 

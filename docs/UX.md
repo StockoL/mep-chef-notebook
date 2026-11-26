@@ -45,7 +45,7 @@ Edit: name, origin, another way, makes, the ingredients box and the method box, 
 
 ### Dish
 
-Reading: plating photo and spec, components (each opens its recipe, scaled to the dish's covers when set), allergens gathered from all of them, "add to today's sheet" (the one orange button), and the menus it's on as a small line.
+Reading: plating photo and spec, components (each opens its recipe, scaled to the dish's covers when set), allergens gathered from all of them, "add to today's sheet" (the one orange button), and the menus it's on as a small line of links with "Add to a menu": pick a menu on now or coming up, then its course (the courses that menu uses first). 3 taps, with Undo. Price and who makes what are set on the menu, in its edit mode.
 Edit: name, kitchen, description, add a component, amounts/order/remove, how many, plating photo and spec, tags, collections, delete.
 
 ### Ingredient
