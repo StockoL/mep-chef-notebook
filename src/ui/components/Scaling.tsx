@@ -1,9 +1,8 @@
 /**
  * Scaling on screen (S1–S3, UX → Component: "scale control at the top").
  *
- * - ScalePanel, on a component: "Make…" (by yield) or "From what I've got"
- *   (anchor ingredient). While scaled, a banner says so and the ingredients
- *   show at the new amounts; "As written" goes back. The choice is
+ * - ScaleControl and IngredientRows, on a component's reading view: one
+ *   line saying the scale, and the ingredients at that scale. The choice is
  *   remembered per component (UX rule 2) and never changes the recipe.
  * - PortionsPanel, on a dish: "For 40 covers or people" → each component's
  *   amount, with a link to the component scaled to it.
@@ -46,93 +45,113 @@ const readNumber = (text: string) => {
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-export function ScalePanel({ componentId, kitchenId, choice, variationId }: { componentId: Id; kitchenId: KitchenId; choice: ScaleChoice | null; variationId?: Id | null }) {
+/**
+ * The scale control on a recipe's reading view (FEEL_PASS 2): one line,
+ * "Makes 1kg · as written" or "Makes 2kg · ×2". Tap it for the scaling sheet:
+ * an amount to make, from what you've got, or back to as written.
+ */
+export function ScaleControl({ componentId, kitchenId, choice, variationId }: { componentId: Id; kitchenId: KitchenId; choice: ScaleChoice | null; variationId?: Id | null }) {
   const scaled = useLiveQuery(() => getScaledComponent(componentId, kitchenId, choice, undefined, variationId), [componentId, kitchenId, JSON.stringify(choice), variationId]);
-  const [sheet, setSheet] = useState<'yield' | 'anchor' | null>(null);
+  const [sheet, setSheet] = useState<'menu' | 'yield' | 'anchor' | null>(null);
+  // A sheet's close event arrives after the next one has opened: only clear it if it's still the one showing.
+  const closeSheet = (which: 'menu' | 'yield' | 'anchor') => () => setSheet((current) => (current === which ? null : current));
   if (!scaled) return null;
 
   const choose = async (next: ScaleChoice | null) => {
     await trackSave(setScaleChoice(componentId, next));
     setSheet(null);
   };
-  const anchorLine = choice?.by === 'anchor' ? scaled.lines.find((l) => l.lineId === choice.lineId) : undefined;
   const isScaled = choice !== null && !scaled.problem;
+  const factor = Math.round(scaled.factor * 100) / 100;
+  const anchorLine = choice?.by === 'anchor' ? scaled.lines.find((l) => l.lineId === choice.lineId) : undefined;
 
   return (
-    <section class="flow" aria-label="Scale">
-      {choice ? (
-        <div class="scale-banner" data-problem={Boolean(scaled.problem)} role="status">
-          <p>
-            {scaled.problem ??
-              [
-                `Scaled ×${Math.round(scaled.factor * 100) / 100}`,
-                choice.by === 'anchor' && anchorLine ? `from ${formatAmount(choice.amount, choice.unit)} ${anchorLine.name.toLowerCase()}` : null,
-                scaled.makes ? `makes ${scaled.makes}` : null,
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-          </p>
-          <div class="cluster">
-            <button class="button" type="button" onClick={() => setSheet(choice.by)}>
-              Change
-            </button>
-            <button class="button" type="button" data-variant="primary" onClick={() => choose(null)}>
-              As written
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div class="cluster">
-          <button class="button" type="button" onClick={() => setSheet('yield')}>
-            Make…
-          </button>
-          <button class="button" type="button" onClick={() => setSheet('anchor')}>
-            From what I’ve got
-          </button>
-        </div>
-      )}
+    <>
+      <button class="scale-control" type="button" onClick={() => setSheet('menu')} data-scaled={isScaled}>
+        <span class="scale-control__amount">{scaled.makes ? `Makes ${scaled.makes}` : 'Scale'}</span>
+        <span class="scale-control__factor">
+          {isScaled ? `×${factor}${anchorLine && choice?.by === 'anchor' ? ` from ${formatAmount(choice.amount, choice.unit)} ${anchorLine.name.toLowerCase()}` : ''}` : 'as written'}
+        </span>
+      </button>
+      {scaled.problem && <p class="plan-flag">{scaled.problem}</p>}
 
-      {isScaled && (
-        <section class="flow" aria-labelledby="scaled-title">
-          <h2 id="scaled-title">Ingredients, scaled</h2>
-          <ScaledLines lines={scaled.lines} />
-          <p class="field__hint">Scaling doesn’t change the recipe. To edit it, go back to as written.</p>
-        </section>
-      )}
-
-      <Sheet open={sheet === 'yield'} onClose={() => setSheet(null)} title="Make…">
+      <Sheet open={sheet === 'menu'} onClose={closeSheet('menu')} title="Scale">
+        {sheet === 'menu' && (
+          <ul class="row-list" role="list">
+            <li>
+              <button class="list-row" type="button" onClick={() => setSheet('yield')}>
+                <span class="list-row__main">
+                  <span class="list-row__title">Make an amount</span>
+                  <span class="list-row__meta">{scaled.baseYield ? `As written it makes ${formatAmount(scaled.baseYield.amount, scaled.baseYield.unit)}` : 'Set what it makes first (Edit)'}</span>
+                </span>
+                <Icon name="chevron-right" />
+              </button>
+            </li>
+            <li>
+              <button class="list-row" type="button" onClick={() => setSheet('anchor')}>
+                <span class="list-row__main">
+                  <span class="list-row__title">From what I’ve got</span>
+                  <span class="list-row__meta">Scale to one ingredient you have</span>
+                </span>
+                <Icon name="chevron-right" />
+              </button>
+            </li>
+            {choice && (
+              <li>
+                <button class="list-row" type="button" onClick={() => choose(null)}>
+                  <span class="list-row__main">
+                    <span class="list-row__title">As written</span>
+                  </span>
+                </button>
+              </li>
+            )}
+          </ul>
+        )}
+      </Sheet>
+      <Sheet open={sheet === 'yield'} onClose={closeSheet('yield')} title="Make…">
         {sheet === 'yield' && <YieldForm base={scaled.baseYield} current={choice?.by === 'yield' ? choice : null} onScale={choose} />}
       </Sheet>
-      <Sheet open={sheet === 'anchor'} onClose={() => setSheet(null)} title="From what I’ve got">
+      <Sheet open={sheet === 'anchor'} onClose={closeSheet('anchor')} title="From what I’ve got">
         {sheet === 'anchor' && <AnchorForm lines={scaled.lines} current={choice?.by === 'anchor' ? choice : null} onScale={choose} />}
       </Sheet>
-    </section>
+    </>
   );
 }
 
-function ScaledLines({ lines }: { lines: ScaledLine[] }) {
+/**
+ * The ingredients to cook from: name left, amount right (at the chosen
+ * scale), prep note muted. A component opens scaled to the amount needed;
+ * an ingredient opens its page.
+ */
+export function IngredientRows({ componentId, kitchenId, choice, variationId }: { componentId: Id; kitchenId: KitchenId; choice: ScaleChoice | null; variationId?: Id | null }) {
+  const scaled = useLiveQuery(() => getScaledComponent(componentId, kitchenId, choice, undefined, variationId), [componentId, kitchenId, JSON.stringify(choice), variationId]);
+  if (!scaled || scaled.lines.length === 0) return null;
+  const isScaled = choice !== null && !scaled.problem;
   return (
-    <ul class="line-rows" role="list" aria-label="Ingredients at this scale">
-      {lines.map((line) => {
+    <ul class="ingredient-rows" role="list" aria-label="Ingredients">
+      {scaled.lines.map((line) => {
+        const amount = isScaled ? line.scaled : line.written;
         const content = (
           <>
-            <span class="line-rows__quantity">{line.scaled ?? ''}</span>
-            <span class="line-rows__name">
+            <span class="ingredient-rows__name">
               {line.name}
-              {line.prepNote && <span class="line-rows__note">, {line.prepNote}</span>}
-              {line.estimate && <span class="line-rows__estimate"> ≈ {line.estimate}</span>}
+              {line.prepNote && <span class="ingredient-rows__note">, {line.prepNote}</span>}
             </span>
-            {line.written && <span class="line-rows__was">was {line.written}</span>}
+            <span class="ingredient-rows__amount">
+              {amount || (line.canAnchor ? '' : 'to taste')}
+              {line.estimate && <span class="ingredient-rows__note"> ≈ {line.estimate}</span>}
+            </span>
           </>
         );
+        const href = line.component ? paths.componentMaking(line.component.id, line.component.amount, line.component.unit) : line.ingredientId ? paths.ingredient(line.ingredientId) : null;
         return (
           <li key={line.lineId}>
-            {line.component ? (
-              <a class="line-rows__row" href={paths.componentMaking(line.component.id, line.component.amount, line.component.unit)}>
+            {href ? (
+              <a class="ingredient-rows__row" href={href}>
                 {content}
               </a>
             ) : (
-              <span class="line-rows__row">{content}</span>
+              <span class="ingredient-rows__row">{content}</span>
             )}
           </li>
         );

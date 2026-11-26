@@ -1,0 +1,15 @@
+/*
+ * Section labels (FEEL_PASS 4, UX principle 3: quiet structure). One large
+ * title per page; sections inside it get a small label instead of a
+ * heading. Keep the real heading element (h2) for screen readers and give
+ * it this class: only the look changes.
+ */
+.section-label {
+  margin: 0;
+  font-size: var(--step--1);
+  font-weight: var(--weight-semibold);
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+}

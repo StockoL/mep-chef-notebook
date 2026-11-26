@@ -31,11 +31,11 @@ import { menusForComponent, menusForDish, tagSuggestions } from '../../data/menu
 import { addDishToSheet } from '../../data/dishes';
 import { componentAllergens, dishAllergens } from '../../data/allergens';
 import { AllergenPicker, AllergenSummaryView, MadeButton, ProductsSection } from '../components/FoodSafety';
-import { getDishPortions } from '../../data/scaling';
+import { getDishNeeds, getDishPortions } from '../../data/scaling';
 import { getScaleChoice, setScaleChoice } from '../../data/scaling';
 import { recordView } from '../../data/search';
 import { restoreSnapshot } from '../../data/snapshot';
-import type { Variation } from '../../data/types';
+import type { Step, Variation } from '../../data/types';
 import { ChipChoice, Segmented } from '../components/Controls';
 import {
   AliasesField,
@@ -47,11 +47,14 @@ import {
   TextAreaField,
 } from '../components/LibraryEditors';
 import { MediaView } from '../components/MediaView';
-import { MethodEditor } from '../components/MethodEditor';
+import { MethodEditor, MethodSteps } from '../components/MethodEditor';
+import { useEditMode } from '../hooks/useEditMode';
+import { whatsMissing } from '../../core/parser/readiness';
+import { tagNames } from '../../data/tags';
 import { techniquesForIngredient } from '../../data/techniques';
 import { menuLabel } from './Menus';
 import { AttemptLog, IdeaFields, VariationActions, VariationChips } from '../components/Variations';
-import { IngredientWeights, PerPortionButton, PortionsPanel, ScalePanel } from '../components/Scaling';
+import { IngredientRows, IngredientWeights, PerPortionButton, PortionsPanel, ScaleControl } from '../components/Scaling';
 import { NoteEditor } from '../components/NoteEditor';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Sheet } from '../components/Sheet';
@@ -67,11 +70,19 @@ const COMPONENT_TYPES = { kind: 'values', list: 'component-types', kitchenId: nu
 
 // ─── Component ────────────────────────────────────────────────────────────
 
-/** A component's page (UX → Component): /library/component/:id */
+/**
+ * A component's page (UX → Component): /library/component/:id
+ *
+ * Read by default (FEEL_PASS 2): the scale, the ingredients and the method
+ * to cook from, and nothing to type into. Edit (top right, `?edit=1`) turns
+ * the page into the editor in place; Done returns. A component with nothing
+ * written yet opens straight in edit mode.
+ */
 export function ComponentPage({ id = '' }: { id?: string }) {
   const place = useLiveQuery(() => getPlace());
   const kitchenId = place?.kitchenId;
   const { route, query } = useLocation();
+  const { editing, start, done } = useEditMode();
   // Another way of making it, when the chef taps its chip (V4); otherwise the one in use here.
   const shownId = query.v ?? null;
   const details = useLiveQuery(async () => (kitchenId ? getComponentDetails(id, kitchenId, undefined, shownId) : undefined), [id, kitchenId, shownId]);
@@ -80,6 +91,12 @@ export function ComponentPage({ id = '' }: { id?: string }) {
   const choice = useLiveQuery(() => getScaleChoice(id), [id]);
   const menus = useLiveQuery(() => menusForComponent(id), [id]);
   const tagHints = useLiveQuery(() => tagSuggestions({ kind: 'component', id }), [id]);
+  const tags = useLiveQuery(async () => {
+    const names = await tagNames();
+    return (details?.component.tagIds ?? []).map((t) => names.get(t)).filter((n): n is string => Boolean(n));
+  }, [details?.component.tagIds.join(',')]);
+  // Opened empty once already: don't send the chef back into edit mode after Done.
+  const openedEmpty = useRef<string | null>(null);
 
   useEffect(() => void recordView({ kind: 'component', id }), [id]);
   // Opened "to make" an amount (from a dish, a sheet item or a recipe that uses it): scale to it.
@@ -89,6 +106,14 @@ export function ComponentPage({ id = '' }: { id?: string }) {
       void setScaleChoice(id, { by: 'yield', amount, unit: query.unit });
     }
   }, [id, query.make, query.unit]);
+  const empty = details ? details.lines.length === 0 && details.steps.length === 0 : false;
+  useEffect(() => {
+    if (details && empty && !editing && openedEmpty.current !== id) {
+      openedEmpty.current = id;
+      start();
+    }
+    if (details && !empty) openedEmpty.current = id;
+  }, [id, Boolean(details), empty]);
 
   if (!details) return <ScreenHeader title="" back={BACK} />;
   const { component, variation, lines, steps, dishes, usedInComponents } = details;
@@ -103,24 +128,27 @@ export function ComponentPage({ id = '' }: { id?: string }) {
     }
   }
 
-  return (
-    <section class="flow" key={id}>
-      <ScreenHeader title={component.name} back={BACK} />
-      {variation && kitchenId && <VariationChips componentId={id} kitchenId={kitchenId} shown={variation} />}
-      {variation && <VariationLine variation={variation} />}
-      {variation?.source === 'idea' && <IdeaFields key={variation.id} variation={variation} />}
-      {kitchenId && choice !== undefined && <ScalePanel componentId={id} kitchenId={kitchenId} choice={choice} variationId={variation?.id ?? null} />}
+  const typeName = types?.find((t) => t.id === component.typeId)?.name;
+  const meta = [
+    typeName,
+    dishes.length ? `in ${dishes.slice(0, 2).map((d) => d.name).join(', ')}${dishes.length > 2 ? ` and ${dishes.length - 2} more` : ''}` : null,
+    tags?.length ? `tags: ${tags.join(', ')}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
-      {variation && <YieldField key={variation.id} variation={variation} />}
-
-      {/* While scaled, the scaled list stands in for the editor: the recipe is only edited as written. */}
-      {variation && !choice && <LinesEditor key={`lines-${variation.id}`} variationId={variation.id} componentId={id} lines={lines} />}
-      {variation && <MethodEditor key={`steps-${variation.id}`} variation={variation} steps={steps} componentName={component.name} />}
-      <MadeButton componentId={id} label="Made a batch: label it" />
-
-      {/* Everything else about the recipe, folded away (DECISIONS 54): the page opens on what you cook from. */}
-      <MoreAbout storageKey="more.component" title="More about this recipe">
+  if (editing) {
+    return (
+      <section class="flow" key={`${id}-edit`}>
+        <ScreenHeader title={component.name} back={BACK} action={{ label: 'Done', onClick: done }} />
+        {empty && <p class="field__hint">Nothing written yet: add the ingredients and method.</p>}
         <NameField value={component.name} onSave={(name) => updateComponent(id, { name })} />
+        {variation && <VariationLine variation={variation} editable />}
+        {variation && kitchenId && <VariationChips componentId={id} kitchenId={kitchenId} shown={variation} />}
+        {variation?.source === 'idea' && <IdeaFields key={variation.id} variation={variation} />}
+        {variation && <YieldField key={variation.id} variation={variation} />}
+        {variation && <LinesEditor key={`lines-${variation.id}`} variationId={variation.id} componentId={id} lines={lines} />}
+        {variation && <MethodEditor key={`steps-${variation.id}`} variation={variation} steps={steps} componentName={component.name} />}
         <ChipChoice
           label="Type"
           choices={(types ?? []).filter((t) => !t.hidden || t.id === component.typeId).map((t) => ({ value: t.id, label: t.name }))}
@@ -128,11 +156,39 @@ export function ComponentPage({ id = '' }: { id?: string }) {
           onChange={(typeId) => trackSave(updateComponent(id, { typeId }))}
           allowNone
         />
-
         <TagEditor tagIds={component.tagIds} onChange={(tagIds) => updateComponent(id, { tagIds })} suggested={tagHints ?? []} />
         <AliasesField aliases={component.aliases} onSave={(aliases) => updateComponent(id, { aliases })} />
         <CollectionToggles member={{ kind: 'component', id }} />
+        <button class="button" type="button" data-variant="danger" onClick={remove}>
+          Delete component
+        </button>
+      </section>
+    );
+  }
 
+  return (
+    <section class="flow" key={id}>
+      <ScreenHeader title={component.name} back={BACK} action={{ label: 'Edit', onClick: start }} meta={meta || undefined} />
+      {variation && <VariationLine variation={variation} steps={steps} onEdit={start} />}
+      {variation && kitchenId && <VariationChips componentId={id} kitchenId={kitchenId} shown={variation} hideWhenSingle />}
+      {empty ? (
+        <p class="field__hint">
+          Nothing written yet.{' '}
+          <button class="link-button" type="button" onClick={start}>
+            Add the ingredients and method
+          </button>
+        </p>
+      ) : (
+        <>
+          {kitchenId && choice !== undefined && <ScaleControl componentId={id} kitchenId={kitchenId} choice={choice} variationId={variation?.id ?? null} />}
+          {kitchenId && choice !== undefined && <IngredientRows componentId={id} kitchenId={kitchenId} choice={choice} variationId={variation?.id ?? null} />}
+          {variation && <MethodSteps variation={variation} steps={steps} onEdit={start} />}
+        </>
+      )}
+
+      {/* Everything else about the recipe, folded away (DECISIONS 54): the page opens on what you cook from. */}
+      <MoreAbout storageKey="more.component" title="More about this recipe">
+        <MadeButton componentId={id} label="Made a batch: label it" />
         <UsedIn
           groups={[
             { label: 'In dishes', items: dishes.map((d) => ({ href: paths.dish(d.id), name: d.name })) },
@@ -156,33 +212,47 @@ export function ComponentPage({ id = '' }: { id?: string }) {
         </section>
 
         {variation && kitchenId && <ComponentAllergens componentId={id} kitchenId={kitchenId} variationId={variation.id} />}
-
         {variation && kitchenId && <VariationActions componentId={id} kitchenId={kitchenId} shown={variation} />}
-
-        <button class="button" type="button" data-variant="danger" onClick={remove}>
-          Delete component
-        </button>
       </MoreAbout>
     </section>
   );
 }
 
 /**
- * "House recipe · Dumbleton Hall · Draft": whose version this is (V4). Tap
- * it to say where the recipe is from: a kitchen's house recipe (including
- * kitchens you've left), your own, a book or another chef, or an idea.
+ * "House recipe · Dumbleton Hall · Draft: step 3: no time": whose version
+ * this is (V4) and, for a draft, the first thing missing. In the reading view
+ * the missing item opens edit mode; in edit mode the line opens "Where's
+ * this recipe from?": a kitchen's house recipe (including kitchens you've
+ * left), your own, a book or another chef, or an idea.
  */
-function VariationLine({ variation }: { variation: Variation }) {
+function VariationLine({ variation, editable = false, steps = [], onEdit }: { variation: Variation; editable?: boolean; steps?: Step[]; onEdit?: () => void }) {
   const kitchen = useLiveQuery(async () => (variation.kitchenId ? getKitchen(variation.kitchenId) : undefined), [variation.kitchenId]);
   const [open, setOpen] = useState(false);
   const source = { house: 'House recipe', mine: 'Your own', book: 'From', idea: 'An idea' }[variation.source];
   const where = variation.source === 'house' ? kitchen?.name : variation.source === 'book' ? (variation.sourceDetail ?? 'a book or chef') : variation.sourceDetail;
+  const label = [variation.source === 'book' ? `${source} ${where}` : source, variation.source === 'book' ? null : where, variation.status === 'draft' ? 'Draft' : 'Ready']
+    .filter(Boolean)
+    .join(' · ');
+  if (!editable) {
+    const first = variation.status === 'draft' ? whatsMissing(steps.map((s) => ({ ...s, parts: s.parts.map((p) => ({ ...p, equipment: p.equipmentTypeId })) })))[0] : undefined;
+    return (
+      <p class="variation-line">
+        {label}
+        {first && (
+          <>
+            {': '}
+            <button class="link-button" type="button" onClick={onEdit}>
+              {first.text.charAt(0).toLowerCase() + first.text.slice(1)}
+            </button>
+          </>
+        )}
+      </p>
+    );
+  }
   return (
     <>
       <button class="variation-line" type="button" onClick={() => setOpen(true)} aria-label="Where this recipe is from">
-        {[variation.source === 'book' ? `${source} ${where}` : source, variation.source === 'book' ? null : where, variation.status === 'draft' ? 'Draft' : 'Ready']
-          .filter(Boolean)
-          .join(' · ')}
+        {label}
         <Icon name="chevron-right" />
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} title="Where’s this recipe from?">
@@ -328,16 +398,24 @@ function YieldField({ variation }: { variation: Variation }) {
 
 // ─── Dish ─────────────────────────────────────────────────────────────────
 
-/** A dish's page (UX → Dish): /library/dish/:id */
+/**
+ * A dish's page (UX → Dish): /library/dish/:id
+ *
+ * Read by default (FEEL_PASS 2): the plating, its components (each opening
+ * its recipe, scaled to the dish's covers when set), allergens, and one
+ * action: add it to today's sheet. Edit (top right) for everything else.
+ */
 export function DishPage({ id = '' }: { id?: string }) {
   const details = useLiveQuery(() => getDishDetails(id), [id]);
   const place = useLiveQuery(() => getPlace());
   const dishMenus = useLiveQuery(() => menusForDish(id), [id]);
   const dishTagHints = useLiveQuery(() => tagSuggestions({ kind: 'dish', id }), [id]);
+  const kitchens = useLiveQuery(() => listKitchens());
   const [picking, setPicking] = useState(false);
   const [editingList, setEditingList] = useState(false);
   const photoInput = useRef<HTMLInputElement>(null);
   const { route } = useLocation();
+  const { editing, start, done } = useEditMode();
 
   useEffect(() => void recordView({ kind: 'dish', id }), [id]);
 
@@ -357,48 +435,12 @@ export function DishPage({ id = '' }: { id?: string }) {
     showMessage(`Deleted “${dish.name}”.`, () => restoreSnapshot(snapshot));
   }
 
-  return (
-    <section class="flow" key={id}>
-      <ScreenHeader title={dish.name} back={BACK} />
-      <DishOriginLine dishId={id} kitchenId={dish.kitchenId} />
-
-      <DishComponents
-        dishId={id}
-        dishName={dish.name}
-        components={components}
-        onAdd={() => setPicking(true)}
-        editing={editingList}
-        onToggleEditing={() => setEditingList(!editingList)}
-      />
-
-      {components.length > 0 && place && <DishAtWork dishId={id} kitchenId={place.kitchenId} />}
-      {components.length > 0 && place && <PortionsPanel dishId={id} kitchenId={place.kitchenId} />}
-
-      <section class="flow" aria-labelledby="plating">
-        <h2 id="plating">Plating</h2>
-        {dish.platingPhotoId && <MediaView id={dish.platingPhotoId} />}
-        <div class="cluster">
-          <button class="button" type="button" onClick={() => photoInput.current?.click()}>
-            <Icon name="camera" /> {dish.platingPhotoId ? 'Replace photo' : 'Add a plating photo'}
-          </button>
-          {dish.platingPhotoId && (
-            <button class="button" type="button" data-variant="ghost" onClick={() => trackSave(setDishPhoto(id, null))}>
-              Remove photo
-            </button>
-          )}
-        </div>
-        <input ref={photoInput} class="visually-hidden" type="file" accept="image/*" tabIndex={-1} aria-hidden="true" onChange={onPhoto} />
-        <TextAreaField
-          id="plating-spec"
-          label="Plating spec"
-          value={dish.platingSpec}
-          placeholder="Gel swoosh left, three quenelles, cress on top"
-          onSave={(platingSpec) => updateDish(id, { platingSpec })}
-        />
-      </section>
-
-      <MoreAbout storageKey="more.dish" title="More about this dish">
+  if (editing) {
+    return (
+      <section class="flow" key={`${id}-edit`}>
+        <ScreenHeader title={dish.name} back={BACK} action={{ label: 'Done', onClick: done }} />
         <NameField value={dish.name} onSave={(name) => updateDish(id, { name })} />
+        <DishOriginLine dishId={id} kitchenId={dish.kitchenId} />
         <TextAreaField
           id="dish-description"
           label="Description"
@@ -406,32 +448,116 @@ export function DishPage({ id = '' }: { id?: string }) {
           placeholder="As it reads on the menu"
           onSave={(description) => updateDish(id, { description })}
         />
-
-        <UsedIn
-          groups={[{ label: 'On menus', items: (dishMenus ?? []).map(({ menu }) => ({ href: paths.menu(menu.id), name: menuLabel(menu) })) }]}
-          empty="Not on a menu. Add it from a menu: Library → Dishes → Menus."
+        <DishComponents
+          dishId={id}
+          dishName={dish.name}
+          components={components}
+          onAdd={() => setPicking(true)}
+          editing={editingList}
+          onToggleEditing={() => setEditingList(!editingList)}
         />
+        {components.length > 0 && place && <PortionsPanel dishId={id} kitchenId={place.kitchenId} />}
+
+        <section class="flow" aria-labelledby="plating">
+          <h2 id="plating">Plating</h2>
+          {dish.platingPhotoId && <MediaView id={dish.platingPhotoId} />}
+          <div class="cluster">
+            <button class="button" type="button" onClick={() => photoInput.current?.click()}>
+              <Icon name="camera" /> {dish.platingPhotoId ? 'Replace photo' : 'Add a plating photo'}
+            </button>
+            {dish.platingPhotoId && (
+              <button class="button" type="button" data-variant="ghost" onClick={() => trackSave(setDishPhoto(id, null))}>
+                Remove photo
+              </button>
+            )}
+          </div>
+          <input ref={photoInput} class="visually-hidden" type="file" accept="image/*" tabIndex={-1} aria-hidden="true" onChange={onPhoto} />
+          <TextAreaField
+            id="plating-spec"
+            label="Plating spec"
+            value={dish.platingSpec}
+            placeholder="Gel swoosh left, three quenelles, cress on top"
+            onSave={(platingSpec) => updateDish(id, { platingSpec })}
+          />
+        </section>
 
         <TagEditor tagIds={dish.tagIds} onChange={(tagIds) => updateDish(id, { tagIds })} suggested={dishTagHints ?? []} />
         <CollectionToggles member={{ kind: 'dish', id }} />
-
         <button class="button" type="button" data-variant="danger" onClick={remove}>
           Delete dish
         </button>
-      </MoreAbout>
 
-      {place && (
-        <ComponentPicker
-          open={picking}
-          onClose={() => setPicking(false)}
-          kitchenId={place.kitchenId}
-          exclude={components.map((c) => c.component.id)}
-          onPick={async (componentId, name) => {
-            await trackSave(addComponentToDish(id, componentId));
-            showMessage(`Added ${name} to ${dish.name}.`);
-          }}
-        />
+        {place && (
+          <ComponentPicker
+            open={picking}
+            onClose={() => setPicking(false)}
+            kitchenId={place.kitchenId}
+            exclude={components.map((c) => c.component.id)}
+            onPick={async (componentId, name) => {
+              await trackSave(addComponentToDish(id, componentId));
+              showMessage(`Added ${name} to ${dish.name}.`);
+            }}
+          />
+        )}
+      </section>
+    );
+  }
+
+  const kitchenName = (kitchens ?? []).find((k) => k.id === dish.kitchenId)?.name ?? 'Your own';
+  const menuNames = (dishMenus ?? []).map(({ menu }) => menuLabel(menu));
+  return (
+    <section class="flow" key={id}>
+      <ScreenHeader title={dish.name} back={BACK} action={{ label: 'Edit', onClick: start }} meta={[kitchenName, dish.description || null].filter(Boolean).join(' · ')} />
+      {dish.platingPhotoId && <MediaView id={dish.platingPhotoId} />}
+      {dish.platingSpec && <p class="dish-spec">{dish.platingSpec}</p>}
+
+      {components.length === 0 ? (
+        <p class="field__hint">
+          No components yet.{' '}
+          <button class="link-button" type="button" onClick={start}>
+            Add the purée, the sauce, the garnish
+          </button>
+        </p>
+      ) : (
+        place && <DishComponentRows dishId={id} kitchenId={place.kitchenId} components={components} />
       )}
+
+      {components.length > 0 && place && <DishAtWork dishId={id} kitchenId={place.kitchenId} />}
+      <p class="field__hint">{menuNames.length ? `On ${menuNames.join(', ')}` : 'Not on a menu yet.'}</p>
+    </section>
+  );
+}
+
+/**
+ * A dish's components to read: tap one for its recipe, scaled to the dish's
+ * covers when they're set ("1.2l for 40"), else as written.
+ */
+function DishComponentRows({ dishId, kitchenId, components }: { dishId: string; kitchenId: string; components: DishDetails['components'] }) {
+  const portions = useLiveQuery(() => getDishPortions(dishId), [dishId]);
+  const needs = useLiveQuery(async () => (portions ? getDishNeeds(dishId, kitchenId, portions) : []), [dishId, kitchenId, portions]);
+  return (
+    <section class="flow" aria-labelledby="dish-components" style={{ '--flow-space': 'var(--space-2xs)' }}>
+      <h2 id="dish-components" class="section-label">
+        Components{portions ? ` · for ${portions}` : ''}
+      </h2>
+      <ul class="row-list" role="list">
+        {components.map(({ link, component }) => {
+          const need = needs?.find((n) => n.link.id === link.id);
+          const href = need && need.amount !== null && need.unit ? paths.componentMaking(component.id, need.amount, need.unit) : paths.component(component.id);
+          const meta = need?.needed ?? (link.quantityPerPortion ? `${formatAmount(link.quantityPerPortion.amount, link.quantityPerPortion.unit)} a portion` : null);
+          return (
+            <li key={link.id}>
+              <a class="list-row" href={href}>
+                <span class="list-row__main">
+                  <span class="list-row__title">{component.name}</span>
+                  {meta && <span class="list-row__meta">{meta}</span>}
+                </span>
+                <Icon name="chevron-right" />
+              </a>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }
@@ -711,10 +837,10 @@ function DishAtWork({ dishId, kitchenId }: { dishId: string; kitchenId: string }
 
   return (
     <section class="flow">
+      {allergens && <AllergenSummaryView allergens={allergens} kitchenId={kitchenId} />}
       <button class="button" type="button" data-variant="primary" onClick={addToSheet}>
         Add to today’s sheet{portions ? ` for ${portions}` : ''}
       </button>
-      {allergens && <AllergenSummaryView allergens={allergens} kitchenId={kitchenId} />}
     </section>
   );
 }

@@ -22,11 +22,12 @@ import { ChipChoice } from './Controls';
 import { Sheet } from './Sheet';
 import { showMessage } from './UndoBar';
 
-export function VariationChips({ componentId, kitchenId, shown }: { componentId: Id; kitchenId: KitchenId; shown: Variation }) {
+/** `hideWhenSingle`: the reading view shows the chips only when there's a choice; adding another way is in edit mode. */
+export function VariationChips({ componentId, kitchenId, shown, hideWhenSingle = false }: { componentId: Id; kitchenId: KitchenId; shown: Variation; hideWhenSingle?: boolean }) {
   const variations = useLiveQuery(() => listVariations(componentId, kitchenId), [componentId, kitchenId]);
   const [adding, setAdding] = useState(false);
   const { route } = useLocation();
-  if (!variations) return null;
+  if (!variations || (hideWhenSingle && variations.length < 2)) return null;
   const inUse = variations.find((v) => v.inUse);
   const shownIsInUse = inUse?.variation.id === shown.id;
 

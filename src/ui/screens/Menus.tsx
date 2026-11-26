@@ -29,6 +29,7 @@ import { ScreenHeader } from '../components/ScreenHeader';
 import { Sheet } from '../components/Sheet';
 import { showMessage } from '../components/UndoBar';
 import { formatCalendarDate } from '../format';
+import { useEditMode } from '../hooks/useEditMode';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
@@ -59,7 +60,8 @@ export function MenusList() {
     if (!kitchenId) return;
     try {
       const id = await trackSave(createMenu(kitchenId, name));
-      route(paths.menu(id));
+      // A new menu opens ready to add dishes to.
+      route(`${paths.menu(id)}?edit=1`);
     } catch (e) {
       setError(e instanceof ListError ? e.message : 'Couldn’t add it.');
     }
@@ -111,16 +113,26 @@ export function MenusList() {
 
 // ─── One menu ─────────────────────────────────────────────────────────────
 
-/** A menu by course (MS1), filterable to mine, with its changeover tools (MS4). /menu/:id */
+/**
+ * A menu by course (MS1): /menu/:id
+ *
+ * Read by default (FEEL_PASS 2): dishes by course, filterable by section;
+ * tap a dish for its page. Edit (top right) to add dishes, set each one's
+ * course, price and who makes what (tap it), the menu's details, and the
+ * changeover tools (MS4): copy, launch, delete.
+ */
 export function MenuScreen({ id = '' }: { id?: string }) {
   const view = useLiveQuery(() => getMenuView(id, []), [id]);
+  const kitchen = useLiveQuery(async () => (view ? getKitchen(view.menu.kitchenId) : undefined), [view?.menu.kitchenId]);
   const [sectionId, setSectionId] = useState<Id | null>(null);
-  const [sheet, setSheet] = useState<'settings' | 'add' | 'launch' | null>(null);
+  const [sheet, setSheet] = useState<'add' | 'launch' | null>(null);
   const [openPlace, setOpenPlace] = useState<Id | null>(null);
   const { route } = useLocation();
+  const { editing, start, done } = useEditMode();
   if (!view) return <ScreenHeader title="" back={{ href: paths.menus, label: 'Menus' }} />;
   const { menu } = view;
   const open = view.courses.flatMap((c) => c.dishes).find((d) => d.place.id === openPlace);
+  const dishCount = view.courses.reduce((n, c) => n + c.dishes.length, 0);
 
   async function copy() {
     const copyId = await trackSave(copyMenu(menu.id, `${menu.name} (new)`));
@@ -134,62 +146,82 @@ export function MenuScreen({ id = '' }: { id?: string }) {
     showMessage(`Deleted ${menu.name}. Its dishes are kept.`, () => restoreSnapshot(snapshot));
   }
 
+  const back = { href: paths.menusFor(menu.kitchenId), label: 'Menus' };
+  const meta = [
+    STATUS_LABELS[menu.status],
+    view.typeName,
+    kitchen?.name,
+    `${dishCount} ${dishCount === 1 ? 'dish' : 'dishes'}`,
+    menu.starts && `from ${formatCalendarDate(menu.starts)}`,
+    menu.ends && `to ${formatCalendarDate(menu.ends)}`,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  if (editing) {
+    return (
+      <section class="flow">
+        <ScreenHeader title={menu.name} back={back} action={{ label: 'Done', onClick: done }} />
+        <button class="button" type="button" data-variant="primary" onClick={() => setSheet('add')}>
+          + Add a dish
+        </button>
+        <p class="field__hint">Tap a dish for its course, price, target GP and who makes each part.</p>
+        <MenuCourses view={view} sectionId={null} onOpen={(placeId) => setOpenPlace(placeId)} />
+
+        <section class="flow" aria-labelledby="menu-details">
+          <h2 id="menu-details" class="section-label">
+            Menu details
+          </h2>
+          <MenuSettings menu={menu} />
+        </section>
+
+        <section class="flow" aria-labelledby="menu-changeover">
+          <h2 id="menu-changeover" class="section-label">
+            Changeover
+          </h2>
+          <div class="cluster">
+            <button class="button" type="button" onClick={copy}>
+              Copy for a new season
+            </button>
+            {menu.status === 'coming-up' && (
+              <button class="button" type="button" onClick={() => setSheet('launch')}>
+                Launch this menu
+              </button>
+            )}
+          </div>
+          <button class="button" type="button" data-variant="danger" onClick={remove}>
+            Delete menu
+          </button>
+        </section>
+
+        <Sheet open={sheet === 'add'} onClose={() => setSheet(null)} title={`Add to ${menu.name}`} position="top">
+          {sheet === 'add' && <AddDishToMenu menu={menu} onDone={() => setSheet(null)} />}
+        </Sheet>
+        <Sheet open={sheet === 'launch'} onClose={() => setSheet(null)} title={`Launch ${menu.name}`}>
+          {sheet === 'launch' && <LaunchMenu menu={menu} onDone={() => setSheet(null)} />}
+        </Sheet>
+        <Sheet open={!!open} onClose={() => setOpenPlace(null)} title={open?.dish.name ?? ''}>
+          {open && <MenuDishEditor key={open.place.id} view={open} kitchenId={menu.kitchenId} onDone={() => setOpenPlace(null)} />}
+        </Sheet>
+      </section>
+    );
+  }
+
   return (
     <section class="flow">
-      <ScreenHeader title={menu.name} back={{ href: paths.menusFor(menu.kitchenId), label: 'Menus' }} />
-      <p class="menu-summary">
-        {[view.typeName, STATUS_LABELS[menu.status], menu.starts && `from ${formatCalendarDate(menu.starts)}`, menu.ends && `to ${formatCalendarDate(menu.ends)}`].filter(Boolean).join(' · ')}
-      </p>
+      <ScreenHeader title={menu.name} back={back} action={{ label: 'Edit', onClick: start }} meta={meta} />
       {view.readiness.total > 0 && (
         <p class="readiness">
           {view.readiness.ready} of {view.readiness.total} components ready
         </p>
       )}
-      <div class="cluster">
-        <button class="button" type="button" data-variant="primary" onClick={() => setSheet('add')}>
-          + Add a dish
-        </button>
-        <button class="button" type="button" onClick={() => setSheet('settings')}>
-          Menu details
-        </button>
-      </div>
       <SectionFilter kitchenId={menu.kitchenId} value={sectionId} onChange={setSectionId} />
-      <div class="cluster">
+      <MenuCourses view={view} sectionId={sectionId} />
+      {dishCount > 0 && (
         <a class="button" href={paths.matrix(menu.id)}>
           Allergen matrix
         </a>
-      </div>
-      <MenuCourses view={view} sectionId={sectionId} onOpen={(placeId) => setOpenPlace(placeId)} />
-
-      <section class="flow" aria-label="Changeover">
-        <h2>Changeover</h2>
-        <div class="cluster">
-          <button class="button" type="button" onClick={copy}>
-            Copy for a new season
-          </button>
-          {menu.status === 'coming-up' && (
-            <button class="button" type="button" data-variant="primary" onClick={() => setSheet('launch')}>
-              Launch this menu
-            </button>
-          )}
-        </div>
-        <button class="button" type="button" data-variant="danger" onClick={remove}>
-          Delete menu
-        </button>
-      </section>
-
-      <Sheet open={sheet === 'settings'} onClose={() => setSheet(null)} title="Menu details">
-        {sheet === 'settings' && <MenuSettings menu={menu} />}
-      </Sheet>
-      <Sheet open={sheet === 'add'} onClose={() => setSheet(null)} title={`Add to ${menu.name}`} position="top">
-        {sheet === 'add' && <AddDishToMenu menu={menu} onDone={() => setSheet(null)} />}
-      </Sheet>
-      <Sheet open={sheet === 'launch'} onClose={() => setSheet(null)} title={`Launch ${menu.name}`}>
-        {sheet === 'launch' && <LaunchMenu menu={menu} onDone={() => setSheet(null)} />}
-      </Sheet>
-      <Sheet open={!!open} onClose={() => setOpenPlace(null)} title={open?.dish.name ?? ''}>
-        {open && <MenuDishEditor key={open.place.id} view={open} kitchenId={menu.kitchenId} onDone={() => setOpenPlace(null)} />}
-      </Sheet>
+      )}
     </section>
   );
 }

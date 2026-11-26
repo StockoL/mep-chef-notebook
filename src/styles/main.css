@@ -27,6 +27,7 @@
 @import './blocks/capture-bar.css' layer(blocks);
 @import './blocks/tab-bar.css' layer(blocks);
 @import './blocks/sheet.css' layer(blocks);
+@import './blocks/section-label.css' layer(blocks);
 @import './blocks/list-row.css' layer(blocks);
 @import './blocks/chip.css' layer(blocks);
 @import './blocks/screen-header.css' layer(blocks);

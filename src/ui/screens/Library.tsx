@@ -493,9 +493,9 @@ function NewItemForm({ initialKind, initialName, onCreated }: NewItemProps) {
     event.preventDefault();
     try {
       if (kind === 'component') onCreated(paths.component(await createComponent(name, place!.kitchenId)));
-      if (kind === 'dish') onCreated(paths.dish(await createDish(name, place!.kitchenId)));
+      if (kind === 'dish') onCreated(`${paths.dish(await createDish(name, place!.kitchenId))}?edit=1`);
       if (kind === 'ingredient') onCreated(paths.ingredient(await createIngredient(name)));
-      if (kind === 'technique') onCreated(paths.technique(await createTechnique(name)));
+      if (kind === 'technique') onCreated(`${paths.technique(await createTechnique(name))}?edit=1`);
     } catch (e) {
       setError(e instanceof ListError ? e.message : 'Couldn’t create it.');
     }

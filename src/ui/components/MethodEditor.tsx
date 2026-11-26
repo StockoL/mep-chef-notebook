@@ -1,12 +1,14 @@
 /**
  * The method (P1–P3, SPEC → Confirming): steps written one per line in the
  * chef's shorthand, each shown with what the step reader got from it as
- * chips. Tap a chip to correct it; "Looks right" confirms the step. Empty
- * chips ("+ time") are what's still missing.
+ * chips.
  *
- * Two views:
- * - Readings (the usual one): step cards with chips, what's missing, confirm.
- * - Writing: the whole method as one text box, saved as you type.
+ * - MethodSteps: the reading view (FEEL_PASS 2): numbered steps with their
+ *   chips and technique links, nothing to type into. A missing reading
+ *   ("+ time") opens edit mode.
+ * - MethodEditor: edit mode. The whole method as one text box, saved as you
+ *   type, with what the reader got directly underneath: tap a chip to
+ *   correct it, "Looks right" confirms the step.
  */
 
 import { useState } from 'preact/hooks';
@@ -45,7 +47,8 @@ export function announceStatus(change: StatusChange | null) {
 }
 
 export function MethodEditor({ variation, steps, componentName }: { variation: Variation; steps: Step[]; componentName: string }) {
-  const [writing, setWriting] = useState(steps.length === 0);
+  // Bumped when a template rewrites the method, so the text box starts again from the saved steps.
+  const [textKey, setTextKey] = useState(0);
   const [templates, setTemplates] = useState<'use' | 'save' | null>(null);
   const [open, setOpen] = useState<{ stepId: Id; part: number } | null>(null);
   const equipmentKitchen = useLiveQuery(() => equipmentKitchenId(variation), [variation.id, variation.kitchenId]);
@@ -62,7 +65,7 @@ export function MethodEditor({ variation, steps, componentName }: { variation: V
   }
 
   function fix(item: Missing) {
-    if (item.field === 'method') setWriting(true);
+    if (item.field === 'method') document.getElementById('steps')?.focus();
     else if (steps[item.step]) setOpen({ stepId: steps[item.step]!.id, part: item.part ?? 0 });
   }
 
@@ -70,38 +73,29 @@ export function MethodEditor({ variation, steps, componentName }: { variation: V
     <section class="flow" aria-labelledby="method-title">
       <div class="method-head">
         <h2 id="method-title">Method</h2>
-        <div class="cluster" style={{ '--gutter': 'var(--space-2xs)' }}>
-          <button class="button" type="button" data-variant="ghost" onClick={() => setTemplates('use')}>
-            Use a template
-          </button>
-          {steps.length > 0 && (
-            <button class="button" type="button" data-variant="ghost" onClick={() => setWriting(!writing)}>
-              {writing ? 'Show readings' : 'Edit method'}
-            </button>
-          )}
-        </div>
+        <button class="button" type="button" data-variant="ghost" onClick={() => setTemplates('use')}>
+          Use a template
+        </button>
       </div>
 
-      {writing ? (
-        <MethodText variationId={variation.id} steps={steps} onDone={() => setWriting(false)} />
-      ) : (
-        <>
-          <ol class="method-steps" role="list">
-            {steps.map((step, index) => (
-              <StepCard key={step.id} step={step} number={index + 1} equipment={equipment ?? []} targets={targets ?? {}} onOpen={(part) => setOpen({ stepId: step.id, part })} />
-            ))}
-          </ol>
-          {unconfirmed > 1 && (
-            <button class="button" type="button" onClick={confirmAll}>
-              Confirm all {unconfirmed} steps
-            </button>
-          )}
-          {steps.length > 0 && (
-            <button class="button" type="button" data-variant="ghost" onClick={() => setTemplates('save')}>
-              Save this method as a template
-            </button>
-          )}
-        </>
+      <MethodText key={textKey} variationId={variation.id} steps={steps} />
+      {/* What the step reader got, straight under the box: the box is the method, these are its readings. */}
+      {steps.length > 0 && (
+        <ol class="method-steps" role="list" aria-label="Steps as read">
+          {steps.map((step, index) => (
+            <StepCard key={step.id} step={step} number={index + 1} equipment={equipment ?? []} targets={targets ?? {}} onOpen={(part) => setOpen({ stepId: step.id, part })} />
+          ))}
+        </ol>
+      )}
+      {unconfirmed > 1 && (
+        <button class="button" type="button" onClick={confirmAll}>
+          Confirm all {unconfirmed} steps
+        </button>
+      )}
+      {steps.length > 0 && (
+        <button class="button" type="button" data-variant="ghost" onClick={() => setTemplates('save')}>
+          Save this method as a template
+        </button>
       )}
 
       <Sheet open={templates === 'use'} onClose={() => setTemplates(null)} title="Use a template">
@@ -111,7 +105,7 @@ export function MethodEditor({ variation, steps, componentName }: { variation: V
             componentName={componentName}
             onDone={() => {
               setTemplates(null);
-              setWriting(false);
+              setTextKey((k) => k + 1);
             }}
           />
         )}
@@ -135,7 +129,7 @@ export function MethodEditor({ variation, steps, componentName }: { variation: V
 
 // ─── Writing ──────────────────────────────────────────────────────────────
 
-function MethodText({ variationId, steps, onDone }: { variationId: Id; steps: Step[]; onDone: () => void }) {
+function MethodText({ variationId, steps }: { variationId: Id; steps: Step[] }) {
   const [text, setText] = useState(() => steps.map((s) => s.text).join('\n'));
   const { change, flush } = useAutosave(async (value: string) => announceStatus(await saveSteps(variationId, value.split('\n'))), 800);
 
@@ -157,20 +151,64 @@ function MethodText({ variationId, steps, onDone }: { variationId: Id; steps: St
         onBlur={flush}
       />
       <p class="field__hint">One step per line, in your own shorthand. Saved as you type; Mep reads times, equipment and settings from it.</p>
-      {text.trim() && (
-        <button
-          class="button"
-          type="button"
-          data-variant="primary"
-          onClick={async () => {
-            await flush();
-            onDone();
-          }}
-        >
-          Check the readings
-        </button>
-      )}
     </div>
+  );
+}
+
+// ─── Reading view ─────────────────────────────────────────────────────────
+
+/**
+ * The method to cook from: numbered steps, each with what's known about it
+ * as quiet chips and its techniques linked. Nothing here edits; a missing
+ * reading ("+ time") opens edit mode.
+ */
+export function MethodSteps({ variation, steps, onEdit }: { variation: Variation; steps: Step[]; onEdit: () => void }) {
+  const equipmentKitchen = useLiveQuery(() => equipmentKitchenId(variation), [variation.id, variation.kitchenId]);
+  const equipment = useLiveQuery(async () => (equipmentKitchen ? listEquipment(equipmentKitchen) : []), [equipmentKitchen]);
+  const targets = useLiveQuery(async () => (equipmentKitchen ? getTargets(equipmentKitchen) : {}), [equipmentKitchen]);
+  if (steps.length === 0) return null;
+  return (
+    <ol class="method-steps method-steps--reading" role="list" aria-label="Method">
+      {steps.map((step, index) => (
+        <li key={step.id} class="method-step">
+          <p class="method-step__text">
+            <span class="method-step__number">{index + 1}</span> <TechniqueText text={step.text} />
+          </p>
+          {step.parts.map((part, partIndex) => {
+            const holdOnly = part.mode === null && part.hold !== null && part.minutesMin === null;
+            const name = equipmentName(part, equipment ?? []);
+            const time = part.minutesMin !== null ? formatMinuteRange(part.minutesMin, part.minutesMax) : null;
+            const facts = holdOnly ? [] : [part.mode ? MODE_LABELS[part.mode].toLowerCase() : null, name ? [name, part.equipmentSetting].filter(Boolean).join(' ') : part.equipmentSetting, time];
+            const cues = cueLabels(part, targets ?? {});
+            // Only a missing time is worth a prompt here: it's what keeps a recipe out of the plan.
+            const needsTime = !holdOnly && time === null && !part.atService;
+            if (!facts.some(Boolean) && cues.length === 0 && !needsTime) return null;
+            return (
+              <div key={partIndex} class="method-step__part">
+                {step.parts.length > 1 && <p class="method-step__part-text">{part.text}</p>}
+                <div class="cluster" style={{ '--gutter': 'var(--space-3xs)' }}>
+                  {facts.filter(Boolean).map((fact) => (
+                    <span key={fact} class="fact-chip">
+                      {fact}
+                    </span>
+                  ))}
+                  {needsTime && (
+                    <button class="fact-chip" type="button" data-empty="true" onClick={onEdit}>
+                      + time
+                    </button>
+                  )}
+                  {cues.map((cue) => (
+                    <span key={cue} class="fact-chip" data-cue="true">
+                      {cue}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </li>
+      ))}
+    </ol>
   );
 }
 

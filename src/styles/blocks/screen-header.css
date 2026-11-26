@@ -28,6 +28,32 @@
   text-decoration: none;
 }
 
+/* Save indicator and the one text action ("Edit", "Done") on the right. */
+.screen-header__end {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.screen-header__action {
+  min-block-size: var(--tap);
+  min-inline-size: var(--tap);
+  padding-inline: var(--space-2xs);
+  margin-inline-end: calc(var(--space-2xs) * -1);
+  border: 0;
+  background: none;
+  color: var(--color-action);
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+}
+
+/* "Sauces and emulsions · in Cured trout · tags: cold": quiet facts under the title. */
+.screen-header__meta {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
 /* The end of an edit screen: Done, full width, after a reminder that it's saved. */
 .done-footer {
   padding-block-start: var(--space-s);

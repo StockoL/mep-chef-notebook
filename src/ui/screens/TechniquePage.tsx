@@ -10,6 +10,7 @@ import {
   deleteTemplate,
   deleteVariant,
   getTechniqueDetails,
+  type TechniqueDetails,
   removeTechniqueMedia,
   setKitchenNote,
   updateTechnique,
@@ -24,6 +25,7 @@ import { NoteEditor } from '../components/NoteEditor';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { showMessage } from '../components/UndoBar';
 import { useAutosave } from '../hooks/useAutosave';
+import { useEditMode } from '../hooks/useEditMode';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { shrinkPhoto } from '../media';
@@ -46,6 +48,7 @@ export function TechniquePage({ id = '' }: { id?: string }) {
   const [variantName, setVariantName] = useState('');
   const mediaInput = useRef<HTMLInputElement>(null);
   const { route } = useLocation();
+  const { editing, start, done } = useEditMode();
 
   if (!details || !place) return <ScreenHeader title="" back={BACK} />;
   const { technique, variants, kitchenNote, templates, notes, usedIn } = details;
@@ -65,9 +68,20 @@ export function TechniquePage({ id = '' }: { id?: string }) {
     showMessage(`Deleted ${technique.name}.`, () => restoreSnapshot(snapshot));
   }
 
+  if (!editing) {
+    return (
+      <TechniqueReading
+        details={details}
+        kitchenName={place.kitchenId !== NO_KITCHEN_ID ? (kitchen?.name ?? 'this kitchen') : null}
+        categoryName={categories?.find((c) => c.id === technique.categoryId)?.name ?? null}
+        onEdit={start}
+      />
+    );
+  }
+
   return (
-    <section class="flow" key={id}>
-      <ScreenHeader title={technique.name} back={BACK} />
+    <section class="flow" key={`${id}-edit`}>
+      <ScreenHeader title={technique.name} back={BACK} action={{ label: 'Done', onClick: done }} />
       <NameField value={technique.name} onSave={(name) => updateTechnique(id, { name })} />
       <AliasesField aliases={technique.aliases} onSave={(aliases) => updateTechnique(id, { aliases })} />
       <ChipChoice
@@ -174,6 +188,89 @@ export function TechniquePage({ id = '' }: { id?: string }) {
       <button class="button" type="button" data-variant="danger" onClick={remove}>
         Delete technique
       </button>
+    </section>
+  );
+}
+
+/**
+ * A technique to read (FEEL_PASS 2): your notes, this kitchen's way, by
+ * context, photos, templates, notes from the inbox, and where it's used.
+ * Edit (top right) for the fields.
+ */
+function TechniqueReading({ details, kitchenName, categoryName, onEdit }: { details: TechniqueDetails; kitchenName: string | null; categoryName: string | null; onEdit: () => void }) {
+  const { technique, variants, kitchenNote, templates, notes, usedIn } = details;
+  const written = Boolean(technique.notes.trim() || technique.mistakes.trim() || kitchenNote?.notes.trim() || variants.some((v) => v.notes.trim()));
+  const meta = [categoryName, technique.aliases.length ? `also ${technique.aliases.join(', ')}` : null].filter(Boolean).join(' · ');
+  const block = (label: string, text: string | undefined) =>
+    text?.trim() ? (
+      <section class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
+        <h2 class="section-label">{label}</h2>
+        <p class="reading-text">{text}</p>
+      </section>
+    ) : null;
+  return (
+    <section class="flow" key={technique.id}>
+      <ScreenHeader title={technique.name} back={BACK} action={{ label: 'Edit', onClick: onEdit }} meta={meta || undefined} />
+      {!written && (
+        <p class="field__hint">
+          A name, waiting for your notes.{' '}
+          <button class="link-button" type="button" onClick={onEdit}>
+            Write how you do it
+          </button>
+        </p>
+      )}
+      {kitchenName && block(`At ${kitchenName}`, kitchenNote?.notes)}
+      {block('How you do it', technique.notes)}
+      {block('Common mistakes', technique.mistakes)}
+      {variants.filter((v) => v.notes.trim()).map((v) => (
+        <div key={v.id}>{block(v.context, v.notes)}</div>
+      ))}
+      {technique.mediaIds.map((mediaId) => (
+        <MediaView key={mediaId} id={mediaId} />
+      ))}
+      {templates.length > 0 && (
+        <section class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
+          <h2 class="section-label">Method templates</h2>
+          {templates.map((t) => (
+            <ol key={t.id} class="reading-steps">
+              {t.steps.map((step, i) => (
+                <li key={i}>{step.text}</li>
+              ))}
+            </ol>
+          ))}
+        </section>
+      )}
+      {notes.length > 0 && (
+        <section class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
+          <h2 class="section-label">Notes</h2>
+          {notes.map((note) => (
+            <div key={note.id} class="card">
+              <div class="card__body">
+                <NoteEditor note={note} />
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+      <section class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
+        <h2 class="section-label">Used in</h2>
+        {usedIn.length === 0 ? (
+          <p class="field__hint">No recipe mentions it yet.</p>
+        ) : (
+          <ul class="row-list" role="list">
+            {usedIn.map((c) => (
+              <li key={c.id}>
+                <a class="list-row" href={paths.component(c.id)}>
+                  <span class="list-row__main">
+                    <span class="list-row__title">{c.name}</span>
+                  </span>
+                  <Icon name="chevron-right" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </section>
   );
 }

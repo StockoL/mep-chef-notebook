@@ -5,13 +5,17 @@ interface ScreenHeaderProps {
   title: string;
   /** Where back goes, and its name: "‹ Settings" (UX → Navigation rule 3). */
   back?: { href: string; label: string };
+  /** One text action at the top right: "Edit" on a reading view, "Done" in edit mode. */
+  action?: { label: string; onClick: () => void };
+  /** A small line under the title: "Sauces and emulsions · in Cured trout". */
+  meta?: string;
 }
 
 /**
  * The top of a screen pushed from a tab: a back link that names where it
  * goes, the title, and the save indicator for anything changed on the screen.
  */
-export function ScreenHeader({ title, back }: ScreenHeaderProps) {
+export function ScreenHeader({ title, back, action, meta }: ScreenHeaderProps) {
   return (
     <header class="screen-header">
       <div class="screen-header__bar">
@@ -23,9 +27,17 @@ export function ScreenHeader({ title, back }: ScreenHeaderProps) {
         ) : (
           <span />
         )}
-        <SaveIndicator />
+        <span class="screen-header__end">
+          <SaveIndicator />
+          {action && (
+            <button class="screen-header__action" type="button" onClick={action.onClick}>
+              {action.label}
+            </button>
+          )}
+        </span>
       </div>
       <h1>{title}</h1>
+      {meta && <p class="screen-header__meta">{meta}</p>}
     </header>
   );
 }
