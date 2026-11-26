@@ -5,6 +5,7 @@ import type { Id } from '../../data/types';
 import { paths } from '../router';
 import { Sheet } from './Sheet';
 import { showMessage } from './UndoBar';
+import { Hint } from './Hint';
 
 interface NoteSheetProps {
   open: boolean;
@@ -61,7 +62,7 @@ export function NoteSheet({ open, onClose, dialogRef, fieldRef }: NoteSheetProps
         placeholder="Chef says: less salt in the beurre blanc…"
         onInput={(e) => onInput(e.currentTarget.value)}
       />
-      <p class="field__hint">Saved as you type. Sort it from the inbox later.</p>
+      <Hint name="note" field empty={!text.trim()}>Saved as you type. Sort it from the inbox later.</Hint>
     </Sheet>
   );
 }

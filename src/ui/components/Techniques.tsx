@@ -21,6 +21,7 @@ import { MediaView } from './MediaView';
 import { announceStatus } from './MethodEditor';
 import { Sheet } from './Sheet';
 import { showMessage } from './UndoBar';
+import { Hint } from './Hint';
 
 /** Text with its technique words as links that open the technique over the page. */
 export function TechniqueText({ text }: { text: string }) {
@@ -99,7 +100,7 @@ export function TemplatePicker({ variationId, componentName, onDone }: { variati
   if (templates?.length === 0) return <p class="field__hint">No templates yet. Save a method as a template from any recipe.</p>;
   return (
     <>
-      <p class="field__hint">Typical steps and times to start from. Correct them to how you do it.</p>
+      <Hint name="templates-use">Typical steps and times to start from.</Hint>
       <ul class="row-list" role="list">
         {templates?.map(({ template, techniqueName, suggested }) => (
           <li key={template.id}>

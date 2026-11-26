@@ -29,6 +29,7 @@ import { Icon } from '../icons';
 import { paths } from '../router';
 import { saveFile, shareText } from '../saveFile';
 import { trackSave } from '../saveStatus';
+import { Hint } from '../components/Hint';
 
 /** Section chips (any section, the last one used first: DECISIONS 48). */
 function SectionChooser({ kitchenId, value }: { kitchenId: KitchenId; value: Id | null }) {
@@ -128,8 +129,8 @@ export function Count() {
       )}
       {!current && rows.length > 0 && (
         <section class="flow" aria-labelledby="count-done">
-          <h2 id="count-done">Counted</h2>
-          <h3 class="used-in__label">Below par ({below.length})</h3>
+          <h2 class="section-label" id="count-done">Counted</h2>
+          <h3 class="section-label">Below par ({below.length})</h3>
           <ul class="row-list" role="list">
             {below.map((r) => (
               <li key={r.view.item.id} class="list-row" data-static>
@@ -153,7 +154,7 @@ export function Count() {
               Count again
             </button>
           </div>
-          <p class="field__hint">Components below par go on the next shift’s sheet when you write it.</p>
+          <Hint name="count-topup">Components below par go on the next shift’s sheet when you write it.</Hint>
         </section>
       )}
     </section>
@@ -170,7 +171,7 @@ export function Orders() {
   return (
     <section class="flow">
       <ScreenHeader title="Draft orders" back={{ href: paths.section, label: 'Section' }} />
-      <p class="field__hint">From your latest counts: ingredients below par, in whole packs. Mep never places an order: send it yourself.</p>
+      <Hint name="orders">From your latest counts, in whole packs. Mep never orders: send it yourself.</Hint>
       {orders?.length === 0 && (
         <div class="empty-state">
           <p>Nothing below par. Count your section to see what’s short.</p>
@@ -179,7 +180,7 @@ export function Orders() {
       {orders?.map((order) => (
         <section key={order.supplier?.id ?? 'none'} class="card">
           <div class="card__body flow">
-            <h2>{order.supplier?.name ?? 'No supplier set'}</h2>
+            <h2 class="section-label">{order.supplier?.name ?? 'No supplier set'}</h2>
             {order.supplier?.cutOff && <p class="plan-flag">Cut-off: {order.supplier.cutOff}</p>}
             <ul class="flow" role="list">
               {order.lines.map((l) => (
@@ -299,7 +300,7 @@ export function Checklists() {
           {editing ? 'Done' : 'Edit the list'}
         </button>
       )}
-      <p class="field__hint">Official temperature records stay in the kitchen’s own system.</p>
+      <Hint name="checklists">Official temperature records stay in the kitchen’s own system.</Hint>
     </section>
   );
 }
@@ -394,11 +395,11 @@ export function WeeklyReportScreen() {
         )}
       </div>
 
-      <h2>Goal</h2>
+      <h2 class="section-label">Goal</h2>
       <p>{report.goal?.text || 'No goal set this week.'}</p>
       {report.goal?.reflection && <p>How it went: {report.goal.reflection}</p>}
 
-      <h2>Stock</h2>
+      <h2 class="section-label">Stock</h2>
       {report.stock.length === 0 ? (
         <p>No counts.</p>
       ) : (
@@ -413,7 +414,7 @@ export function WeeklyReportScreen() {
       )}
       {report.oftenShort.length > 0 && <p>Often short: {report.oftenShort.map((o) => `${o.name} (${o.times} counts)`).join(', ')}.</p>}
 
-      <h2>Waste</h2>
+      <h2 class="section-label">Waste</h2>
       <p>
         {report.waste.entries} {report.waste.entries === 1 ? 'entry' : 'entries'}, {formatPence(report.waste.pence)}
         {report.waste.uncosted ? ` (${report.waste.uncosted} not costed)` : ''}.
@@ -421,7 +422,7 @@ export function WeeklyReportScreen() {
       {report.waste.byReason.length > 0 && <p>By cause: {report.waste.byReason.map((r) => `${r.reason} ${formatPence(r.pence)}`).join(' · ')}</p>}
       {report.waste.topItems.length > 0 && <p>Most wasted: {report.waste.topItems.map((t) => `${t.name} ${formatPence(t.pence)}`).join(' · ')}</p>}
 
-      <h2>GP</h2>
+      <h2 class="section-label">GP</h2>
       {report.gp.length === 0 ? (
         <p>No dishes on menus on now.</p>
       ) : (

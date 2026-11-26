@@ -19,6 +19,7 @@ import { paths } from '../router';
 import { trackSave } from '../saveStatus';
 import { Sheet } from './Sheet';
 import { showMessage } from './UndoBar';
+import { Hint } from './Hint';
 
 // ─── Ingredient lines ─────────────────────────────────────────────────────
 
@@ -65,7 +66,7 @@ export function LinesEditor({ variationId, componentId, lines }: { variationId: 
         }}
         onBlur={flush}
       />
-      <p class="field__hint">One per line or separated by commas. Saved as you go.</p>
+      <Hint name="lines" field empty={!text.trim()}>One per line, or separated by commas.</Hint>
       {parsed.length > 0 && (
         <ul class="line-rows" role="list" aria-label="Ingredients as read">
           {parsed.map((line, index) => {
@@ -321,7 +322,7 @@ export function AliasesField({ aliases, onSave }: { aliases: string[]; onSave: (
           if (next.join('|') !== aliases.join('|')) void trackSave(onSave(next));
         }}
       />
-      <p class="field__hint">Separate with commas. Search and ingredient lists find these too.</p>
+      <Hint name="aliases" field empty={!text.trim()}>Separate with commas. Search finds these too.</Hint>
     </div>
   );
 }

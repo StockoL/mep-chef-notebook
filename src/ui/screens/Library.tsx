@@ -19,6 +19,7 @@ import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
 import { MenuCourses, menuLabel, SectionFilter } from './Menus';
+import { Hint } from '../components/Hint';
 
 type Lens = 'dishes' | 'components' | 'ingredients' | 'techniques';
 const LENSES: { value: Lens; label: string }[] = [
@@ -144,7 +145,7 @@ function Recent() {
   const href = { dish: paths.dish, component: paths.component, ingredient: paths.ingredient };
   return (
     <section class="flow" aria-labelledby="recent" style={{ '--flow-space': 'var(--space-2xs)' }}>
-      <h2 id="recent" class="used-in__label">
+      <h2 id="recent" class="section-label">
         Recent
       </h2>
       <div class="reel" role="region" aria-label="Recent" tabIndex={0}>
@@ -374,7 +375,7 @@ function IngredientsLens() {
     <>
       {[...byLetter].map(([letter, items]) => (
         <section key={letter} class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
-          <h2 class="used-in__label">{letter}</h2>
+          <h2 class="section-label">{letter}</h2>
           <RowList rows={items.map((i) => ({ href: paths.ingredient(i.id), title: i.name, meta: i.aliases.join(', ') }))} />
         </section>
       ))}
@@ -398,7 +399,7 @@ function TechniquesLens() {
   ].filter((g) => g.items.length > 0);
   return (
     <>
-      <p class="field__hint">Filled: your own notes. Outlined: a name, waiting for your notes.</p>
+      <Hint name="techniques-legend">Filled: your own notes. Outlined: waiting for your notes.</Hint>
       {groups.map((group) => (
         <details key={group.key} class="library-group" open>
           <summary class="library-group__summary">
@@ -455,7 +456,7 @@ function SearchResults({ query }: { query: string }) {
     <>
       {groups.map((group) => (
         <section key={group.label} class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
-          <h2 class="used-in__label">{group.label}</h2>
+          <h2 class="section-label">{group.label}</h2>
           <RowList rows={group.rows} />
         </section>
       ))}

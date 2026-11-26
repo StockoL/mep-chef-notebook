@@ -13,6 +13,7 @@ import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
 import { trackSave } from '../saveStatus';
+import { Hint } from '../components/Hint';
 
 const MODE_LABELS = { active: 'Hands on', 'check-in': 'Keep an eye', passive: 'Left' } as const;
 
@@ -97,8 +98,8 @@ export function Plan() {
 
       {view.todos.length > 0 && (
         <section class="flow" aria-labelledby="todos-title">
-          <h2 id="todos-title">Beside the plan</h2>
-          <p class="field__hint">Not planned: drafts and things with no recipe. Tick them off by hand.</p>
+          <h2 class="section-label" id="todos-title">Beside the plan</h2>
+          <Hint name="plan-beside">Drafts and things with no recipe. Tick them off by hand.</Hint>
           <ul class="row-list" role="list">
             {view.todos.map(({ view: item, reason }) => (
               <li key={item.item.id} class="list-row">

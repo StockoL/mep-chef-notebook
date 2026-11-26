@@ -30,7 +30,7 @@ export function InstallHint() {
   return (
     <aside class="card" aria-labelledby="install-hint-title">
       <div class="card__body flow">
-        <h2 id="install-hint-title">Add Mep to your Home Screen</h2>
+        <h2 class="section-label" id="install-hint-title">Add Mep to your Home Screen</h2>
         <p>
           Mep keeps your notebook on this phone. Added to your Home Screen, it opens full screen like an app, works
           offline, and your notebook is far safer from being cleared.

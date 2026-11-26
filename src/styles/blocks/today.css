@@ -42,12 +42,13 @@
   color: var(--color-status-warning-text);
 }
 
+/* An empty state is quiet text, not a box (FEEL_PASS 4): one line, then its one action. */
 .empty-state {
-  padding: var(--space-l) var(--space-s);
-  border: 1px dashed var(--color-border-strong);
-  border-radius: var(--radius-surface);
-  text-align: center;
   color: var(--color-text-muted);
+}
+
+.empty-state > p {
+  margin: 0;
 }
 
 .empty-state__hint {

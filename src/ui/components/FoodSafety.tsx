@@ -86,7 +86,7 @@ export function AllergenSummaryView({ allergens, kitchenId }: { allergens: Aller
   ].filter(Boolean);
   return (
     <section class="flow allergens" aria-labelledby="allergens-title">
-      <h2 id="allergens-title">Allergens</h2>
+      <h2 class="section-label" id="allergens-title">Allergens</h2>
       <p class="allergens__status" data-state={empty ? 'unknown' : complete ? 'complete' : 'incomplete'}>
         {empty
           ? 'Allergens not known yet: no ingredients recorded.'
@@ -110,7 +110,7 @@ export function AllergenSummaryView({ allergens, kitchenId }: { allergens: Aller
       )}
       {mayContain.length > 0 && (
         <>
-          <h3 class="used-in__label">May contain</h3>
+          <h3 class="section-label">May contain</h3>
           <ul class="allergen-list" role="list">
             {mayContain.map((m) => (
               <li key={m.allergen}>
@@ -124,7 +124,7 @@ export function AllergenSummaryView({ allergens, kitchenId }: { allergens: Aller
       )}
       {toConfirm.length > 0 && (
         <>
-          <h3 class="used-in__label">Not confirmed</h3>
+          <h3 class="section-label">Not confirmed</h3>
           <ul class="row-list" role="list">
             {toConfirm.map((line) => (
               <li key={line.lineId}>
@@ -214,7 +214,7 @@ export function ProductsSection({ ingredientId, ingredientName }: { ingredientId
   if (!kitchenId) return null;
   return (
     <section class="flow" aria-labelledby="products-title">
-      <h2 id="products-title">Products here</h2>
+      <h2 class="section-label" id="products-title">Products here</h2>
       <p class="field__hint">The exact {ingredientName.toLowerCase()} this kitchen buys: its allergens come from the label. With one product, recipes use it; with more, each recipe says which.</p>
       <ul class="row-list" role="list">
         {products?.map((p) => (

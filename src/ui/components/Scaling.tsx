@@ -30,6 +30,7 @@ import { paths } from '../router';
 import { trackSave } from '../saveStatus';
 import { ChipChoice } from './Controls';
 import { Sheet } from './Sheet';
+import { Hint } from './Hint';
 
 /** Units offered when typing an amount: the usual ones, plus the line's own. */
 function unitChoices(extra: (string | null | undefined)[] = []) {
@@ -268,7 +269,7 @@ export function PortionsPanel({ dishId, kitchenId }: { dishId: Id; kitchenId: Ki
 
   return (
     <section class="flow" aria-labelledby="portions-title">
-      <h2 id="portions-title">How many?</h2>
+      <h2 class="section-label" id="portions-title">How many?</h2>
       <div class="field">
         <label class="label" for="dish-portions">
           Covers or people
@@ -382,8 +383,8 @@ export function IngredientWeights({ ingredient }: { ingredient: Ingredient }) {
 
   return (
     <section class="flow" aria-labelledby="weights-title">
-      <h2 id="weights-title">Weights</h2>
-      <p class="field__hint">For scaling between measures, and turning a handful or a knob into grams. Leave blank if you don’t know.</p>
+      <h2 class="section-label" id="weights-title">Weights</h2>
+      <Hint name="weights">For scaling between measures. Leave blank if you don’t know.</Hint>
       <NumberField
         id="yield-loss"
         label="Lost to peeling and trimming (%)"

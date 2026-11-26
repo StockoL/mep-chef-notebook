@@ -30,6 +30,7 @@ import { shrinkPhoto } from '../media';
 import { paths } from '../router';
 import { shareText } from '../saveFile';
 import { trackSave } from '../saveStatus';
+import { Hint } from '../components/Hint';
 
 interface SheetPanelProps {
   kitchenId: KitchenId;
@@ -83,7 +84,7 @@ export function SheetPanel({ kitchenId, sectionIds = [], date, isToday }: SheetP
   return (
     <section class="flow" aria-label={heading}>
       <div class="sheet-head">
-        <h2>{isToday ? heading : formatCalendarDate(date)}</h2>
+        <h2 class="section-label">{isToday ? heading : formatCalendarDate(date)}</h2>
         {sheet && <CoversField sheetId={sheet.id} covers={sheet.covers} />}
       </div>
 
@@ -259,7 +260,7 @@ export function PaperEntry() {
       </div>
       <input ref={photoInput} class="visually-hidden" type="file" accept="image/*" capture="environment" tabIndex={-1} aria-hidden="true" onChange={onPhoto} />
 
-      <p class="field__hint">Type each line as it’s written. Mep finds your components and section list items; anything else is kept as typed.</p>
+      <Hint name="paper-sheet" field empty={!typed.trim()}>Type each line as it’s written.</Hint>
       {view && view.items.length > 0 && <SheetItems view={view} kitchenId={place.kitchenId} />}
       {sheet?.photoId && (
         <button class="button" type="button" onClick={() => photoInput.current?.click()}>

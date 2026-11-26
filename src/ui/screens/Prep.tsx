@@ -104,7 +104,7 @@ export function Prep() {
 
       {strip.length > 0 && (
         <section class="flow" aria-labelledby="running-title">
-          <h2 id="running-title" class="used-in__label">
+          <h2 id="running-title" class="section-label">
             Running
           </h2>
           <ul class="row-list" role="list">
@@ -129,7 +129,7 @@ export function Prep() {
 
       {upNext.length > 0 && (
         <section class="flow" aria-labelledby="next-title">
-          <h2 id="next-title" class="used-in__label">
+          <h2 id="next-title" class="section-label">
             Next
           </h2>
           <ul class="row-list" role="list">

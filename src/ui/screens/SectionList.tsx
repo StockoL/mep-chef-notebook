@@ -17,6 +17,7 @@ import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
 import { trackSave } from '../saveStatus';
+import { Hint } from '../components/Hint';
 
 /**
  * A section's list (SPEC → Sections): the components and ingredients the
@@ -86,8 +87,8 @@ export function SectionList() {
 
       {menuOnly.length > 0 && (
         <section class="flow" aria-labelledby="from-menus">
-          <h2 id="from-menus">From the menus on now</h2>
-          <p class="field__hint">Your section makes these on the menus. They’re on your list already; tap one to give it a par or a shelf.</p>
+          <h2 class="section-label" id="from-menus">From the menus on now</h2>
+          <Hint name="section-from-menus">Tap one to give it a par or a shelf.</Hint>
           <ul class="row-list" role="list">
             {menuOnly.map(({ component, menuNames }) => (
               <li key={component.id}>

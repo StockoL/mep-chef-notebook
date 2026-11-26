@@ -19,6 +19,7 @@ import { formatCalendarDate } from '../format';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
+import { Hint } from '../components/Hint';
 
 const BACK = { href: paths.section, label: 'Section' };
 
@@ -41,15 +42,15 @@ export function Money() {
   return (
     <section class="flow">
       <ScreenHeader title="Money" back={BACK} />
-      <p class="field__hint">Your working figures, from the prices in your book. GP from menu prices without VAT. Not the kitchen’s records.</p>
+      <Hint name="money">Your working figures, from your own prices. GP is without VAT. Not the kitchen’s records.</Hint>
 
       <section class="flow" aria-labelledby="money-gp">
-        <h2 id="money-gp">GP</h2>
+        <h2 class="section-label" id="money-gp">GP</h2>
         {view.menus.length === 0 && <p class="field__hint">No dishes on a menu on now. Put dishes on a menu, with prices, to see GP.</p>}
         {below.length > 0 && <p class="plan-flag">Below target: {below.map((b) => b.dishName).join(', ')}</p>}
         {view.menus.map(({ menu, dishes }) => (
           <div key={menu.id} class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
-            <h3 class="used-in__label">{menu.name}</h3>
+            <h3 class="section-label">{menu.name}</h3>
             <ul class="row-list" role="list">
               {dishes.map((g) => (
                 <li key={g.menuDishId}>
@@ -78,8 +79,8 @@ export function Money() {
 
       {view.unpriced.length > 0 && (
         <section class="flow" aria-labelledby="money-prices">
-          <h2 id="money-prices">Prices to add</h2>
-          <p class="field__hint">Used on the menus, with no price. Tap one, then its product: pack and price.</p>
+          <h2 class="section-label" id="money-prices">Prices to add</h2>
+          <Hint name="money-prices">Tap one to add its pack and price.</Hint>
           <ul class="row-list" role="list">
             {view.unpriced.map((u) => (
               <li key={u.ingredientId}>
@@ -121,7 +122,7 @@ export function Money() {
       )}
 
       <section class="flow" aria-labelledby="money-week">
-        <h2 id="money-week">This week</h2>
+        <h2 class="section-label" id="money-week">This week</h2>
         <p class="menu-summary">
           {formatCalendarDate(view.week.start)} to {formatCalendarDate(view.week.end)}
         </p>

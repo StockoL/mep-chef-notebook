@@ -21,15 +21,7 @@
   cursor: pointer;
 }
 
-/* Small section labels: "In dishes", "Recent", "A". */
-.used-in__label {
-  margin: 0;
-  font-size: var(--step--1);
-  font-weight: var(--weight-semibold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-muted);
-}
+/* Small section labels ("In dishes", "Recent", "A") use .section-label (blocks/section-label.css). */
 
 /* Whose version this is: "House variation · Dumbleton Hall · Draft". */
 .variation-line {

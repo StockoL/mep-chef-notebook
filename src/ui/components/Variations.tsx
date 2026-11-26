@@ -113,7 +113,7 @@ export function IdeaFields({ variation }: { variation: Variation }) {
   return (
     <section class="card" aria-labelledby="idea-title">
       <div class="card__body flow">
-        <h2 id="idea-title">The idea</h2>
+        <h2 class="section-label" id="idea-title">The idea</h2>
         <textarea
           class="textarea"
           aria-label="The idea"

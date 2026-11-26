@@ -31,6 +31,7 @@ import { Icon } from '../icons';
 import { shrinkPhoto } from '../media';
 import { paths } from '../router';
 import { trackSave } from '../saveStatus';
+import { Hint } from '../components/Hint';
 
 const BACK = { href: paths.library, label: 'Library' };
 
@@ -105,8 +106,8 @@ export function TechniquePage({ id = '' }: { id?: string }) {
       <TextAreaField id="technique-mistakes" label="Common mistakes" value={technique.mistakes} placeholder="What goes wrong, and how to tell" onSave={(mistakes) => updateTechnique(id, { mistakes })} />
 
       <section class="flow" aria-labelledby="variants-title">
-        <h2 id="variants-title">By context</h2>
-        <p class="field__hint">When it’s done differently: “smooth mixes”, “textured mixes”.</p>
+        <h2 class="section-label" id="variants-title">By context</h2>
+        <Hint name="technique-context">When it’s done differently: “smooth mixes”, “textured mixes”.</Hint>
         {variants.map((v) => (
           <VariantEditor key={v.id} variant={v} />
         ))}
@@ -127,7 +128,7 @@ export function TechniquePage({ id = '' }: { id?: string }) {
       </section>
 
       <section class="flow" aria-labelledby="media-title">
-        <h2 id="media-title">Photos and video</h2>
+        <h2 class="section-label" id="media-title">Photos and video</h2>
         {technique.mediaIds.map((mediaId) => (
           <div key={mediaId} class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
             <MediaView id={mediaId} />
@@ -144,8 +145,8 @@ export function TechniquePage({ id = '' }: { id?: string }) {
 
       {templates.length > 0 && (
         <section class="flow" aria-labelledby="templates-title">
-          <h2 id="templates-title">Method templates</h2>
-          <p class="field__hint">Offered under Method → Use a template, on any recipe.</p>
+          <h2 class="section-label" id="templates-title">Method templates</h2>
+          <Hint name="technique-templates">Offered under Method → Use a template.</Hint>
           {templates.map((t) => (
             <TemplateEditor key={t.id} template={t} />
           ))}
@@ -154,7 +155,7 @@ export function TechniquePage({ id = '' }: { id?: string }) {
 
       {notes.length > 0 && (
         <section class="flow" aria-labelledby="technique-notes-title">
-          <h2 id="technique-notes-title">Notes</h2>
+          <h2 class="section-label" id="technique-notes-title">Notes</h2>
           {notes.map((note) => (
             <div key={note.id} class="card">
               <div class="card__body">
@@ -166,7 +167,7 @@ export function TechniquePage({ id = '' }: { id?: string }) {
       )}
 
       <section class="flow" aria-labelledby="used-title">
-        <h2 id="used-title">Used in</h2>
+        <h2 class="section-label" id="used-title">Used in</h2>
         {usedIn.length === 0 ? (
           <p class="field__hint">No recipe mentions it yet. Mep finds it in steps and prep notes by name or alias.</p>
         ) : (

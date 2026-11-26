@@ -53,7 +53,7 @@ export function Settings() {
 
       <section class="card" aria-labelledby="backup-title">
         <div class="card__body flow">
-          <h2 id="backup-title">Backup</h2>
+          <h2 class="section-label" id="backup-title">Backup</h2>
           <p>
             Your notebook is only on this phone.{' '}
             {backup?.lastBackupAt
@@ -87,7 +87,7 @@ export function Settings() {
 
       <section class="card" aria-labelledby="appearance-title">
         <div class="card__body flow">
-          <h2 id="appearance-title">Appearance</h2>
+          <h2 class="section-label" id="appearance-title">Appearance</h2>
           <Segmented<ThemeChoice>
             label="Dark mode"
             choices={[
@@ -105,7 +105,7 @@ export function Settings() {
       </section>
 
       <section class="flow" aria-labelledby="lists-title">
-        <h2 id="lists-title">Your lists</h2>
+        <h2 class="section-label" id="lists-title">Your lists</h2>
         <ul class="row-list" role="list">
           {CHEF_LISTS.map(({ list, label }) => (
             <li key={list}>
@@ -154,7 +154,7 @@ function StorageCheck() {
   return (
     <section class="card" aria-labelledby="storage-title">
       <div class="card__body flow">
-        <h2 id="storage-title">Storage</h2>
+        <h2 class="section-label" id="storage-title">Storage</h2>
         <dl class="details-list">
           <dt>Opened from</dt>
           <dd>{isInstalled() ? 'Home Screen' : 'Browser tab'}</dd>

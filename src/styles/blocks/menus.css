@@ -35,10 +35,6 @@
   color: var(--color-text-muted);
 }
 
-.course-heading {
-  margin-block-end: 0;
-}
-
 .readiness {
   font-variant-numeric: tabular-nums;
 }

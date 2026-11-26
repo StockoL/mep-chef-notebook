@@ -14,6 +14,7 @@ import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
 import { trackSave } from '../saveStatus';
+import { Hint } from '../components/Hint';
 
 /** A kitchen's events from today on (K6): /kitchen/:id/events */
 export function Events({ id = '' }: { id?: string }) {
@@ -37,7 +38,7 @@ export function Events({ id = '' }: { id?: string }) {
   return (
     <section class="flow">
       <ScreenHeader title="Events" back={{ href: paths.kitchen(id), label: kitchen?.name ?? 'Kitchen' }} />
-      <p class="field__hint">Weddings, functions and one-off time changes, with their own service times and covers.</p>
+      <Hint name="events">Weddings, functions and one-off time changes.</Hint>
       <ul class="row-list" role="list">
         {events?.map(({ event, services }) => (
           <li key={event.id}>
@@ -59,7 +60,7 @@ export function Events({ id = '' }: { id?: string }) {
 
       <form class="card" onSubmit={add}>
         <div class="card__body flow">
-          <h2>Add an event</h2>
+          <h2 class="section-label">Add an event</h2>
           <div class="field">
             <label class="label" for="event-name">Name</label>
             <input class="input" id="event-name" value={name} placeholder="Smith wedding" autocomplete="off" onInput={(e) => setName(e.currentTarget.value)} />
@@ -121,7 +122,7 @@ export function EventEditor({ id = '', eventId = '' }: { id?: string; eventId?: 
       )}
       <p class="field__hint">{event.replacesServiceId ? 'That service’s usual times are replaced by these.' : 'Runs alongside the usual services.'}</p>
 
-      <h2>Service times</h2>
+      <h2 class="section-label">Service times</h2>
       {details.services.map((s) => (
         <EventServiceRow key={s.id} service={s} />
       ))}

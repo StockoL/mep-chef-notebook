@@ -51,7 +51,7 @@ export function HouseRules({ kitchenId }: { kitchenId: KitchenId }) {
       <p class="field__hint">From the kitchen’s own food safety pack (HACCP or SFBB). Mep shows these on steps and labels; it doesn’t replace the kitchen’s records.</p>
 
       <section class="flow" aria-labelledby="targets-title">
-        <h2 id="targets-title">Critical points</h2>
+        <h2 class="section-label" id="targets-title">Critical points</h2>
         {KINDS.map((kind) => (
           <RuleField
             key={kind}
@@ -66,7 +66,7 @@ export function HouseRules({ kitchenId }: { kitchenId: KitchenId }) {
       </section>
 
       <section class="flow" aria-labelledby="shelf-title">
-        <h2 id="shelf-title">Shelf life by type</h2>
+        <h2 class="section-label" id="shelf-title">Shelf life by type</h2>
         {types
           .filter((t) => !t.hidden)
           .map((t) => (
@@ -83,7 +83,7 @@ export function HouseRules({ kitchenId }: { kitchenId: KitchenId }) {
       </section>
 
       <section class="flow" aria-labelledby="own-title">
-        <h2 id="own-title">Shelf life for one component</h2>
+        <h2 class="section-label" id="own-title">Shelf life for one component</h2>
         <p class="field__hint">Wins over its type’s.</p>
         {componentRules.map((rule) => (
           <RuleField

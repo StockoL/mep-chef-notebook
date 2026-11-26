@@ -17,6 +17,7 @@ import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
 import { trackSave } from '../saveStatus';
+import { Hint } from '../components/Hint';
 
 interface HubLink {
   href: string;
@@ -61,7 +62,7 @@ function HubLinks({ title, links }: { title: string; links: HubLink[] }) {
   const id = `hub-${title.toLowerCase().replace(/\W+/g, '-')}`;
   return (
     <section class="flow" aria-labelledby={id} style={{ '--flow-space': 'var(--space-2xs)' }}>
-      <h2 id={id} class="used-in__label">
+      <h2 id={id} class="section-label">
         {title}
       </h2>
       <ul class="row-list" role="list">
@@ -140,7 +141,7 @@ export function Goal() {
       {checkIn && (
         <div class="card">
           <div class="card__body flow">
-            <h2>How did last week go?</h2>
+            <h2 class="section-label">How did last week go?</h2>
             <p>{checkIn.text}</p>
             <ChipChoice
               label="Last week’s goal"
@@ -172,7 +173,7 @@ export function Goal() {
           }}
           onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
         />
-        <p class="field__hint">Shown as one quiet line on Today. Saved as you type.</p>
+        <Hint name="goal" field empty={!(text ?? goal?.text ?? '').trim()}>Shown as one quiet line on Today.</Hint>
       </div>
       <GoalSuggestions
         onUse={async (suggestion) => {
@@ -183,7 +184,7 @@ export function Goal() {
 
       {history && history.filter((g) => g.week !== week).length > 0 && (
         <section class="flow" aria-labelledby="goal-history">
-          <h2 id="goal-history">Past weeks</h2>
+          <h2 class="section-label" id="goal-history">Past weeks</h2>
           <ul class="row-list" role="list">
             {history
               .filter((g) => g.week !== week)
@@ -249,7 +250,7 @@ function GoalSuggestions({ onUse }: { onUse: (text: string) => void }) {
   if (!suggestions?.length) return null;
   return (
     <section class="flow" aria-labelledby="goal-ideas" style={{ '--flow-space': 'var(--space-2xs)' }}>
-      <h2 id="goal-ideas" class="used-in__label">
+      <h2 id="goal-ideas" class="section-label">
         Ideas from last week
       </h2>
       <ul class="row-list" role="list">

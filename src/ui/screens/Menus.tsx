@@ -34,6 +34,7 @@ import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
 import { trackSave } from '../saveStatus';
+import { Hint } from '../components/Hint';
 
 const STATUS_LABELS: Record<MenuStatus, string> = { 'on-now': 'On now', 'coming-up': 'Coming up', past: 'Past' };
 
@@ -76,7 +77,7 @@ export function MenusList() {
         if (group.length === 0) return null;
         return (
           <section key={status} class="flow" aria-label={STATUS_LABELS[status]}>
-            <h2>{STATUS_LABELS[status]}</h2>
+            <h2 class="section-label">{STATUS_LABELS[status]}</h2>
             <ul class="row-list" role="list">
               {group.map((menu) => (
                 <li key={menu.id}>
@@ -165,7 +166,7 @@ export function MenuScreen({ id = '' }: { id?: string }) {
         <button class="button" type="button" data-variant="primary" onClick={() => setSheet('add')}>
           + Add a dish
         </button>
-        <p class="field__hint">Tap a dish for its course, price, target GP and who makes each part.</p>
+        <Hint name="menu-edit">Tap a dish for its course, price and who makes each part.</Hint>
         <MenuCourses view={view} sectionId={null} onOpen={(placeId) => setOpenPlace(placeId)} />
 
         <section class="flow" aria-labelledby="menu-details">
@@ -262,7 +263,7 @@ export function MenuCourses({ view, sectionId, onOpen }: { view: MenuView; secti
     <>
       {courses.map((course) => (
         <section key={course.courseId ?? 'none'} class="flow" aria-label={course.name}>
-          <h2 class="course-heading">{course.name}</h2>
+          <h2 class="section-label">{course.name}</h2>
           <ul class="row-list" role="list">
             {course.dishes.map((d) => {
               const ready = d.components.filter((c) => c.ready).length;

@@ -190,7 +190,7 @@ export function KitchenServices({ id = '' }: { id?: string }) {
     <section class="flow">
       <ScreenHeader title="Services and shift" back={{ href: paths.kitchen(id), label: kitchen.name }} />
 
-      <h2>Services</h2>
+      <h2 class="section-label">Services</h2>
       <ul class="row-list" role="list">
         {services
           ?.filter((s) => !s.hidden)
@@ -217,7 +217,7 @@ export function KitchenServices({ id = '' }: { id?: string }) {
         <ListEditor listRef={{ kind: 'services', kitchenId: id }} itemName="service" />
       </details>
 
-      <h2>Your usual shift</h2>
+      <h2 class="section-label">Your usual shift</h2>
       {shifts?.map((shift) => (
         <div key={shift.id} class="card">
           <div class="card__body flow">

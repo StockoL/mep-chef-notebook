@@ -98,7 +98,7 @@ function AddForm({ kitchenId, ensureSheet, onClose }: Omit<AddToSheetProps, 'ope
         />
       )}
 
-      <h3 class="used-in__label">From a section’s list</h3>
+      <h3 class="section-label">From a section’s list</h3>
       {sections && sections.length > 1 && (
         <div class="reel" role="region" aria-label="Section" tabIndex={0}>
           {sections

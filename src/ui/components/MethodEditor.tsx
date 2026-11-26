@@ -31,6 +31,7 @@ import { ChipChoice, ChipToggles } from './Controls';
 import { Sheet } from './Sheet';
 import { SaveTemplate, TechniqueText, TemplatePicker } from './Techniques';
 import { showMessage } from './UndoBar';
+import { Hint } from './Hint';
 
 const MODE_LABELS: Record<StepMode, string> = { active: 'Active', 'check-in': 'Check-in', passive: 'Passive' };
 const MODE_HINTS: Record<StepMode, string> = {
@@ -72,7 +73,7 @@ export function MethodEditor({ variation, steps, componentName }: { variation: V
   return (
     <section class="flow" aria-labelledby="method-title">
       <div class="method-head">
-        <h2 id="method-title">Method</h2>
+        <h2 class="section-label" id="method-title">Method</h2>
         <button class="button" type="button" data-variant="ghost" onClick={() => setTemplates('use')}>
           Use a template
         </button>
@@ -150,7 +151,7 @@ function MethodText({ variationId, steps }: { variationId: Id; steps: Step[] }) 
         }}
         onBlur={flush}
       />
-      <p class="field__hint">One step per line, in your own shorthand. Saved as you type; Mep reads times, equipment and settings from it.</p>
+      <Hint name="method" field empty={!text.trim()}>One step per line, in your own shorthand.</Hint>
     </div>
   );
 }

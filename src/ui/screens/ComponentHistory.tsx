@@ -158,7 +158,7 @@ export function ComponentCompare({ id = '' }: { id?: string }) {
               { title: label(b), steps: compared.stepsB },
             ].map((side, index) => (
               <section key={index} class="flow">
-                <h2>{side.title}: method</h2>
+                <h2 class="section-label">{side.title}: method</h2>
                 {side.steps.length ? (
                   <ol>
                     {side.steps.map((s, i) => (

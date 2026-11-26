@@ -64,6 +64,7 @@ import { Icon } from '../icons';
 import { shrinkPhoto } from '../media';
 import { paths } from '../router';
 import { trackSave } from '../saveStatus';
+import { Hint } from '../components/Hint';
 
 const BACK = { href: paths.library, label: 'Library' };
 const COMPONENT_TYPES = { kind: 'values', list: 'component-types', kitchenId: null } as const;
@@ -199,7 +200,7 @@ export function ComponentPage({ id = '' }: { id?: string }) {
         />
 
         <section class="flow" aria-labelledby="component-notes">
-          <h2 id="component-notes">Notes and attempts</h2>
+          <h2 class="section-label" id="component-notes">Notes and attempts</h2>
           {variation && kitchenId && <AttemptLog componentId={id} variationId={variation.id} kitchenId={kitchenId} />}
           {notes?.map((note) => (
             <div key={note.id} class="card">
@@ -349,7 +350,7 @@ function OriginEditor({ variation, onDone }: { variation: Variation; onDone: () 
           />
         </div>
       )}
-      <p class="field__hint">A house recipe uses that kitchen’s equipment and shows first when you’re there. Keeping several versions of one recipe comes next, with variations.</p>
+      <Hint name="origin">A house recipe uses that kitchen’s equipment and shows first when you’re there.</Hint>
       <button class="button" type="button" data-variant="primary" onClick={onDone}>
         Done
       </button>
@@ -459,7 +460,7 @@ export function DishPage({ id = '' }: { id?: string }) {
         {components.length > 0 && place && <PortionsPanel dishId={id} kitchenId={place.kitchenId} />}
 
         <section class="flow" aria-labelledby="plating">
-          <h2 id="plating">Plating</h2>
+          <h2 class="section-label" id="plating">Plating</h2>
           {dish.platingPhotoId && <MediaView id={dish.platingPhotoId} />}
           <div class="cluster">
             <button class="button" type="button" onClick={() => photoInput.current?.click()}>
@@ -580,7 +581,7 @@ function DishComponents({
 }) {
   return (
       <section class="flow" aria-labelledby="dish-components">
-        <h2 id="dish-components">Components</h2>
+        <h2 class="section-label" id="dish-components">Components</h2>
         {components.length === 0 && <p class="field__hint">Add each part of the dish: the purée, the sauce, the garnish.</p>}
         <ul class="row-list" role="list">
           {components.map(({ link, component }, index) => (
@@ -675,7 +676,7 @@ export function IngredientPage({ id = '' }: { id?: string }) {
 
       {applied && applied.length > 0 && (
         <section class="flow" aria-labelledby="applied-title">
-          <h2 id="applied-title">Techniques applied</h2>
+          <h2 class="section-label" id="applied-title">Techniques applied</h2>
           <ul class="row-list" role="list">
             {applied.map(({ technique, components }) => (
               <li key={technique.id}>
@@ -710,7 +711,7 @@ export function IngredientPage({ id = '' }: { id?: string }) {
       {ingredient.kind === 'basic' ? (
         <div class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
           <AllergenPicker label="Allergens" value={ingredient.allergens} onChange={(allergens) => trackSave(updateIngredient(id, { allergens }))} />
-          <p class="field__hint">What this ingredient contains. Every recipe using it gathers these.</p>
+          <Hint name="allergen-picker">Every recipe using it gathers these.</Hint>
         </div>
       ) : (
         <ProductsSection key={`products-${ingredient.id}`} ingredientId={ingredient.id} ingredientName={ingredient.name} />
@@ -781,7 +782,7 @@ function DishOriginLine({ dishId, kitchenId }: { dishId: string; kitchenId: stri
                 setOpen(false);
               }}
             />
-            <p class="field__hint">Shown under the name and used by the library’s filter, so the name can stay as the menu writes it.</p>
+            <Hint name="dish-origin">Shown under the name, so the name can stay as the menu writes it.</Hint>
             <button class="button" type="button" data-variant="primary" onClick={() => setOpen(false)}>
               Done
             </button>
@@ -802,7 +803,7 @@ function UsedIn({ groups, empty }: { groups: { label: string; items: { href: str
         .filter((g) => g.items.length > 0)
         .map((group) => (
           <div key={group.label} class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
-            <h2 class="used-in__label">{group.label}</h2>
+            <h2 class="section-label">{group.label}</h2>
             <ul class="row-list" role="list">
               {group.items.map((item) => (
                 <li key={item.href}>
