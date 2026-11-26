@@ -4,7 +4,7 @@ import { componentOrigins, findSuffixedNames, MINE, originChoices, tidySuffixedN
 import { restoreSnapshot } from '../../data/snapshot';
 import { showMessage } from '../components/UndoBar';
 import { trackSave } from '../saveStatus';
-import { getPlace } from '../../data/kitchens';
+import { getPlace, listKitchens } from '../../data/kitchens';
 import { getSetting, setSetting } from '../../data/settings';
 import { createComponent, createDish, createIngredient, listComponentSummaries, listDishSummaries, listIngredients } from '../../data/library';
 import { getListItems, ListError } from '../../data/lists';
@@ -284,6 +284,15 @@ function DishesLens() {
   const dishes = useLiveQuery(() => listDishSummaries());
   const place = useLiveQuery(() => getPlace());
   const menus = useLiveQuery(async () => (place ? (await listMenus(place.kitchenId)).filter((m) => m.status !== 'past') : []), [place?.kitchenId]);
+  // Other kitchens' menus too, including ones you've left: you may be writing up a menu from your last job.
+  const otherMenus = useLiveQuery(async () => {
+    if (!place) return [];
+    const out = [];
+    for (const kitchen of (await listKitchens()).filter((k) => !k.builtIn && k.id !== place.kitchenId)) {
+      for (const menu of (await listMenus(kitchen.id)).filter((m) => m.status !== 'past')) out.push({ menu, kitchen });
+    }
+    return out;
+  }, [place?.kitchenId]);
   const types = useLiveQuery(async () => (place ? getListItems({ kind: 'values', list: 'menu-types', kitchenId: place.kitchenId }) : []), [place?.kitchenId]);
   const lastMenu = useLiveQuery(() => getSetting<string>(MENU_KEY));
   const [chosen, setChosen] = useState<string | null>(null);
@@ -292,12 +301,13 @@ function DishesLens() {
   const fallbackMenu = () => {
     const onNow = (menus ?? []).filter((m) => m.status === 'on-now');
     const carte = onNow.find((m) => /carte/i.test(types?.find((t) => t.id === m.typeId)?.name ?? m.name));
-    return (lastMenu && menus?.some((m) => m.id === lastMenu) ? lastMenu : null) ?? carte?.id ?? onNow[0]?.id ?? menus?.[0]?.id ?? 'all';
+    const known = menus?.some((m) => m.id === lastMenu) || otherMenus?.some((o) => o.menu.id === lastMenu);
+    return (lastMenu && known ? lastMenu : null) ?? carte?.id ?? onNow[0]?.id ?? menus?.[0]?.id ?? 'all';
   };
   const menuId = chosen ?? fallbackMenu();
   const view = useLiveQuery(async () => (menuId !== 'all' ? getMenuView(menuId, []) : undefined), [menuId]);
   const filters = useFilters('dish', view ? { kitchenId: view.menu.kitchenId, value: sectionId, onChange: setSectionId } : undefined);
-  if (!dishes || !menus) return null;
+  if (!dishes || !menus || !otherMenus) return null;
 
   function choose(id: string) {
     setChosen(id);
@@ -306,11 +316,12 @@ function DishesLens() {
     void setSetting(MENU_KEY, id);
   }
 
-  const current = menus.find((m) => m.id === menuId);
+  const other = otherMenus.find((o) => o.menu.id === menuId);
+  const current = menus.find((m) => m.id === menuId) ?? other?.menu;
   const heading = (
     <div class="library-menu-head">
       <button class="library-menu" type="button" onClick={() => setPicking(true)} aria-haspopup="dialog">
-        {current ? `${current.name} · ${current.status === 'on-now' ? 'on now' : 'coming up'}` : 'All dishes'} <Icon name="chevron-down" size="s" />
+        {current ? `${current.name} · ${other ? other.kitchen.name : current.status === 'on-now' ? 'on now' : 'coming up'}` : 'All dishes'} <Icon name="chevron-down" size="s" />
       </button>
       {filters.button}
     </div>
@@ -334,6 +345,19 @@ function DishesLens() {
                 <span class="list-row__main">
                   <span class="list-row__title">{m.name}</span>
                   <span class="list-row__meta">{m.status === 'on-now' ? 'On now' : 'Coming up'}</span>
+                </span>
+              </button>
+            </li>
+          ))}
+          {otherMenus.map(({ menu, kitchen }) => (
+            <li key={menu.id}>
+              <button class="list-row" type="button" aria-pressed={menu.id === menuId} onClick={() => choose(menu.id)}>
+                <span class="list-row__main">
+                  <span class="list-row__title">{menu.name}</span>
+                  <span class="list-row__meta">
+                    {kitchen.name}
+                    {kitchen.archived ? ' (left)' : ''} · {menu.status === 'on-now' ? 'on now' : 'coming up'}
+                  </span>
                 </span>
               </button>
             </li>

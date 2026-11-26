@@ -49,6 +49,7 @@ import {
 import { MediaView } from '../components/MediaView';
 import { MethodEditor, MethodSteps } from '../components/MethodEditor';
 import { useEditMode } from '../hooks/useEditMode';
+import { useBackLink } from '../hooks/useBackLink';
 import { whatsMissing } from '../../core/parser/readiness';
 import { tagNames } from '../../data/tags';
 import { techniquesForIngredient } from '../../data/techniques';
@@ -84,6 +85,7 @@ export function ComponentPage({ id = '' }: { id?: string }) {
   const kitchenId = place?.kitchenId;
   const { route, query } = useLocation();
   const { editing, start, done } = useEditMode();
+  const back = useBackLink(BACK);
   // Another way of making it, when the chef taps its chip (V4); otherwise the one in use here.
   const shownId = query.v ?? null;
   const details = useLiveQuery(async () => (kitchenId ? getComponentDetails(id, kitchenId, undefined, shownId) : undefined), [id, kitchenId, shownId]);
@@ -116,7 +118,7 @@ export function ComponentPage({ id = '' }: { id?: string }) {
     if (details && !empty) openedEmpty.current = id;
   }, [id, Boolean(details), empty]);
 
-  if (!details) return <ScreenHeader title="" back={BACK} />;
+  if (!details) return <ScreenHeader title="" back={back} />;
   const { component, variation, lines, steps, dishes, usedInComponents } = details;
 
   async function remove() {
@@ -141,7 +143,7 @@ export function ComponentPage({ id = '' }: { id?: string }) {
   if (editing) {
     return (
       <section class="flow mode-swap" key={`${id}-edit`}>
-        <ScreenHeader title={component.name} back={BACK} action={{ label: 'Done', onClick: done }} />
+        <ScreenHeader title={component.name} back={back} action={{ label: 'Done', onClick: done }} />
         {empty && <p class="field__hint">Nothing written yet: add the ingredients and method.</p>}
         <NameField value={component.name} onSave={(name) => updateComponent(id, { name })} />
         {variation && <VariationLine variation={variation} editable />}
@@ -169,7 +171,7 @@ export function ComponentPage({ id = '' }: { id?: string }) {
 
   return (
     <section class="flow mode-swap" key={id}>
-      <ScreenHeader title={component.name} back={BACK} action={{ label: 'Edit', onClick: start }} meta={meta || undefined} />
+      <ScreenHeader title={component.name} back={back} action={{ label: 'Edit', onClick: start }} meta={meta || undefined} />
       {variation && <VariationLine variation={variation} steps={steps} onEdit={start} />}
       {variation && kitchenId && <VariationChips componentId={id} kitchenId={kitchenId} shown={variation} hideWhenSingle />}
       {empty ? (
@@ -416,10 +418,11 @@ export function DishPage({ id = '' }: { id?: string }) {
   const photoInput = useRef<HTMLInputElement>(null);
   const { route } = useLocation();
   const { editing, start, done } = useEditMode();
+  const back = useBackLink(BACK);
 
   useEffect(() => void recordView({ kind: 'dish', id }), [id]);
 
-  if (!details) return <ScreenHeader title="" back={BACK} />;
+  if (!details) return <ScreenHeader title="" back={back} />;
   const { dish, components } = details;
 
   async function onPhoto(event: Event) {
@@ -438,7 +441,7 @@ export function DishPage({ id = '' }: { id?: string }) {
   if (editing) {
     return (
       <section class="flow mode-swap" key={`${id}-edit`}>
-        <ScreenHeader title={dish.name} back={BACK} action={{ label: 'Done', onClick: done }} />
+        <ScreenHeader title={dish.name} back={back} action={{ label: 'Done', onClick: done }} />
         <NameField value={dish.name} onSave={(name) => updateDish(id, { name })} />
         <DishOriginLine dishId={id} kitchenId={dish.kitchenId} />
         <TextAreaField
@@ -506,7 +509,7 @@ export function DishPage({ id = '' }: { id?: string }) {
   const kitchenName = (kitchens ?? []).find((k) => k.id === dish.kitchenId)?.name ?? 'Your own';
   return (
     <section class="flow mode-swap" key={id}>
-      <ScreenHeader title={dish.name} back={BACK} action={{ label: 'Edit', onClick: start }} meta={[kitchenName, dish.description || null].filter(Boolean).join(' · ')} />
+      <ScreenHeader title={dish.name} back={back} action={{ label: 'Edit', onClick: start }} meta={[kitchenName, dish.description || null].filter(Boolean).join(' · ')} />
       {dish.platingPhotoId && <MediaView id={dish.platingPhotoId} />}
       {dish.platingSpec && <p class="dish-spec">{dish.platingSpec}</p>}
 
@@ -522,7 +525,7 @@ export function DishPage({ id = '' }: { id?: string }) {
       )}
 
       {components.length > 0 && place && <DishAtWork dishId={id} kitchenId={place.kitchenId} />}
-      {place && <DishMenus dishId={id} dishName={dish.name} kitchenId={place.kitchenId} />}
+      {place && <DishMenus dishId={id} dishName={dish.name} kitchenId={dish.kitchenId ?? place.kitchenId} />}
     </section>
   );
 }
@@ -663,7 +666,8 @@ function DishComponentRows({ dishId, kitchenId, components }: { dishId: string; 
       <ul class="row-list" role="list">
         {components.map(({ link, component }) => {
           const need = needs?.find((n) => n.link.id === link.id);
-          const href = need && need.amount !== null && need.unit ? paths.componentMaking(component.id, need.amount, need.unit) : paths.component(component.id);
+          const from = `dish:${dishId}`;
+          const href = need && need.amount !== null && need.unit ? paths.componentMaking(component.id, need.amount, need.unit, from) : paths.component(component.id, from);
           const meta = need?.needed ?? (link.quantityPerPortion ? `${formatAmount(link.quantityPerPortion.amount, link.quantityPerPortion.unit)} a portion` : null);
           return (
             <li key={link.id}>

@@ -216,3 +216,4 @@ Calm to use on a shift. No new features (docs/FEEL_PASS.md).
 - `seed/proposed-split.json`: a proposed split of the seed into components and ingredients, for Louis to correct.
 - Dishes: the menus a dish is on are links, and "Add to a menu" puts it on one from the dish page (menu, then course; 3 taps, with Undo).
 - Menus are easy to find again: ••• → Menus (with what's on now), "All menus" at the top of the Library's menu picker, and "Open À la carte" under a menu's dishes.
+- Working on another kitchen's menus (e.g. one you've left): a dish opened from a menu goes Back to that menu, a recipe opened from a dish goes Back to the dish; "Add to a menu" offers the dish's own kitchen's menus; the Library's menu picker and the Menus screen include other kitchens' menus.

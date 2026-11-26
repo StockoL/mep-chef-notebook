@@ -1,6 +1,14 @@
 import type { IconName } from './icons';
 
 /**
+ * Where a page was opened from, for its Back link (`menu:<id>`, `dish:<id>`):
+ * a dish opened from a menu goes back to that menu, not the library.
+ */
+function withFrom(url: string, from?: string): string {
+  return from ? `${url}${url.includes('?') ? '&' : '?'}from=${encodeURIComponent(from)}` : url;
+}
+
+/**
  * Where the app lives: "/mep-chef-notebook/" (vite.config.ts → base).
  * Vite puts it on import.meta.env, so it's never written out twice.
  */
@@ -20,7 +28,7 @@ export const paths = {
   notesFor: (kitchenId: string) => `${BASE}notes?kitchen=${kitchenId}`,
   library: `${BASE}library`,
   librarySearch: `${BASE}library?search=1`,
-  component: (id: string) => `${BASE}library/component/${id}`,
+  component: (id: string, from?: string) => withFrom(`${BASE}library/component/${id}`, from),
   /** A component showing one of its other variations (V4). */
   componentVariation: (id: string, variationId: string) => `${BASE}library/component/${id}?v=${variationId}`,
   componentHistory: (id: string, variationId: string) => `${BASE}library/component/${id}/history?v=${variationId}`,
@@ -29,8 +37,9 @@ export const paths = {
   menusFor: (kitchenId: string) => `${BASE}menus?kitchen=${kitchenId}`,
   menu: (id: string) => `${BASE}menu/${id}`,
   /** A component opened scaled to make this much: from a dish's portions, a sheet item or a recipe that uses it. */
-  componentMaking: (id: string, amount: number, unit: string) => `${BASE}library/component/${id}?make=${Math.round(amount * 1000) / 1000}&unit=${encodeURIComponent(unit)}`,
-  dish: (id: string) => `${BASE}library/dish/${id}`,
+  componentMaking: (id: string, amount: number, unit: string, from?: string) =>
+    withFrom(`${BASE}library/component/${id}?make=${Math.round(amount * 1000) / 1000}&unit=${encodeURIComponent(unit)}`, from),
+  dish: (id: string, from?: string) => withFrom(`${BASE}library/dish/${id}`, from),
   ingredient: (id: string) => `${BASE}library/ingredient/${id}`,
   technique: (id: string) => `${BASE}library/technique/${id}`,
   plan: `${BASE}plan`,

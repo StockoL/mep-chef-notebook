@@ -3,7 +3,7 @@ import { useState } from 'preact/hooks';
 import { formatPrice, parsePrice } from '../../core/money/money';
 import { toCalendarDate } from '../../core/time/calendar';
 import { createDish, listDishSummaries } from '../../data/library';
-import { getPlace, getKitchen, listSections } from '../../data/kitchens';
+import { getPlace, getKitchen, listSections, listKitchens } from '../../data/kitchens';
 import { getListItems, ListError } from '../../data/lists';
 import {
   addDishToMenu,
@@ -53,6 +53,7 @@ export function MenusList() {
   const kitchenId = query.kitchen ?? place?.kitchenId;
   const kitchen = useLiveQuery(async () => (kitchenId ? getKitchen(kitchenId) : undefined), [kitchenId]);
   const menus = useLiveQuery(async () => (kitchenId ? listMenus(kitchenId) : []), [kitchenId]);
+  const otherKitchens = useLiveQuery(async () => (await listKitchens()).filter((k) => !k.builtIn && k.id !== kitchenId), [kitchenId]);
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [adding, setAdding] = useState(false);
@@ -105,6 +106,26 @@ export function MenusList() {
       <button class="button" type="button" data-variant="primary" onClick={() => setAdding(true)}>
         + New menu
       </button>
+      {otherKitchens && otherKitchens.length > 0 && (
+        <section class="flow" aria-labelledby="other-kitchens" style={{ '--flow-space': 'var(--space-2xs)' }}>
+          <h2 id="other-kitchens" class="section-label">
+            Other kitchens
+          </h2>
+          <ul class="row-list" role="list">
+            {otherKitchens.map((k) => (
+              <li key={k.id}>
+                <a class="list-row" href={paths.menusFor(k.id)}>
+                  <span class="list-row__main">
+                    <span class="list-row__title">{k.name}’s menus</span>
+                    {k.archived && <span class="list-row__meta">A kitchen you’ve left</span>}
+                  </span>
+                  <Icon name="chevron-right" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <Sheet open={adding} onClose={() => setAdding(false)} title="New menu">
         {adding && (
           <form class="flow" onSubmit={add}>
@@ -230,7 +251,8 @@ export function MenuScreen({ id = '' }: { id?: string }) {
         </p>
       )}
       <SectionFilter kitchenId={menu.kitchenId} value={sectionId} onChange={setSectionId} />
-      <MenuCourses view={view} sectionId={sectionId} />
+      {/* A dish opened from here comes back here. */}
+      <MenuCourses view={view} sectionId={sectionId} from={`menu:${menu.id}`} />
       {dishCount > 0 && (
         <a class="button" href={paths.matrix(menu.id)}>
           Allergen matrix
@@ -262,7 +284,7 @@ export function SectionFilter({ kitchenId, value, onChange }: { kitchenId: Kitch
 }
 
 /** Dishes by course: price, sections, readiness (MS1). Used on the menu screen and in the library. */
-export function MenuCourses({ view, sectionId, onOpen }: { view: MenuView; sectionId: Id | null; onOpen?: (placeId: Id) => void }) {
+export function MenuCourses({ view, sectionId, onOpen, from }: { view: MenuView; sectionId: Id | null; onOpen?: (placeId: Id) => void; from?: string }) {
   const touches = (d: MenuDishView) => sectionId === null || d.components.some((c) => c.sectionId === sectionId);
   const courses = view.courses.map((c) => ({ ...c, dishes: c.dishes.filter(touches) })).filter((c) => c.dishes.length > 0);
   if (courses.length === 0) {
@@ -304,7 +326,7 @@ export function MenuCourses({ view, sectionId, onOpen }: { view: MenuView; secti
                       {content}
                     </button>
                   ) : (
-                    <a class="list-row" href={paths.dish(d.dish.id)}>
+                    <a class="list-row" href={paths.dish(d.dish.id, from)}>
                       {content}
                     </a>
                   )}
@@ -472,7 +494,7 @@ function MenuDishEditor({ view, kitchenId, onDone }: { view: MenuDishView; kitch
           Move down
         </button>
       </div>
-      <a class="button" href={paths.dish(view.dish.id)} onClick={onDone}>
+      <a class="button" href={paths.dish(view.dish.id, `menu:${view.place.menuId}`)} onClick={onDone}>
         Open the dish
       </a>
       <button class="button" type="button" data-variant="danger" onClick={remove}>
