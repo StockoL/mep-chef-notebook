@@ -16,30 +16,109 @@
   text-decoration: none;
 }
 
-.needs-you {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+/* The top of Today (FEEL_PASS 5): date and kitchen small, the day large, the next service. */
+.today__head {
+  display: grid;
+  gap: var(--space-3xs);
 }
 
-.needs-you__item {
+.today__head > h1 {
+  margin: 0;
+}
+
+.today__kicker {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-weight: var(--weight-semibold);
+}
+
+.next-service__button {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3xs);
+  justify-self: start;
+  min-block-size: var(--tap);
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+/* "Needs you: 4 notes to sort · backup due": one line with a status dot, not a stack of cards. */
+.needs-you-line {
   display: flex;
-  flex-wrap: wrap; /* the button drops below the text at large text sizes */
+  align-items: center;
+  gap: var(--space-2xs);
+  inline-size: 100%;
+  min-block-size: var(--tap);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-status-warning-text);
+  font: inherit;
+  font-weight: var(--weight-semibold);
+  text-align: start;
+  cursor: pointer;
+}
+
+.needs-you-line__dot {
+  flex-shrink: 0;
+  inline-size: 0.6em;
+  block-size: 0.6em;
+  border: 2px solid currentColor;
+  border-radius: var(--radius-pill);
+}
+
+/* The next job from the plan: a dark card, Start on the right (wireframe Today). */
+.next-job {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-s);
-  min-block-size: var(--tap);
-  padding: var(--space-2xs) var(--space-s);
+  padding: var(--space-s);
   border-radius: var(--radius-surface);
-  background-color: var(--color-surface-raised);
-  color: var(--color-text);
+  background-color: var(--color-text);
+  color: var(--color-text-inverse);
   text-decoration: none;
 }
 
-.needs-you__item[data-status='warning'] {
-  border: 1px solid var(--color-status-warning-border);
-  background-color: var(--color-status-warning-surface);
-  color: var(--color-status-warning-text);
+.next-job__main {
+  display: grid;
+  gap: var(--space-3xs);
+  min-inline-size: 0;
+}
+
+.next-job__when {
+  font-size: var(--step--1);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+
+.next-job__task {
+  font-weight: var(--weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.next-job__for {
+  font-size: var(--step--1);
+  opacity: 0.75;
+}
+
+.next-job__start {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--tap);
+  padding-inline: var(--space-s);
+  border-radius: var(--radius-control);
+  background-color: var(--color-surface-raised);
+  color: var(--color-text);
+  font-weight: var(--weight-semibold);
 }
 
 /* An empty state is quiet text, not a box (FEEL_PASS 4): one line, then its one action. */
@@ -50,6 +129,7 @@
 .empty-state > p {
   margin: 0;
 }
+
 
 .empty-state__hint {
   font-size: var(--step--1);

@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { Icon } from '../icons';
 import { iosBrowser, isInstalled, isIos, type IosBrowser } from '../platform';
 
@@ -13,12 +13,30 @@ const SHARE_PLACE: Record<IosBrowser, string> = {
   edge: "in Edge's menu (•••)",
 };
 
+const SHOW_AGAIN = 'mep-install-hint-again';
+
+/** Dismissed this session: Today's "Needs you" then offers it instead (FEEL_PASS 5). */
+export function installHintDismissed(): boolean {
+  return sessionStorage.getItem(DISMISSED_KEY) === '1';
+}
+
+/** "Add Mep to your Home Screen" from "Needs you": show the steps again. */
+export function clearInstallHintDismissal() {
+  sessionStorage.removeItem(DISMISSED_KEY);
+  window.dispatchEvent(new Event(SHOW_AGAIN));
+}
+
 /**
  * iPhone never offers to install a web app, so show how (DECISIONS 21).
  * Shown in any iPhone or iPad browser when Mep isn't opened from the Home Screen.
  */
 export function InstallHint() {
-  const [dismissed, setDismissed] = useState(() => sessionStorage.getItem(DISMISSED_KEY) === '1');
+  const [dismissed, setDismissed] = useState(installHintDismissed);
+  useEffect(() => {
+    const again = () => setDismissed(false);
+    window.addEventListener(SHOW_AGAIN, again);
+    return () => window.removeEventListener(SHOW_AGAIN, again);
+  }, []);
 
   if (dismissed || !isIos() || isInstalled()) return null;
 
@@ -48,7 +66,7 @@ export function InstallHint() {
           The Home Screen app keeps its own notebook, separate from this browser tab, so anything added here won't
           appear there.
         </p>
-        <button class="button" type="button" data-variant="secondary" onClick={dismiss}>
+        <button class="button" type="button" onClick={dismiss}>
           Not now
         </button>
       </div>

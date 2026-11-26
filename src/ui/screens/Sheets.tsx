@@ -98,9 +98,8 @@ export function SheetPanel({ kitchenId, sectionIds = [], date, isToday }: SheetP
       {view && view.items.length > 0 ? (
         <SheetItems view={view} kitchenId={kitchenId} />
       ) : (
-        <div class="empty-state flow">
+        <div class="empty-state">
           <p>{isToday ? 'Nothing on today’s sheet yet.' : 'Nothing on this sheet yet.'}</p>
-          <p class="empty-state__hint">Add items, type in chef’s paper sheet, or pick from your section list.</p>
         </div>
       )}
 
