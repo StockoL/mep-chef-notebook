@@ -48,6 +48,7 @@ From `src/data/types.ts`:
 - A step (`steps`) is a method line as written (`text`) with the step reader's `parts`: one object per piece of work, each with its own mode, minutes, equipment and flags (schema v4). The chef's corrections to the reader are in `wordListEntries`.
 - An ingredient's `unitWeights` holds the chef's own weights in grams per one of a count unit, e.g. `{ "handful": 40, "each": 55 }` (schema v5). Prep mode's records of steps started and done are in `partRuns` (schema v6), and the timings learned from them in `timings`. The last scaling choices are in `settings` (`scale.<componentId>`, `portions.<dishId>`).
 - Stock counts are in `stockCounts` (one row per section and day, `counts` by section-list item). Opening and closing checklists are in `checklists`, each day's ticks in `checklistRuns` (schema v7). Prices are on `products` (`price` in pence for the `pack`); costs and GP are never stored.
+- A dish's `kitchenId` (schema v8) is the kitchen it's from, or `null` for the chef's own. An older export without it is filled in on import from the dish's menus or its components' house recipes.
 
 ## Import
 

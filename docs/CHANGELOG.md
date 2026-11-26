@@ -189,3 +189,14 @@ Run a section's numbers from the same book.
 - "Also used for …" on sheet items and recipes when a component or ingredient is on other dishes on now, with a heads-up on tomorrow's sheet or a reminder.
 - **Allergen matrix** per menu (grid, print or PDF, spreadsheet), headed as a working copy.
 - **Weekly report**: goal, stock value, waste by reason and item with costs, GP against target, items often short; print or save as PDF. Goal suggestions on the weekly goal, par suggestions on the section list, waste costed in the waste log.
+
+## After Phase 11: less on each page (26 Nov 2026)
+
+From first real use: too much on one page.
+
+- **Section → Money**: GP on each menu on now (below target flagged), prices still to add for what's on the menus, recipe costs, and this week's stock value and waste. Costs and GP are no longer on recipe, dish and menu pages, the waste log or the count.
+- The Section tab is in two groups: **On shift** and **Admin**.
+- Recipe pages open on yield, ingredients and method; dish pages on where it's from, components, add to sheet and allergens. Everything else is under **More about this recipe/dish** (it stays open once opened, for the session). A recipe with one way of making it no longer shows a chip for it.
+- Dishes have a kitchen (schema v8), shown under the name and changeable there; older dishes take theirs from their menus or recipes.
+- Library: filter dishes and components by where they're from (each kitchen, Mine, All). Search results say where each is from, so two dishes called "Steak" can be told apart.
+- Names like "Cornish sea bass (Dumbleton, 2026)": the library offers to tidy them once, recording the kitchen instead, with undo.
