@@ -5,6 +5,7 @@ import { restoreSnapshot } from '../../data/snapshot';
 import { showMessage } from '../components/UndoBar';
 import { trackSave } from '../saveStatus';
 import { getPlace } from '../../data/kitchens';
+import { getSetting, setSetting } from '../../data/settings';
 import { createComponent, createDish, createIngredient, listComponentSummaries, listDishSummaries, listIngredients } from '../../data/library';
 import { getListItems, ListError } from '../../data/lists';
 import { getMenuView, listMenus } from '../../data/menus';
@@ -18,7 +19,7 @@ import { formatWhen } from '../format';
 import { useLiveQuery } from '../hooks/useLiveQuery';
 import { Icon } from '../icons';
 import { paths } from '../router';
-import { MenuCourses, menuLabel, SectionFilter } from './Menus';
+import { MenuCourses, SectionFilter } from './Menus';
 import { Hint } from '../components/Hint';
 
 type Lens = 'dishes' | 'components' | 'ingredients' | 'techniques';
@@ -30,6 +31,8 @@ const LENSES: { value: Lens; label: string }[] = [
 ];
 const LENS_KEY = 'mep.libraryLens';
 const ORIGIN_KEY = 'mep.libraryOrigin';
+/** The menu last looked at in the Dishes lens (a setting, so it's there next time). */
+const MENU_KEY = 'library.menu';
 
 /**
  * The library (R7, R2, UX → Navigation → Library): one search box, recently
@@ -39,7 +42,9 @@ const ORIGIN_KEY = 'mep.libraryOrigin';
 export function Library() {
   const { query, route } = useLocation();
   const [search, setSearch] = useState('');
-  const [lens, setLensState] = useState<Lens>(() => (sessionStorage.getItem(LENS_KEY) as Lens | null) ?? 'components');
+  const [lens, setLensState] = useState<Lens>(() => (sessionStorage.getItem(LENS_KEY) as Lens | null) ?? 'dishes');
+  // Recent shows while the search box is in use (FEEL_PASS 6): one less row of chips on the page.
+  const [searching, setSearching] = useState(false);
   const [creating, setCreating] = useState(false);
   const searchField = useRef<HTMLInputElement>(null);
 
@@ -68,25 +73,23 @@ export function Library() {
         type="search"
         enterkeyhint="search"
         aria-label="Search the library"
-        placeholder="Search dishes, components, ingredients, notes"
+        placeholder="Search"
         value={search}
         autocomplete="off"
         onInput={(e) => setSearch(e.currentTarget.value)}
+        onFocus={() => setSearching(true)}
+        // Late enough for a tap on a Recent chip to land first.
+        onBlur={() => setTimeout(() => setSearching(false), 200)}
       />
 
       {search.trim() ? (
         <SearchResults query={search} />
       ) : (
         <>
+          {searching && <Recent />}
           <TidyNames />
-          <Recent />
-          {/* Chips on one row that scrolls: four long labels don't fit across a phone. */}
-          <div class="reel" role="region" aria-label="Show" tabIndex={0}>
-            {LENSES.map((choice) => (
-              <button key={choice.value} class="chip" type="button" aria-pressed={lens === choice.value} onClick={() => setLens(choice.value)}>
-                {choice.label}
-              </button>
-            ))}
+          <div class="library-lens">
+            <Segmented label="Show" choices={LENSES} value={lens} onChange={setLens} />
           </div>
           {lens === 'dishes' && <DishesLens />}
           {lens === 'components' && <ComponentsLens />}
@@ -159,35 +162,58 @@ function Recent() {
   );
 }
 
-/** Tag and collection filters, shared by dishes and components. */
-function useFilters(kind: 'dish' | 'component') {
+/**
+ * The library's filters behind one button (FEEL_PASS 6): where it's from,
+ * a section (on a menu), tags and collections. The button shows how many
+ * are on.
+ */
+function useFilters(kind: 'dish' | 'component', section?: { kitchenId: string; value: string | null; onChange: (id: string | null) => void }) {
   const tags = useLiveQuery(() => listTags());
   const collections = useLiveQuery(() => listCollections());
+  const origin = useOrigin();
   const [tagId, setTagId] = useState<string | null>(null);
   const [collectionId, setCollectionId] = useState<string | null>(null);
+  const [open, setOpen] = useState(false);
   const collection = collections?.find((c) => c.id === collectionId);
 
   const matches = (item: { id: string; tagIds: string[] }) =>
     (!tagId || item.tagIds.includes(tagId)) && (!collection || inCollection(collection, kind, item.id));
+  const count = [tagId, collectionId, origin?.value, section?.value].filter(Boolean).length;
+  const hasChoices = Boolean((tags && tags.length) || (collections && collections.length) || origin?.controls || section);
 
-  const controls = (
-    <>
-      {tags && tags.length > 0 && (
-        <ChipChoice label="Tag" choices={tags.map((t) => ({ value: t.id, label: t.name }))} value={tagId} onChange={setTagId} allowNone reel />
+  const button = hasChoices ? (
+    <button class="button library-filter" type="button" data-variant="ghost" onClick={() => setOpen(true)} aria-pressed={count > 0}>
+      Filter{count ? ` · ${count}` : ''}
+    </button>
+  ) : null;
+  const sheet = (
+    <Sheet open={open} onClose={() => setOpen(false)} title="Filter">
+      {open && (
+        <>
+          {origin?.controls && (
+            <div class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
+              <p class="label">Where it’s from</p>
+              {origin.controls}
+            </div>
+          )}
+          {section && (
+            <div class="flow" style={{ '--flow-space': 'var(--space-2xs)' }}>
+              <p class="label">Section</p>
+              <SectionFilter kitchenId={section.kitchenId} value={section.value} onChange={section.onChange} />
+            </div>
+          )}
+          {tags && tags.length > 0 && <ChipChoice label="Tag" choices={tags.map((t) => ({ value: t.id, label: t.name }))} value={tagId} onChange={setTagId} allowNone reel />}
+          {collections && collections.length > 0 && (
+            <ChipChoice label="Collection" choices={collections.map((c) => ({ value: c.id, label: c.name }))} value={collectionId} onChange={setCollectionId} allowNone reel />
+          )}
+          <button class="button" type="button" data-variant="primary" onClick={() => setOpen(false)}>
+            Done
+          </button>
+        </>
       )}
-      {collections && collections.length > 0 && (
-        <ChipChoice
-          label="Collection"
-          choices={collections.map((c) => ({ value: c.id, label: c.name }))}
-          value={collectionId}
-          onChange={setCollectionId}
-          allowNone
-          reel
-        />
-      )}
-    </>
+    </Sheet>
   );
-  return { matches, controls };
+  return { matches, origin, button, sheet };
 }
 
 /**
@@ -204,7 +230,8 @@ function useOrigin() {
   if (!choices || !origins || !place) return undefined;
 
   const stored = chosen === 'all' ? null : chosen;
-  const fallback = choices.some((c) => c.value === place.kitchenId) ? place.kitchenId : null;
+  // Only one kitchen in the book: nothing to filter by.
+  const fallback = choices.length > 1 && choices.some((c) => c.value === place.kitchenId) ? place.kitchenId : null;
   const value: Origin | null = chosen === null ? fallback : stored && choices.some((c) => c.value === stored) ? stored : null;
   const names = new Map(choices.map((c) => [c.value, c.label]));
   const showWhere = value === null && choices.length > 1;
@@ -215,6 +242,7 @@ function useOrigin() {
   const dishOrigin = (dish: Dish): Origin => dish.kitchenId ?? MINE;
 
   return {
+    value,
     matchesDish: (dish: Dish) => value === null || dishOrigin(dish) === value,
     matchesComponent: (id: string) => value === null || Boolean(origins.get(id)?.has(value)),
     /** Where it's from, for its row, when showing everything (always, with `always`). */
@@ -247,71 +275,113 @@ function inCollection(collection: Collection, kind: 'dish' | 'component', id: st
 }
 
 /**
- * Dishes by menu and course (R7, UX → Library): the menus on now and coming
- * up as chips at the top, then "All dishes" for everything else.
+ * Dishes by menu and course (R7, UX → Library; FEEL_PASS 6). The menu is a
+ * heading ("À la carte · on now ▾") that opens a picker: the menus on now
+ * and coming up, or all dishes. Opens on the menu last looked at, else the
+ * à la carte, else the first menu on now.
  */
 function DishesLens() {
   const dishes = useLiveQuery(() => listDishSummaries());
   const place = useLiveQuery(() => getPlace());
   const menus = useLiveQuery(async () => (place ? (await listMenus(place.kitchenId)).filter((m) => m.status !== 'past') : []), [place?.kitchenId]);
+  const types = useLiveQuery(async () => (place ? getListItems({ kind: 'values', list: 'menu-types', kitchenId: place.kitchenId }) : []), [place?.kitchenId]);
+  const lastMenu = useLiveQuery(() => getSetting<string>(MENU_KEY));
   const [chosen, setChosen] = useState<string | null>(null);
+  const [picking, setPicking] = useState(false);
   const [sectionId, setSectionId] = useState<string | null>(null);
-  const menuId = chosen ?? menus?.[0]?.id ?? 'all';
+  const fallbackMenu = () => {
+    const onNow = (menus ?? []).filter((m) => m.status === 'on-now');
+    const carte = onNow.find((m) => /carte/i.test(types?.find((t) => t.id === m.typeId)?.name ?? m.name));
+    return (lastMenu && menus?.some((m) => m.id === lastMenu) ? lastMenu : null) ?? carte?.id ?? onNow[0]?.id ?? menus?.[0]?.id ?? 'all';
+  };
+  const menuId = chosen ?? fallbackMenu();
   const view = useLiveQuery(async () => (menuId !== 'all' ? getMenuView(menuId, []) : undefined), [menuId]);
-  const { matches, controls } = useFilters('dish');
-  const origin = useOrigin();
-  if (!dishes || !menus || !origin) return null;
+  const filters = useFilters('dish', view ? { kitchenId: view.menu.kitchenId, value: sectionId, onChange: setSectionId } : undefined);
+  if (!dishes || !menus) return null;
 
-  const menuChips = (
-    <div class="reel" role="region" aria-label="Menu" tabIndex={0}>
-      {menus.map((m) => (
-        <button key={m.id} class="chip" type="button" aria-pressed={menuId === m.id} onClick={() => setChosen(m.id)}>
-          {menuLabel(m)}
-        </button>
-      ))}
-      <button class="chip" type="button" aria-pressed={menuId === 'all'} onClick={() => setChosen('all')}>
-        All dishes
+  function choose(id: string) {
+    setChosen(id);
+    setSectionId(null);
+    setPicking(false);
+    void setSetting(MENU_KEY, id);
+  }
+
+  const current = menus.find((m) => m.id === menuId);
+  const heading = (
+    <div class="library-menu-head">
+      <button class="library-menu" type="button" onClick={() => setPicking(true)} aria-haspopup="dialog">
+        {current ? `${current.name} · ${current.status === 'on-now' ? 'on now' : 'coming up'}` : 'All dishes'} <Icon name="chevron-down" size="s" />
       </button>
-      <a class="chip" href={paths.menus}>
-        Menus…
-      </a>
+      {filters.button}
     </div>
+  );
+  const picker = (
+    <Sheet open={picking} onClose={() => setPicking(false)} title="Show">
+      {picking && (
+        <ul class="row-list" role="list">
+          {menus.map((m) => (
+            <li key={m.id}>
+              <button class="list-row" type="button" aria-pressed={m.id === menuId} onClick={() => choose(m.id)}>
+                <span class="list-row__main">
+                  <span class="list-row__title">{m.name}</span>
+                  <span class="list-row__meta">{m.status === 'on-now' ? 'On now' : 'Coming up'}</span>
+                </span>
+              </button>
+            </li>
+          ))}
+          <li>
+            <button class="list-row" type="button" aria-pressed={menuId === 'all'} onClick={() => choose('all')}>
+              <span class="list-row__main">
+                <span class="list-row__title">All dishes</span>
+              </span>
+            </button>
+          </li>
+          <li>
+            <a class="list-row" href={paths.menus}>
+              <span class="list-row__main">
+                <span class="list-row__title">Menus…</span>
+                <span class="list-row__meta">Add, copy or launch a menu</span>
+              </span>
+              <Icon name="chevron-right" />
+            </a>
+          </li>
+        </ul>
+      )}
+    </Sheet>
   );
 
   if (menuId !== 'all') {
     return (
       <>
-        {menuChips}
-        {view && <SectionFilter kitchenId={view.menu.kitchenId} value={sectionId} onChange={setSectionId} />}
+        {heading}
+        {picker}
+        {filters.sheet}
         {view && <MenuCourses view={view} sectionId={sectionId} />}
-        {view && (
-          <a class="button" href={paths.menu(view.menu.id)}>
-            Edit {view.menu.name}
-          </a>
-        )}
       </>
     );
   }
   if (dishes.length === 0) {
     return (
       <>
-        {menuChips}
+        {heading}
+        {picker}
         <Empty text="No dishes yet. A dish is anything served, made of components. Tap + New." />
       </>
     );
   }
-  const shown = dishes.filter(({ dish }) => matches(dish) && origin.matchesDish(dish));
+  const origin = filters.origin;
+  const shown = dishes.filter(({ dish }) => filters.matches(dish) && (!origin || origin.matchesDish(dish)));
   return (
     <>
-      {menuChips}
-      {origin.controls}
-      {controls}
-      {shown.length === 0 && <Empty text="Nothing from there yet." />}
+      {heading}
+      {picker}
+      {filters.sheet}
+      {shown.length === 0 && <Empty text="Nothing matches. Change the filter." />}
       <RowList
         rows={shown.map(({ dish, componentCount }) => ({
           href: paths.dish(dish.id),
           title: dish.name,
-          meta: [origin.dishWhere(dish), componentCount === 1 ? '1 component' : `${componentCount} components`].filter(Boolean).join(' · '),
+          meta: [origin?.dishWhere(dish), dish.description || (componentCount === 1 ? '1 component' : `${componentCount} components`)].filter(Boolean).join(' · '),
         }))}
       />
     </>
@@ -324,12 +394,12 @@ function ComponentsLens() {
   const kitchenId = place?.kitchenId;
   const summaries = useLiveQuery(async () => (kitchenId ? listComponentSummaries(kitchenId) : undefined), [kitchenId]);
   const types = useLiveQuery(() => getListItems({ kind: 'values', list: 'component-types', kitchenId: null }));
-  const { matches, controls } = useFilters('component');
-  const origin = useOrigin();
+  const filters = useFilters('component');
+  const origin = filters.origin;
   if (!summaries || !types || !origin) return null;
   if (summaries.length === 0) return <Empty text="No components yet. A component is a recipe for one part: a stock, a sauce, a garnish. Tap + New." />;
 
-  const shown = summaries.filter(({ component }) => matches(component) && origin.matchesComponent(component.id));
+  const shown = summaries.filter(({ component }) => filters.matches(component) && origin.matchesComponent(component.id));
   const knownType = (typeId: string | null) => typeId !== null && types.some((t) => t.id === typeId);
   const groups = [
     ...types.map((t) => ({ key: t.id, name: t.name, items: shown.filter((s) => s.component.typeId === t.id) })),
@@ -338,11 +408,12 @@ function ComponentsLens() {
 
   return (
     <>
-      {origin.controls}
-      {controls}
-      {groups.length === 0 && <Empty text="Nothing from there yet." />}
+      {filters.button && <div class="library-menu-head">{filters.button}</div>}
+      {filters.sheet}
+      {groups.length === 0 && <Empty text="Nothing matches. Change the filter." />}
       {groups.map((group) => (
-        <details key={group.key} class="library-group" open>
+        // One group: open. Several: closed, so the types read as a list (wireframe Library → Components).
+        <details key={group.key} class="library-group" open={groups.length === 1}>
           <summary class="library-group__summary">
             {group.name} <span class="list-row__meta">{group.items.length}</span>
           </summary>
@@ -350,7 +421,9 @@ function ComponentsLens() {
             rows={group.items.map(({ component, dishCount, status }) => ({
               href: paths.component(component.id),
               title: component.name,
-              meta: [origin.componentWhere(component.id), status === 'draft' ? 'Draft' : 'Ready', dishCount ? `in ${dishCount} ${dishCount === 1 ? 'dish' : 'dishes'}` : '']
+              marker: status === 'draft' ? 'Draft' : undefined,
+              // "in 1 dish" on every row says nothing: only the unusual is worth a line.
+              meta: [origin.componentWhere(component.id), dishCount === 0 ? 'not on a dish' : dishCount > 1 ? `in ${dishCount} dishes` : '']
                 .filter(Boolean)
                 .join(' · '),
             }))}
@@ -537,14 +610,17 @@ function NewItemForm({ initialKind, initialName, onCreated }: NewItemProps) {
 
 // ─── Small pieces ─────────────────────────────────────────────────────────
 
-function RowList({ rows }: { rows: { href: string; title: string; meta?: string }[] }) {
+function RowList({ rows }: { rows: { href: string; title: string; meta?: string; marker?: string }[] }) {
   return (
     <ul class="row-list" role="list">
       {rows.map((row) => (
         <li key={row.href + row.title}>
           <a class="list-row" href={row.href}>
             <span class="list-row__main">
-              <span class="list-row__title note-text">{row.title}</span>
+              <span class="list-row__title note-text">
+                {row.title}
+                {row.marker && <span class="row-marker"> {row.marker}</span>}
+              </span>
               {row.meta && <span class="list-row__meta">{row.meta}</span>}
             </span>
             <Icon name="chevron-right" />

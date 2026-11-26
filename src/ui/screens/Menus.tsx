@@ -267,20 +267,21 @@ export function MenuCourses({ view, sectionId, onOpen }: { view: MenuView; secti
           <ul class="row-list" role="list">
             {course.dishes.map((d) => {
               const ready = d.components.filter((c) => c.ready).length;
-              const meta = [
-                d.place.price !== null ? formatPrice(d.place.price) : null,
-                d.sectionNames.join(', ') || null,
-                d.components.length ? `${ready}/${d.components.length} ready` : 'no components',
-              ]
-                .filter(Boolean)
-                .join(' · ');
+              const toFinish = d.components.length - ready;
+              // Reading: what's on the plate, and how much is left to make. Editing: price and who makes it.
+              const meta = onOpen
+                ? [d.place.price !== null ? formatPrice(d.place.price) : null, d.sectionNames.join(', ') || null].filter(Boolean).join(' · ')
+                : d.dish.description || d.components.map((c) => c.component.name.toLowerCase()).join(', ');
+              const aside = d.components.length === 0 ? 'no components' : toFinish === 0 ? 'all ready' : `${toFinish} to finish`;
               const content = (
                 <>
                   <span class="list-row__main">
                     <span class="list-row__title">{d.dish.name}</span>
-                    <span class="list-row__meta">{meta}</span>
+                    {meta && <span class="list-row__meta">{meta}</span>}
                   </span>
-                  <Icon name="chevron-right" />
+                  <span class="row-aside" data-todo={toFinish > 0}>
+                    {aside}
+                  </span>
                 </>
               );
               return (
