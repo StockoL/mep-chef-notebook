@@ -1,14 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { parseShorthand } from '../core/ingredients/shorthand';
-import { componentAllergens } from './allergens';
+import { componentAllergens, dishAllergens } from './allergens';
 import type { MepDatabase } from './db';
 import { getBatchLabel, getTargets, makeBatch, setInitials, setShelfLife, setTarget, shelfLifeFor } from './foodSafety';
 import { createKitchen, setPlace } from './kitchens';
-import { createComponent, getComponentDetails, getVariationInUse, saveLines, updateComponent, updateIngredient } from './library';
+import { addComponentToDish, createComponent, createDish, getComponentDetails, getVariationInUse, saveLines, updateComponent, updateIngredient } from './library';
 import { getListItems } from './lists';
 import { createProduct, deleteProduct, markChecked, setLineProduct, updateProduct } from './products';
 import { restoreSnapshot } from './snapshot';
-import { freshDatabase } from './testing';
+import { freshDatabase, loadSeed } from './testing';
 
 let db: MepDatabase;
 let kitchenId: string;
@@ -79,6 +79,44 @@ describe('allergens through components (FS1, FS5)', () => {
     const praline = await recipe('Praline', 'hazelnuts 200g, sugar 200g');
     await updateIngredient((await ingredient('Hazelnuts')).id, { allergens: ['tree-nuts:hazelnut'] }, db);
     expect((await componentAllergens(praline, kitchenId, null, db)).contains).toEqual([{ allergen: 'tree-nuts', label: 'Tree nuts', subTypes: ['hazelnut'], from: ['Hazelnuts'] }]);
+  });
+});
+
+describe('allergens are never “none” when nothing is recorded (FEEL_PASS 1)', () => {
+  const dishOf = async (...components: string[]) => {
+    const dish = await createDish('Cod', kitchenId, db);
+    for (const c of components) await addComponentToDish(dish, c, db);
+    return dishAllergens(dish, kitchenId, db);
+  };
+
+  it('an empty component is not known yet', async () => {
+    const empty = await createComponent('Garnish', kitchenId, db);
+    expect(await componentAllergens(empty, kitchenId, null, db)).toMatchObject({ empty: true, complete: false, contains: [] });
+  });
+
+  it('an empty dish, and a dish whose components are all empty, are not known yet', async () => {
+    expect(await dishOf()).toMatchObject({ empty: true, complete: false });
+    expect(await dishOf(await createComponent('Garnish', kitchenId, db), await createComponent('Sauce', kitchenId, db))).toMatchObject({ empty: true, complete: false });
+  });
+
+  it('one empty component makes a dish incomplete, and names it', async () => {
+    const chips = await recipe('Chips', 'potatoes 1kg');
+    const garnish = await createComponent('Garnish', kitchenId, db);
+    const allergens = await dishOf(chips, garnish);
+    expect(allergens).toMatchObject({ empty: false, complete: false, unrecorded: ['Garnish'] });
+    expect((await dishOf(chips)).complete).toBe(true);
+  });
+
+  it('nothing in the Dumbleton seed (all drafts, no lines) reads as confirmed or “none”', async () => {
+    const seedKitchen = await loadSeed(db);
+    for (const dish of await db.dishes.toArray()) expect((await dishAllergens(dish.id, seedKitchen, db)).complete, dish.name).toBe(false);
+    for (const c of await db.components.toArray()) expect((await componentAllergens(c.id, seedKitchen, null, db)).complete, c.name).toBe(false);
+  });
+
+  it('an empty component inside a recipe makes the recipe incomplete', async () => {
+    await createComponent('Chicken stock', kitchenId, db);
+    const jus = await recipe('Jus', 'chicken stock 2l, butter 50g');
+    expect(await componentAllergens(jus, kitchenId, null, db)).toMatchObject({ complete: false, unrecorded: ['Chicken stock'] });
   });
 });
 

@@ -78,12 +78,21 @@ export function allergenList(codes: readonly string[]): string {
 /** Contains / may contain, where from, and what isn't confirmed (FS1, FS5). */
 export function AllergenSummaryView({ allergens, kitchenId }: { allergens: Allergens; kitchenId: KitchenId }) {
   const [fixing, setFixing] = useState<UnconfirmedLine | null>(null);
-  const { contains, mayContain, toConfirm, complete } = allergens;
+  const { contains, mayContain, toConfirm, complete, empty, unrecorded } = allergens;
+  // Why it isn't complete, in the chef's words: unconfirmed lines and parts with nothing recorded.
+  const missing = [
+    toConfirm.length ? `${toConfirm.length} ${toConfirm.length === 1 ? 'ingredient isn’t' : 'ingredients aren’t'} confirmed` : null,
+    unrecorded.length ? `no ingredients recorded for ${unrecorded.join(', ')}` : null,
+  ].filter(Boolean);
   return (
     <section class="flow allergens" aria-labelledby="allergens-title">
       <h2 id="allergens-title">Allergens</h2>
-      <p class="allergens__status" data-complete={complete}>
-        {complete ? 'Every line confirmed.' : `Not complete: ${toConfirm.length} ${toConfirm.length === 1 ? 'ingredient isn’t' : 'ingredients aren’t'} confirmed. Never read this as allergen-free.`}
+      <p class="allergens__status" data-state={empty ? 'unknown' : complete ? 'complete' : 'incomplete'}>
+        {empty
+          ? 'Allergens not known yet: no ingredients recorded.'
+          : complete
+            ? 'Every line confirmed.'
+            : `Not complete: ${missing.join('; ')}. Never read this as allergen-free.`}
       </p>
       {contains.length === 0 && complete && <p>None in its ingredients as recorded.</p>}
       {contains.length > 0 && (
@@ -431,8 +440,12 @@ export function BatchLabelView({ batchId, onDeleted }: { batchId: Id; onDeleted?
           <p class="plan-flag">No shelf life set for this in this kitchen: no use-by worked out.</p>
         )}
         <p>
-          {allergens.contains.length ? `Contains: ${allergens.contains.map((c) => (c.subTypes.length ? `${c.label} (${c.subTypes.join(', ')})` : c.label)).join(', ')}` : 'No allergens recorded.'}
-          {!allergens.complete && ' Not all ingredients confirmed.'}
+          {allergens.empty
+            ? 'Allergens not known: no ingredients recorded.'
+            : allergens.contains.length
+              ? `Contains: ${allergens.contains.map((c) => (c.subTypes.length ? `${c.label} (${c.subTypes.join(', ')})` : c.label)).join(', ')}`
+              : 'No allergens recorded.'}
+          {!allergens.empty && !allergens.complete && ' Not all ingredients confirmed.'}
         </p>
         <p class="day-dot__initials">{label.initials || '—'}</p>
       </article>

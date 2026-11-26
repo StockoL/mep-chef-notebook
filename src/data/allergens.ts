@@ -39,6 +39,7 @@ async function walk(
   via: string[],
   sources: AllergenSource[],
   toConfirm: UnconfirmedLine[],
+  unrecorded: string[],
   products: Product[],
   seen: Set<Id>,
   database: MepDatabase,
@@ -49,13 +50,20 @@ async function walk(
   const component = await database.components.get(componentId);
   const chosen = variationId ? await database.variations.get(variationId) : undefined;
   const variation = chosen?.componentId === componentId ? chosen : await getVariationInUse(componentId, kitchenId, database);
-  if (!component || !variation?.currentVersionId) return;
+  const lines = variation?.currentVersionId ? await database.lines.where('versionId').equals(variation.currentVersionId).sortBy('order') : [];
+  // A part with nothing recorded: its allergens aren't known, so neither are the whole's.
+  if (!lines.some((l) => l.ingredientId || l.componentId)) {
+    const name = component?.name ?? 'A component';
+    unrecorded.push(via.length > 1 ? `${name} (via ${via.slice(0, -1).join(' → ')})` : name);
+    seen.delete(componentId);
+    return;
+  }
   // A house recipe's lines use that kitchen's products; the chef's own use the kitchen they're in.
-  const productKitchen = variation.kitchenId ?? kitchenId;
-  for (const line of await database.lines.where('versionId').equals(variation.currentVersionId).sortBy('order')) {
+  const productKitchen = variation?.kitchenId ?? kitchenId;
+  for (const line of lines) {
     if (line.componentId) {
       const used = await database.components.get(line.componentId);
-      await walk(line.componentId, kitchenId, [...via, used?.name ?? 'a component'], sources, toConfirm, products, seen, database);
+      await walk(line.componentId, kitchenId, [...via, used?.name ?? 'a component'], sources, toConfirm, unrecorded, products, seen, database);
       continue;
     }
     if (!line.ingredientId) continue;
@@ -69,7 +77,7 @@ async function walk(
     const confirmed = product !== null && isConfirmed(product);
     sources.push({ ingredient: ingredient.name, via, contains: product?.contains ?? [], mayContain: product?.mayContain ?? [], unconfirmed: !confirmed });
     if (!confirmed) {
-      toConfirm.push({ lineId: line.id, ingredientId: ingredient.id, ingredientName: ingredient.name, componentId, componentName: component.name, productId: product?.id ?? null });
+      toConfirm.push({ lineId: line.id, ingredientId: ingredient.id, ingredientName: ingredient.name, componentId, componentName: component?.name ?? '', productId: product?.id ?? null });
     }
   }
   seen.delete(componentId);
@@ -79,9 +87,11 @@ async function walk(
 export async function componentAllergens(componentId: Id, kitchenId: KitchenId, variationId?: Id | null, database: MepDatabase = appDb): Promise<Allergens> {
   const sources: AllergenSource[] = [];
   const toConfirm: UnconfirmedLine[] = [];
+  const unrecorded: string[] = [];
   const products = await database.products.toArray();
-  await walk(componentId, kitchenId, [], sources, toConfirm, products, new Set(), database, variationId);
-  return { ...summariseAllergens(sources), toConfirm };
+  await walk(componentId, kitchenId, [], sources, toConfirm, unrecorded, products, new Set(), database, variationId);
+  // The component itself being empty is said by `empty`; only name its parts.
+  return { ...summariseAllergens(sources, sources.length ? unrecorded : []), toConfirm };
 }
 
 /** A dish's allergens, gathered from all its components (MS2, FS1). */
@@ -89,11 +99,12 @@ export async function dishAllergens(dishId: Id, kitchenId: KitchenId, database: 
   const details = await getDishDetails(dishId, database);
   const sources: AllergenSource[] = [];
   const toConfirm: UnconfirmedLine[] = [];
+  const unrecorded: string[] = [];
   const products = await database.products.toArray();
   for (const { component } of details?.components ?? []) {
-    await walk(component.id, kitchenId, [component.name], sources, toConfirm, products, new Set(), database);
+    await walk(component.id, kitchenId, [component.name], sources, toConfirm, unrecorded, products, new Set(), database);
   }
-  return { ...summariseAllergens(sources), toConfirm };
+  return { ...summariseAllergens(sources, sources.length ? unrecorded : []), toConfirm };
 }
 
 /** For the current kitchen. */

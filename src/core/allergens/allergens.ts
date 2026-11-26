@@ -114,7 +114,17 @@ export interface AllergenSummary {
   mayContain: AllergenFinding[];
   /** "Mayonnaise (via Tartare)": no product chosen, so not confirmed. */
   unconfirmed: string[];
-  /** Every line is confirmed: only then is the list complete. */
+  /**
+   * Parts with no ingredients recorded, named as sources are ("Garnish (via
+   * Cod)"): their allergens aren't known, so the whole isn't either.
+   */
+  unrecorded: string[];
+  /** No ingredients recorded anywhere: nothing is known yet. */
+  empty: boolean;
+  /**
+   * Complete only when there is at least one ingredient, every part has
+   * ingredients, and every line is confirmed. Never vacuously true.
+   */
   complete: boolean;
 }
 
@@ -144,15 +154,19 @@ function findings(sources: readonly AllergenSource[], pick: (s: AllergenSource) 
 
 /**
  * What a recipe contains, may contain, and what isn't confirmed (FS1, FS5).
- * Never "allergen-free" while anything is unconfirmed: `complete` says so.
+ * Never "allergen-free" while anything is unconfirmed or unrecorded:
+ * `complete` says so. `unrecorded` names the parts with no ingredients.
  */
-export function summariseAllergens(sources: readonly AllergenSource[]): AllergenSummary {
+export function summariseAllergens(sources: readonly AllergenSource[], unrecorded: readonly string[] = []): AllergenSummary {
   const contains = findings(sources, (s) => s.contains);
   const known = new Set(contains.map((c) => c.allergen));
+  const empty = sources.length === 0;
   return {
     contains,
     mayContain: findings(sources, (s) => s.mayContain).filter((m) => !known.has(m.allergen)),
     unconfirmed: [...new Set(sources.filter((s) => s.unconfirmed).map(sourceName))],
-    complete: sources.every((s) => !s.unconfirmed),
+    unrecorded: [...new Set(unrecorded)],
+    empty,
+    complete: !empty && unrecorded.length === 0 && sources.every((s) => !s.unconfirmed),
   };
 }

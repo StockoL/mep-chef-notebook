@@ -8,9 +8,16 @@
   font-weight: var(--weight-semibold);
 }
 
-.allergens__status[data-complete='true'] {
+.allergens__status[data-state='complete'] {
   background-color: var(--color-status-success-surface);
   color: var(--color-status-success-text);
+}
+
+/* Nothing recorded: not a warning about a mistake, just not known yet. */
+.allergens__status[data-state='unknown'] {
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text-muted);
+  font-weight: var(--weight-regular);
 }
 
 .allergen-list {
