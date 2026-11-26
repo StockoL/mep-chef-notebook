@@ -215,3 +215,4 @@ Calm to use on a shift. No new features (docs/FEEL_PASS.md).
 - Small fixes: the backup reminder and appearance controls fit at phone width; the storage test marker is under Developer; a new menu is made in a sheet.
 - `seed/proposed-split.json`: a proposed split of the seed into components and ingredients, for Louis to correct.
 - Dishes: the menus a dish is on are links, and "Add to a menu" puts it on one from the dish page (menu, then course; 3 taps, with Undo).
+- Menus are easy to find again: ••• → Menus (with what's on now), "All menus" at the top of the Library's menu picker, and "Open À la carte" under a menu's dishes.

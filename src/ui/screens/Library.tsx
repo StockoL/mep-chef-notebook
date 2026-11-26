@@ -316,9 +316,18 @@ function DishesLens() {
     </div>
   );
   const picker = (
-    <Sheet open={picking} onClose={() => setPicking(false)} title="Show">
+    <Sheet open={picking} onClose={() => setPicking(false)} title="Which menu?">
       {picking && (
         <ul class="row-list" role="list">
+          <li>
+            <a class="list-row" href={paths.menus}>
+              <span class="list-row__main">
+                <span class="list-row__title">All menus</span>
+                <span class="list-row__meta">On now, coming up and past; add, copy or launch one</span>
+              </span>
+              <Icon name="chevron-right" />
+            </a>
+          </li>
           {menus.map((m) => (
             <li key={m.id}>
               <button class="list-row" type="button" aria-pressed={m.id === menuId} onClick={() => choose(m.id)}>
@@ -336,15 +345,6 @@ function DishesLens() {
               </span>
             </button>
           </li>
-          <li>
-            <a class="list-row" href={paths.menus}>
-              <span class="list-row__main">
-                <span class="list-row__title">Menus…</span>
-                <span class="list-row__meta">Add, copy or launch a menu</span>
-              </span>
-              <Icon name="chevron-right" />
-            </a>
-          </li>
         </ul>
       )}
     </Sheet>
@@ -357,6 +357,20 @@ function DishesLens() {
         {picker}
         {filters.sheet}
         {view && <MenuCourses view={view} sectionId={sectionId} />}
+        {/* The menu's own page: prices, the allergen matrix, and Edit to add dishes or change the menu. */}
+        {view && (
+          <ul class="row-list" role="list">
+            <li>
+              <a class="list-row" href={paths.menu(view.menu.id)}>
+                <span class="list-row__main">
+                  <span class="list-row__title">Open {view.menu.name}</span>
+                  <span class="list-row__meta">Allergen matrix; Edit to add dishes, prices and courses</span>
+                </span>
+                <Icon name="chevron-right" />
+              </a>
+            </li>
+          </ul>
+        )}
       </>
     );
   }
